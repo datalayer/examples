@@ -135,7 +135,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
     }
 
     const factory = new PreviewFactory(getPreviewUrl, {
-      name: "Preview-preview",
+      name: "preview",
       fileTypes: ["notebook"],
       modelName: "notebook"
     });
@@ -158,7 +158,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
       Promise.all([settingRegistry.load(preview.id), app.restored])
         .then(([settings]) => {
           updateSettings(settings);
-          settings.changed.connect(updateSettings);
+          settings.changed.connect(updateSettings);    
         })
         .catch((reason: Error) => {
           console.error(reason.message);
@@ -177,10 +177,9 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
         if (current) {
           context = current.context;
           await context.save();
-
           commands.execute("docmanager:open", {
             path: context.path,
-            factory: "Preview-preview",
+            factory: "preview",
             options: {
               mode: "split-right"
             }

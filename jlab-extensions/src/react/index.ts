@@ -1,5 +1,6 @@
 import {
-  JupyterFrontEnd, JupyterFrontEndPlugin
+  JupyterFrontEnd, 
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import { ICommandPalette } from '@jupyterlab/apputils';

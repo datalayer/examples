@@ -91,15 +91,17 @@ class RecentsManager {
 
   set recents(recents: types.Recent[]) {
     // Keep track of any recents pertaining to other roots
-    const otherRecents = this._recents.filter(
-      (r) => r.root !== this.serverRoot
-    );
-    const allRecents = recents
-      .filter((r) => r.root === this.serverRoot)
-      .concat(otherRecents);
-    this._recents = allRecents;
-    this.saveRecents();
-    this.recentsChanged.emit(this.recents);
+    if (this._recents) {
+      const otherRecents = this._recents.filter(
+        (r) => r.root !== this.serverRoot
+      );
+      const allRecents = recents
+        .filter((r) => r.root === this.serverRoot)
+        .concat(otherRecents);
+      this._recents = allRecents;
+      this.saveRecents();
+      this.recentsChanged.emit(this.recents);
+    }
   }
 
   public async init() {
@@ -231,10 +233,10 @@ const recents: JupyterFrontEndPlugin<void> = {
     );
 
     docManager.activateRequested.connect(async (_, path) => {
-      const item = await docManager.services.contents.get(path, {
+      const model = await docManager.services.contents.get(path, {
         content: false,
       });
-      const fileType = app.docRegistry.getFileTypeForModel(item);
+      const fileType = app.docRegistry.getFileTypeForModel(model);
       const contentType = fileType.contentType;
       recentsManager.addRecent(path, contentType);
       // Add the containing directory, too

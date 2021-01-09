@@ -1,3 +1,4 @@
+import autoCreate from './auto-create';
 import cellFlash from './cell-flash';
 import codeCellButton from './codecell-btn';
 import contextMenu from './context-menu';
@@ -14,6 +15,7 @@ import topBar from './topbar';
 import '../style/index.css';
 
 export default [
+    autoCreate,
     cellFlash,
     ...codeCellButton,
     contextMenu,
