@@ -1,0 +1,39 @@
+{
+  "title": "JupyterLab Extension Examples",
+  "description": "Settings for the JupyterLab Extension Examples",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "description": "Enable ExecuteTime cell extension",
+      "default": true
+    },
+    "highlight": {
+      "type": "boolean",
+      "title": "Highlight",
+      "description": "Highlight the execution time on completion",
+      "default": true
+    },
+    "positioning": {
+      "type": "string",
+      "title": "Positioning",
+      "description": "How to position the execution time. Possible values are: \"left\" or \"right\"",
+      "default": "left",
+      "enum": ["left", "right"]
+    },
+    "color": {
+      "type": "string",
+      "title": "Color",
+      "description": "The base color for the flash effect",
+      "default": "rgba(255, 255, 0, 0.5)"
+    },
+    "duration": {
+      "type": "number",
+      "title": "Duration (seconds)",
+      "description": "The duration of the flash effect animation (in seconds)",
+      "default": 0.5
+    }
+  }
+}

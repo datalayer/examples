@@ -1,0 +1,8 @@
+default_context:
+  author_name: "Isabela Presedo-Floyd; Eric Charles; Jovyans at Quansight"
+  python_name: "jlab_theme_extensions"
+  labextension_name: "@datalayer-examples/jlab-theme-extensions"
+  project_short_description: "JupyterLab Theme Christmas, Designed by Isabela Presedo-Floyd"
+  repository: "https://github.com/datalayer-jupyter/jlab-theme-extensions"
+  has_server_extension: "false"
+  has_binder: "n"

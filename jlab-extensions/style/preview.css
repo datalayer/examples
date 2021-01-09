@@ -1,0 +1,15 @@
+.jp-PreviewIcon {
+  background-image: var(--jp-icon-preview);
+}
+
+.jp-Preview-renderOnSave {
+  align-items: center;
+}
+
+[data-jp-theme-light="true"] {
+  --jp-icon-preview: url("./preview-light.svg");
+}
+
+[data-jp-theme-light="false"] {
+  --jp-icon-preview: url("./preview-dark.svg");
+}

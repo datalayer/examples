@@ -1,0 +1,9 @@
+.jp-Datalayer-React {
+    color: var(--jp-ui-font-color1);
+    background: var(--jp-layout-color2);
+    font-size: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}

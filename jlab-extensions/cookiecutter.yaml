@@ -1,0 +1,8 @@
+default_context:
+  author_name: "Your Name"
+  python_name: "jlab_extensions"
+  labextension_name: "@datalayer-examples/jlab-extensions"
+  project_short_description: "JupyterLab 3 Simple Extension"
+  repository: "https://github.com/datalayer/examples"
+  has_server_extension: "false"
+  has_binder: "n"

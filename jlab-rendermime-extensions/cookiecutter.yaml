@@ -1,0 +1,13 @@
+default_context:
+  author_name: "Datalayer"
+  python_name: "jlab_rendermime_extensions"
+  labextension_name: "@datalayer-examples/jlab-rendermime-extensions"
+  viewer_name: "Rendermime Extensions"
+  mimetype: "text/csv"
+  mimetype_name: "table"
+  file_extension: ".csv"
+  data_format": ["string"],
+  project_short_description": "A JupyterLab extension with render examples."
+  repository: "https://github.com/datalayer-examples/examples"
+  has_server_extension: "false"
+  has_binder: "n"
