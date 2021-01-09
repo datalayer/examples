@@ -63,9 +63,14 @@ class MetadataEditorWidget extends Widget {
 }
 
 const nbMetadata: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlab_nbmetadata',
+  id: '@datalayer-examples/jupyterlab_nbmetadata',
   autoStart: true,
-  requires: [ICommandPalette, ILayoutRestorer, INotebookTracker, IEditorServices],
+  requires: [
+    ICommandPalette, 
+    ILayoutRestorer, 
+    INotebookTracker, 
+    IEditorServices
+  ],
   activate: (
     app: JupyterFrontEnd,
     palette: ICommandPalette, 
@@ -78,18 +83,18 @@ const nbMetadata: JupyterFrontEndPlugin<void> = {
     app.commands.addCommand(command, {
       label: "Notebook Metadata Editor",
       execute: () => {
-        if (!tracker.has(widget)) {
-          tracker.add(widget);
-        }
-        if (!widget.isAttached) {
-          app.shell.add(widget, 'right');
-        }
         widget.update();
         app.shell.activateById(widget.id);
       },
     })
     palette.addItem({command, category: 'Notebook Operations'});
     let tracker = new WidgetTracker<Widget>({ namespace: 'nbmetadata-editor' });
+    if (!tracker.has(widget)) {
+      tracker.add(widget);
+    }
+    if (!widget.isAttached) {
+      app.shell.add(widget, 'right');
+    }
     restorer.restore(tracker, {
       command,
       args: () => JSONExt.emptyObject,

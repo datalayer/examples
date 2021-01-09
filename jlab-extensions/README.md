@@ -52,7 +52,7 @@ jupyter labextension develop --overwrite
 
 ```bash
 # List extensions.
-jupyter labextension list 
+jupyter labextension list
 pip list | grep jlab-extensions
 ```
 
