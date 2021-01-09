@@ -80,7 +80,7 @@ conda activate jlab-theme-extensions && \
 conda activate jupyterlab-extension-examples && \
   jupyter lab \
     --watch \
-    --dev-mode
+    --dev-mode \
     --ServerApp.token= \
     --extensions-in-dev-mode
 ```

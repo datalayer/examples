@@ -80,7 +80,7 @@ conda activate jlab-rendermime-extensions && \
 conda activate jlab-rendermime-extensions && \
   jupyter lab \
     --watch \
-    --dev-mode
+    --dev-mode \
     --ServerApp.token= \
     --extensions-in-dev-mode \
     ./examples

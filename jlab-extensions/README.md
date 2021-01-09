@@ -78,7 +78,7 @@ conda activate jlab-extensions && \
 conda activate jlab-extensions && \
   jupyter lab \
     --watch \
-    --dev-mode
+    --dev-mode \
     --ServerApp.token= \
     --extensions-in-dev-mode \
     ./examples
