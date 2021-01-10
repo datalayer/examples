@@ -88,7 +88,9 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
     if (menu) {
       menu.fileMenu.newMenu.addGroup([{ command }], 30);
     }
+
   }
+
 };
 
 export default pythonFile;

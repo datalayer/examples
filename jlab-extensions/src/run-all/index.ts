@@ -48,8 +48,8 @@ class RunAllCellsButtonExtension
 }
 
 function activate(app: JupyterFrontEnd): void {
-  let buttonExtension = new RunAllCellsButtonExtension(app);
-  app.docRegistry.addWidgetExtension('notebook', buttonExtension);
+  let runAllExtension = new RunAllCellsButtonExtension(app);
+  app.docRegistry.addWidgetExtension('notebook', runAllExtension);
   app.contextMenu.addItem({
     selector: '.jp-Notebook',
     command: 'notebook:run-all-cells',

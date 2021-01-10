@@ -16,6 +16,10 @@ const CLASS_NAME = 'mimerenderer-mp4';
  * A widget for rendering mp4.
  */
 export class VideoWidget extends Widget implements IRenderMime.IRenderer {
+
+  private _video: HTMLVideoElement;
+  private _mimeType: string;
+
   /**
    * Construct a new output widget.
    */
@@ -34,12 +38,9 @@ export class VideoWidget extends Widget implements IRenderMime.IRenderer {
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     let data = model.data[this._mimeType] as string;
     this._video.src = `data:${MIME_TYPE};base64,${data}`;
-    
     return Promise.resolve();
   }
 
-  private _video: HTMLVideoElement;
-  private _mimeType: string;
 }
 
 /**

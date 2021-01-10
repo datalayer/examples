@@ -105,7 +105,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
         command: "docmanager:open",
         args: panel => ({
           path: panel.context.path,
-          factory: factory.name
+          factory: previewFactory.name
         }),
         name: panel => panel.context.path,
         when: app.serviceManager.ready
@@ -134,13 +134,13 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
       return "/"
     }
 
-    const factory = new PreviewFactory(getPreviewUrl, {
+    const previewFactory = new PreviewFactory(getPreviewUrl, {
       name: "preview",
       fileTypes: ["notebook"],
       modelName: "notebook"
     });
 
-    factory.widgetCreated.connect((sender, widget) => {
+    previewFactory.widgetCreated.connect((sender, widget) => {
       // Notify the widget tracker if restore data needs to update.
       widget.context.pathChanged.connect(() => {
         void tracker.save(widget);
@@ -150,7 +150,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
     });
 
     const updateSettings = (settings: ISettingRegistry.ISettings): void => {
-      factory.defaultRenderOnSave = settings.get("renderOnSave")
+      previewFactory.defaultRenderOnSave = settings.get("renderOnSave")
         .composite as boolean;
     };
 
@@ -165,7 +165,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
         });
     }
 
-    app.docRegistry.addWidgetFactory(factory);
+    app.docRegistry.addWidgetFactory(previewFactory);
 
     const { commands, docRegistry } = app;
 

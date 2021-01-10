@@ -45,6 +45,7 @@ export const getTimeDiff = (end: Date, start: Date) => {
     // Only show ms if is < 1 hr
     timeDiff += `${secs.toFixed(hours ? 0 : 2)}s`;
   }
+
   return timeDiff.trim();
 
 };

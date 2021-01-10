@@ -84,7 +84,9 @@ const topBar: JupyterFrontEndPlugin<ITopBar> = {
     app.shell.add(topBar, 'top', { rank: 1000 });
 
     return topBar;
+
   },
+
 };
 
 export default topBar;

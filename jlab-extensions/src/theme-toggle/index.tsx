@@ -110,6 +110,7 @@ const themeToggle: JupyterFrontEndPlugin<void> = {
       topBar.addItem("theme-toggle", widget);
     }
   }
+
 };
 
 export default themeToggle;

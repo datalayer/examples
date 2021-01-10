@@ -101,7 +101,6 @@ const nbMetadata: JupyterFrontEndPlugin<void> = {
       name: () => 'nbmetadata-editor'
     });
   }
-
 };
 
 export default nbMetadata;

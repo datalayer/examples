@@ -32,33 +32,26 @@ function activateCommands(
   app: JupyterFrontEnd,
   tracker: INotebookTracker
 ): Promise<void> {
-
   Promise.all([app.restored]).then(([params]) => {
     const { commands, shell } = app;
-
     function getCurrent(args: ReadonlyPartialJSONObject): NotebookPanel | null {
       const widget = tracker.currentWidget;
       const activate = args.activate !== false;
-
       if (activate && widget) {
         shell.activateById(widget.id);
       }
-
       return widget;
     }
-
     function isEnabled(): boolean {
       return (
         tracker.currentWidget !== null &&
         tracker.currentWidget === app.shell.currentWidget
       );
     }
-
     commands.addCommand('run-selected-codecell', {
       label: 'Run Cell',
       execute: args => {
         const current = getCurrent(args);
-
         if (current) {
           const { context, content } = current;
           NotebookActions.run(content, context.sessionContext);
@@ -68,7 +61,6 @@ function activateCommands(
       isEnabled
     });
   });
-
   return Promise.resolve();
 }
 
