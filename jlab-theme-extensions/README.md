@@ -21,7 +21,7 @@ pip install jupyter_packaging
 
 ```bash
 # Install jupyterlab.
-pip install jupyterlab==3.0.1
+pip install jupyterlab==3.0.3
 # ...or alternatively, clone and build jupyterlab from source.
 git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
   cd jupyterlab && \
@@ -125,7 +125,7 @@ conda create -y \
   python=3.8 \
   nodejs=14.5.0
 conda activate jlab-theme-extensions-user
-pip install --pre jupyterlab==3.0.0rc6
+pip install --pre jupyterlab==3.0.3
 ```
 
 ```bash
