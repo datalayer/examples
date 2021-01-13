@@ -10,6 +10,7 @@ import react from './react';
 import recents from './recents';
 import runAll from './run-all';
 import themeToggle from './theme-toggle';
+import server from './server';
 import topBar from './topbar';
 
 import '../style/index.css';
@@ -26,6 +27,7 @@ export default [
     react,
     recents,
     runAll,
+    server,
     themeToggle,
     topBar,
 ];

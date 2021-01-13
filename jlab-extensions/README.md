@@ -68,6 +68,7 @@ conda activate jlab-extensions && \
   jupyter lab \
     --watch \
     --ServerApp.token= \
+    --ServerApp.jpserver_extensions="{'jlab_extensions': True}" \
     ./examples
 ```
 
@@ -80,6 +81,7 @@ conda activate jlab-extensions && \
     --watch \
     --dev-mode \
     --ServerApp.token= \
+    --ServerApp.jpserver_extensions="{'jlab_extensions': True}" \
     --extensions-in-dev-mode \
     ./examples
 ```

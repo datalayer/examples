@@ -73,7 +73,7 @@
   "jupyterlab": { 
     "extension": true,
     "schemaDir": "schema",
-    "outputDir": "jlab_extensions/static",
+    "outputDir": "jlab_extensions/labextension",
     "sharedPackages": {
       "jupyterlab-topbar": {"requiredVersion": "0.6.0", "bundled": false, "singleton": true}
    }
