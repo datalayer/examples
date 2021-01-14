@@ -4,10 +4,11 @@ import jinja2
 from jupyter_server.extension.application import ExtensionApp, ExtensionAppJinjaMixin
 from jupyter_server.utils import url_path_join
 
-from .handlers import DefaultHandler, RouteHandler
+from .handlers import DefaultHandler, ExampleHandler
 
 
 class JlabExtensions(ExtensionApp):
+
     # The name of the extension.
     name = "jlab_extensions"
 
@@ -29,8 +30,8 @@ class JlabExtensions(ExtensionApp):
 #            (route_pattern, RouteHandler),
 #        ])
         self.handlers.extend([
-            (r'/jupyter_rtc/default', DefaultHandler),
-            (r'/jupyter_rtc/get_example', RouteHandler),
+            (r'/jlab_extensions/default', DefaultHandler),
+            (r'/jlab_extensions/get_example', ExampleHandler),
         ])
 
 # Entry Point Definition

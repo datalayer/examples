@@ -10,7 +10,7 @@ const server: JupyterFrontEndPlugin<void> = {
   activate: (app: JupyterFrontEnd) => {
     requestAPI<any>('get_example')
       .then(data => {
-        console.log('Response from Server API', data);
+        console.log('Got a response from the server API', data);
       })
       .catch(reason => {
         console.error(
