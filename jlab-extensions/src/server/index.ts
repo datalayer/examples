@@ -18,6 +18,6 @@ const server: JupyterFrontEndPlugin<void> = {
         );
       });
   }
-};
+}
 
 export default server;

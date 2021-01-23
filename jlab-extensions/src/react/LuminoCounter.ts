@@ -3,9 +3,7 @@ import { BoxPanel, Widget } from '@lumino/widgets';
 import { getRandomInt } from './utils';
 
 class LuminoCounter extends BoxPanel {
-
   private counterValue = 0;
-
   private counter: Widget;
   private button: Widget;
 

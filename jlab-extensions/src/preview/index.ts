@@ -88,12 +88,14 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
   provides: IPreviewTracker,
   activate: (
     app: JupyterFrontEnd,
-    notebooks: INotebookTracker,
+    notebookTracker: INotebookTracker,
     palette: ICommandPalette | null,
     restorer: ILayoutRestorer | null,
     menu: IMainMenu | null,
     settingRegistry: ISettingRegistry | null
   ) => {
+
+    const { commands, docRegistry } = app;
 
     // Create a widget tracker for Previews.
     const tracker = new WidgetTracker<Preview>({
@@ -113,7 +115,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
     }
 
     function getCurrent(args: ReadonlyJSONObject): NotebookPanel | null {
-      const widget = notebooks.currentWidget;
+      const widget = notebookTracker.currentWidget;
       const activate = args["activate"] !== false;
       if (activate && widget) {
         app.shell.activateById(widget.id);
@@ -123,8 +125,8 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
 
     function isEnabled(): boolean {
       return (
-        notebooks.currentWidget !== null &&
-        notebooks.currentWidget === app.shell.currentWidget
+        notebookTracker.currentWidget !== null &&
+        notebookTracker.currentWidget === app.shell.currentWidget
       );
     }
 
@@ -166,8 +168,6 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
     }
 
     app.docRegistry.addWidgetFactory(previewFactory);
-
-    const { commands, docRegistry } = app;
 
     commands.addCommand(CommandIDs.previewRender, {
       label: "Render Notebook with Preview",
@@ -225,6 +225,7 @@ const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
     }
 
     const previewButton = new PreviewRenderButton(commands);
+
     docRegistry.addWidgetExtension("Notebook", previewButton);
 
     return tracker;

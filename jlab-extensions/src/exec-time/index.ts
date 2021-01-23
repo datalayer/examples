@@ -38,9 +38,10 @@ const execTime: JupyterFrontEndPlugin<void> = {
   requires: [INotebookTracker, ISettingRegistry],
   activate: (
     app: JupyterFrontEnd,
-    tracker: INotebookTracker,
+    notebookTracker: INotebookTracker,
     settingRegistry: ISettingRegistry
   ) => {
+    // We need notebookTracker to ensure correct injection order.
     app.docRegistry.addWidgetExtension(
       'notebook',
       new ExecuteTimeWidgetExtension(settingRegistry)

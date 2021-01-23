@@ -21,7 +21,7 @@ import {
 class RunAllCellsButtonExtension 
   implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel> {
 
-  readonly app: JupyterFrontEnd;
+  private readonly app: JupyterFrontEnd;
 
   constructor(app: JupyterFrontEnd) {
     this.app = app;
@@ -39,7 +39,7 @@ class RunAllCellsButtonExtension
       onClick: runAllCells,
       tooltip: 'Run All Cells'
     });
-    // Add the toolbar button to the notebook.Ò
+    // Add the toolbar button to the notebook.
     panel.toolbar.insertItem(6, 'runAllCells', button);
     // The ToolbarButton class implements `IDisposable`, so the
     // button *is* the extension for the purposes of this method.
@@ -47,20 +47,18 @@ class RunAllCellsButtonExtension
   }
 }
 
-function activate(app: JupyterFrontEnd): void {
-  let runAllExtension = new RunAllCellsButtonExtension(app);
-  app.docRegistry.addWidgetExtension('notebook', runAllExtension);
-  app.contextMenu.addItem({
-    selector: '.jp-Notebook',
-    command: 'notebook:run-all-cells',
-    rank: -0.5
-  });
-}
-
 const runAll: JupyterFrontEndPlugin<void> = {
   id: 'runall-extension',
   autoStart: true,
-  activate
-};
+  activate: (app: JupyterFrontEnd): void => {
+    let runAllExtension = new RunAllCellsButtonExtension(app);
+    app.docRegistry.addWidgetExtension('notebook', runAllExtension);
+    app.contextMenu.addItem({
+      selector: '.jp-Notebook',
+      command: 'notebook:run-all-cells',
+      rank: -0.5
+    });
+  }
+}
 
 export default runAll;

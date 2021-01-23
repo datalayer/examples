@@ -45,6 +45,6 @@ const contextMenu: JupyterFrontEndPlugin<void> = {
       rank: 0
     });
   }
-};
+}
 
 export default contextMenu;

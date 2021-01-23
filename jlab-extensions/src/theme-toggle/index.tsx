@@ -79,6 +79,8 @@ const themeToggle: JupyterFrontEndPlugin<void> = {
     topBar: ITopBar
   ) => {
 
+    const { commands } = app;
+
     // TODO: make this configurable via the settings?
     const themes = [
       "JupyterLab Light", // Light Theme goes first
@@ -90,13 +92,12 @@ const themeToggle: JupyterFrontEndPlugin<void> = {
       await app.commands.execute("apputils:change-theme", {
         theme: themes[~~isLight]
       });
-    };
+    }
 
-    const { commands } = app;
     commands.addCommand('jupyterlab-theme-toggle:toggle', {
       label: "Toggle Theme",
       execute: onChange
-    })
+    });
 
     if (topBar) {
       const widget = ReactWidget.create(
@@ -111,6 +112,6 @@ const themeToggle: JupyterFrontEndPlugin<void> = {
     }
   }
 
-};
+}
 
 export default themeToggle;

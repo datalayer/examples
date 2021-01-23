@@ -40,6 +40,7 @@ export const PREVIEW_ICON_CLASS = "jp-MaterialIcon jp-PreviewIcon";
  * A DocumentWidget that shows a preview in an IFrame.
  */
 export class Preview extends DocumentWidget<IFrame, INotebookModel> {
+  private _renderOnSave: boolean;
 
   /**
    * Instantiate a new Preview.
@@ -51,33 +52,28 @@ export class Preview extends DocumentWidget<IFrame, INotebookModel> {
       content: new IFrame({ sandbox: ["allow-same-origin", "allow-scripts"] })
     });
 
+    const { getPreviewUrl, context, renderOnSave } = options;
+
     window.onmessage = (event: any) => {
       //console.log("EVENT: ", event);
-
       switch (event.data?.level) {
         case "debug":
           console.debug(...event.data?.msg);
           break;
-
         case "info":
           console.info(...event.data?.msg);
           break;
-
         case "warn":
           console.warn(...event.data?.msg);
           break;
-
         case "error":
           console.error(...event.data?.msg);
           break;
-
         default:
           console.log(event);
           break;
       }
     };
-
-    const { getPreviewUrl, context, renderOnSave } = options;
 
     this.content.url = getPreviewUrl(context.path);
     this.content.title.icon = PREVIEW_ICON_CLASS;
@@ -161,7 +157,6 @@ export class Preview extends DocumentWidget<IFrame, INotebookModel> {
     this._renderOnSave = renderOnSave;
   }
 
-  private _renderOnSave: boolean;
 }
 
 /**
@@ -186,7 +181,7 @@ export namespace Preview {
 }
 
 export class PreviewFactory extends ABCWidgetFactory<Preview, INotebookModel> {
-  defaultRenderOnSave: boolean = false;
+  public defaultRenderOnSave: boolean = false;
 
   constructor(
     private getPreviewUrl: (path: string) => string,

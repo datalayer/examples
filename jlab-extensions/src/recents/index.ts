@@ -53,7 +53,6 @@ namespace utils {
 }
 
 class RecentsManager {
-
   public recentsMenu: Menu;
   private recentsChanged = new Signal<this, types.Recent[]>(this);
   private serverRoot: string;
@@ -133,12 +132,7 @@ class RecentsManager {
     this.recents = directories.concat(files);
   }
 
-  removeRecents(paths: string[]) {
-    const recents = this.recents;
-    this.recents = recents.filter((r) => paths.indexOf(r.path) === -1);
-  }
-
-  clearRecents() {
+  public clearRecents() {
     this.recents = [];
   }
 
@@ -163,6 +157,11 @@ class RecentsManager {
     if (invalidPaths.length > 0) {
       this.removeRecents(invalidPaths);
     }
+  }
+
+  private removeRecents(paths: string[]) {
+    const recents = this.recents;
+    this.recents = recents.filter((r) => paths.indexOf(r.path) === -1);
   }
 
   private syncRecentsMenu() {
@@ -213,6 +212,7 @@ class RecentsManager {
       }
     }, 500);
   }
+
 }
 
 const recents: JupyterFrontEndPlugin<void> = {
@@ -315,6 +315,6 @@ const recents: JupyterFrontEndPlugin<void> = {
     }
     recentsManager.init();
   },
-};
+}
 
 export default recents;

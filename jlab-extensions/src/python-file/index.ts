@@ -12,7 +12,9 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 
 const FACTORY = 'Editor';
+
 const ICON_CLASS = 'jp-PythonIcon';
+
 const PALETTE_CATEGORY = 'Text Editor';
 
 namespace CommandIDs {
@@ -30,11 +32,8 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
     menu: IMainMenu | null,
     palette: ICommandPalette
   ) => {
-
     const { commands, contextMenu } = app;
-
     const command = CommandIDs.createNew;
-
     commands.addCommand(command, {
       label: args =>
         args['isPalette'] || args['isContextMenu']
@@ -56,8 +55,7 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
         });
       }
     });
-
-    // add to the file browser context menu
+    // Add to the file browser context menu.
     const selectorContent = '.jp-DirListing-content';
     contextMenu.addItem({
       command,
@@ -65,8 +63,7 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
       selector: selectorContent,
       rank: 3
     });
-
-    // add to the launcher
+    // Add to the launcher.
     if (launcher) {
       launcher.add({
         command,
@@ -74,8 +71,7 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
         rank: 1
       });
     }
-
-    // add to the palette
+    // Add to the palette.
     if (palette) {
       palette.addItem({
         command,
@@ -83,14 +79,11 @@ const pythonFile: JupyterFrontEndPlugin<void> = {
         category: PALETTE_CATEGORY
       });
     }
-
-    // add to the menu
+    // Add to the menu.
     if (menu) {
       menu.fileMenu.newMenu.addGroup([{ command }], 30);
     }
-
   }
-
-};
+}
 
 export default pythonFile;

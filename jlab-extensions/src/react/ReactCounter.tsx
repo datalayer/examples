@@ -32,7 +32,7 @@ const CounterComponent = (props: {animate: boolean}): JSX.Element => {
       }
     </div>
   );
-};
+}
 
 /**
  * A React Counter Widget that wraps a CounterComponent.
@@ -44,13 +44,13 @@ class ReactCounter extends ReactWidget {
    */
   constructor(animate: boolean) {
     super();
-    this.addClass('jp-Datalayer-React');
     this.animate = animate;
+    this.addClass('jp-Datalayer-React');
   }
   protected render(): JSX.Element {
     return <CounterComponent 
       animate={this.animate}
-      />;
+    />;
   }
 }
 

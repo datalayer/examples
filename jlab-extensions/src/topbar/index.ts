@@ -85,8 +85,8 @@ const topBar: JupyterFrontEndPlugin<ITopBar> = {
 
     return topBar;
 
-  },
+  }
 
-};
+}
 
 export default topBar;

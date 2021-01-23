@@ -4,7 +4,10 @@ import {
   ILayoutRestorer 
 } from '@jupyterlab/application';
 
-import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
+import { 
+  ICommandPalette,
+  WidgetTracker 
+} from '@jupyterlab/apputils';
 
 import { 
   IEditorServices,
@@ -21,7 +24,6 @@ import { Message } from '@lumino/messaging';
 import { PanelLayout, Widget } from '@lumino/widgets';
 
 class MetadataEditorWidget extends Widget {
-
   readonly containerDiv: HTMLDivElement
   readonly editorDiv: HTMLDivElement;
   readonly notebookTracker: INotebookTracker;
@@ -40,23 +42,23 @@ class MetadataEditorWidget extends Widget {
     this.containerDiv.appendChild(this.editorDiv);
     this.editor = new JSONEditor({
         editorFactory: editorFactoryService.newDocumentEditor,
-//        title: "Notebook Metadata"
     });
-    // FIXME: JSON serialization seems to use 4space indent, so this doesn't actually work
+    this.editor.title.label = "Notebook Metadata"
+    // FIXME: JSON serialization seems to use 4space indent, so this doesn't actually work.
     this.editor.editor.setOption('tabSize', 2);
     this.editor.editor.setOption('lineWrap', 'off');
     let layout = new PanelLayout()
     layout.insertWidget(0, this.editor);
     this.layout = layout;
-    this.notebookTracker.currentChanged.connect(() => {this.update()});
+    this.notebookTracker.currentChanged.connect(() => { this.update() });
   }
 
   onUpdateRequest(msg: Message) {
-    let curNotebookWidget = this.notebookTracker.currentWidget;
-    if (curNotebookWidget != null && curNotebookWidget.isAttached) {
-        let metadata = curNotebookWidget.content.model.metadata;
-        this.editor.source = metadata;
-//        this.editor.title = 'Notebook Metadata (' + curNotebookWidget.title.label + ')';
+    const notebook = this.notebookTracker.currentWidget;
+    if (notebook != null && notebook.isAttached) {
+        let metadata = notebook.content.model.metadata;
+        this.editor.source = metadata; 
+        this.editor.title.label =  'Notebook Metadata (' + notebook.title.label + ')'      
     }
     return true;
   }
@@ -101,6 +103,6 @@ const nbMetadata: JupyterFrontEndPlugin<void> = {
       name: () => 'nbmetadata-editor'
     });
   }
-};
+}
 
 export default nbMetadata;
