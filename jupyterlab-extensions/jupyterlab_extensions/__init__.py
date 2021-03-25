@@ -20,6 +20,6 @@ def _jupyter_labextension_paths():
 
 def _jupyter_server_extension_paths():
     return [{
-        "module": "jlab_extensions.app",
+        "module": "jupyterlab_extensions.app",
         "app": JlabExtensions
     }]

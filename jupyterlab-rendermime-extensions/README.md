@@ -44,7 +44,7 @@ cookiecutter \
   https://github.com/jupyterlab/mimerender-cookiecutter-ts \
   --config-file cookiecutter.yaml \
   --checkout jlab3 && \
-cd jlab_rendermime_extensions
+cd jupyterlab_rendermime_extensions
 ```
 
 ```bash
@@ -103,13 +103,13 @@ jupyter lab build
 ## Publish
 
 ```bash
-cd jlab_rendermime_extensions && \
+cd jupyterlab_rendermime_extensions && \
   yarn build:lib && \
   npm publish --access public
 ```
 
 ```bash
-cd jlab_rendermime_extensions && \
+cd jupyterlab_rendermime_extensions && \
   pip install -e . && \
   python setup.py sdist bdist_wheel && \
   twine upload dist/*

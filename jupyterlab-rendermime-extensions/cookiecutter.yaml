@@ -1,6 +1,6 @@
 default_context:
   author_name: "Datalayer"
-  python_name: "jlab_rendermime_extensions"
+  python_name: "jupyterlab_rendermime_extensions"
   labextension_name: "@datalayer-examples/jupyterlab-rendermime-extensions"
   viewer_name: "Rendermime Extensions"
   mimetype: "text/csv"

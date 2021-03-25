@@ -42,7 +42,7 @@ cookiecutter \
   https://github.com/jupyterlab/extension-cookiecutter-ts \
   --config-file cookiecutter.yaml \
   --checkout master && \
-cd jlab_extensions
+cd jupyterlab_extensions
 ```
 
 ```bash
@@ -68,7 +68,7 @@ conda activate jupyterlab-extensions && \
   jupyter lab \
     --watch \
     --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jlab_extensions': True}" \
+    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
     ./examples
 ```
 
@@ -81,7 +81,7 @@ conda activate jupyterlab-extensions && \
     --watch \
     --dev-mode \
     --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jlab_extensions': True}" \
+    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
     --extensions-in-dev-mode \
     ./examples
 ```
@@ -103,13 +103,13 @@ jupyter lab build
 ## Publish
 
 ```bash
-cd jlab_extensions && \
+cd jupyterlab_extensions && \
   yarn build:lib && \
   npm publish --access public
 ```
 
 ```bash
-cd jlab_extensions && \
+cd jupyterlab_extensions && \
   pip install -e . && \
   python setup.py sdist bdist_wheel && \
   twine upload dist/*

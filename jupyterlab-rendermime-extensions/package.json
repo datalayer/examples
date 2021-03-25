@@ -32,7 +32,7 @@
     "build:lib": "tsc",
     "clean": "jlpm run clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf jlab_rendermime_extensions/labextension",
+    "clean:labextension": "rimraf jupyterlab_rendermime_extensions/labextension",
     "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
@@ -66,6 +66,6 @@
   ],
   "jupyterlab": {
     "mimeExtension": true,
-    "outputDir": "jlab_rendermime_extensions/labextension"
+    "outputDir": "jupyterlab_rendermime_extensions/labextension"
   }
 }

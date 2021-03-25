@@ -33,7 +33,7 @@
     "build:lib": "tsc",
     "clean": "jlpm run clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf jlab_theme_extensions/labextension",
+    "clean:labextension": "rimraf jupyterlab_theme_extensions/labextension",
     "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
@@ -64,6 +64,6 @@
   "jupyterlab": { 
     "extension": true,
     "themePath": "style/index.css",
-    "outputDir": "jlab_theme_extensions/labextension"
+    "outputDir": "jupyterlab_theme_extensions/labextension"
   }
 }

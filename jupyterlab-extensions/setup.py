@@ -1,5 +1,5 @@
 """
-jlab_extensions setup
+jupyterlab_extensions setup
 """
 import os
 
@@ -12,7 +12,7 @@ import setuptools
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name="jlab_extensions"
+name="jupyterlab_extensions"
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))

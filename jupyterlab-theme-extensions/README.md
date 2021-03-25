@@ -42,12 +42,12 @@ cookiecutter \
   https://github.com/jupyterlab/extension-cookiecutter-ts \
   --config-file cookiecutter.yaml \
   --checkout master && \
-cd jlab_theme_extensions
+cd jupyterlab_theme_extensions
 ```
 
 ```bash
 # Build the extension and link for dev in shell 1.
-cd jlab_theme_extensions && \
+cd jupyterlab_theme_extensions && \
   jupyter labextension develop --overwrite
 ```
 
@@ -102,13 +102,13 @@ jupyter lab build
 ## Publish
 
 ```bash
-cd jlab_theme_extensions && \
+cd jupyterlab_theme_extensions && \
   yarn build:lib && \
   npm publish --access public
 ```
 
 ```bash
-cd jlab_theme_extensions && \
+cd jupyterlab_theme_extensions && \
   pip install -e . && \
   python setup.py sdist bdist_wheel && \
   twine upload dist/*

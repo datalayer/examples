@@ -1,5 +1,5 @@
 """
-jlab_rendermime_extensions setup
+jupyterlab_rendermime_extensions setup
 """
 import json
 import os
@@ -13,7 +13,7 @@ import setuptools
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name="jlab_rendermime_extensions"
+name="jupyterlab_rendermime_extensions"
 
 # Get our version
 with open(os.path.join(HERE, 'package.json')) as f:

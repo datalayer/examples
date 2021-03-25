@@ -1,12 +1,12 @@
 include LICENSE
 include README.md
 include pyproject.toml
-include jupyter-config/jlab_extensions.json
+include jupyter-config/jupyterlab_extensions.json
 
 include package.json
 include ts*.json
 
-graft jlab_extensions/static
+graft jupyterlab_extensions/static
 
 # Javascript files
 graft src

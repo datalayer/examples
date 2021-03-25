@@ -10,10 +10,10 @@ from .handlers import DefaultHandler, ExampleHandler
 class JlabExtensions(ExtensionApp):
 
     # The name of the extension.
-    name = "jlab_extensions"
+    name = "jupyterlab_extensions"
 
     # The url that your extension will serve its homepage.
-    extension_url = '/jlab_extensions/default'
+    extension_url = '/jupyterlab_extensions/default'
 
     # Should your extension expose other server extensions when launched directly?
     load_other_extensions = True
@@ -24,14 +24,14 @@ class JlabExtensions(ExtensionApp):
     def initialize_handlers(self):
 #        host_pattern = ".*$"
 #        base_url = self.settings["base_url"]
-#        route_pattern = url_path_join(base_url, "jlab_extensions", "get_example")
+#        route_pattern = url_path_join(base_url, "jupyterlab_extensions", "get_example")
 #        self.handlers.extend([
 #            (r'/{}/default'.format(self.name), DefaultHandler),
 #            (route_pattern, RouteHandler),
 #        ])
         self.handlers.extend([
-            (r'/jlab_extensions/default', DefaultHandler),
-            (r'/jlab_extensions/get_example', ExampleHandler),
+            (r'/jupyterlab_extensions/default', DefaultHandler),
+            (r'/jupyterlab_extensions/get_example', ExampleHandler),
         ])
 
 # Entry Point Definition

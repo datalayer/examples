@@ -26,5 +26,5 @@ class ExampleHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         self.finish(json.dumps({
-            "data": "This is /jlab_extensions/get_example endpoint!"
+            "data": "This is /jupyterlab_extensions/get_example endpoint!"
         }))
