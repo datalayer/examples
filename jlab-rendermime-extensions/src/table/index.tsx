@@ -101,7 +101,7 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
  * Extension definition.
  */
 const table: IRenderMime.IExtension = {
-  id: '@datalayer-examples/jlab-rendermime-extensions:plugin',
+  id: '@datalayer-examples/jupyterlab-rendermime-extensions:plugin',
   rendererFactory,
   rank: 0,
   dataType: 'string',

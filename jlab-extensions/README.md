@@ -6,16 +6,16 @@
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-extensions
+  conda remove -y --all -n jupyterlab-extensions
 # Create your conda environment.
 conda create -y \
-  -n jlab-extensions \
+  -n jupyterlab-extensions \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
   yarn=1.22.5 \
   cookiecutter
-conda activate jlab-extensions
+conda activate jupyterlab-extensions
 pip install jupyter_packaging
 ```
 
@@ -53,7 +53,7 @@ jupyter labextension develop --overwrite
 ```bash
 # List extensions.
 jupyter labextension list
-pip list | grep jlab-extensions
+pip list | grep jupyterlab-extensions
 ```
 
 ```bash
@@ -64,7 +64,7 @@ yarn watch
 ```bash
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jlab-extensions && \
+conda activate jupyterlab-extensions && \
   jupyter lab \
     --watch \
     --ServerApp.token= \
@@ -76,7 +76,7 @@ conda activate jlab-extensions && \
 # Only if you have build jupyterlab from source.
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jlab-extensions && \
+conda activate jupyterlab-extensions && \
   jupyter lab \
     --watch \
     --dev-mode \
@@ -119,13 +119,13 @@ cd jlab_extensions && \
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-extensions-user
+  conda remove -y --all -n jupyterlab-extensions-user
 # Create your conda environment.
 conda create -y \
-  -n jlab-extensions-user \
+  -n jupyterlab-extensions-user \
   python=3.8 \
   nodejs=14.5.0
-conda activate jlab-extensions-user
+conda activate jupyterlab-extensions-user
 pip install --pre jupyterlab==3.0.5
 ```
 
@@ -143,7 +143,7 @@ pip search "JupyterLab3"
 ```
 
 ```bash
-pip install @datalayer-examples/jlab-extensions
+pip install @datalayer-examples/jupyterlab-extensions
 jupyter labextension list
 jupyter lab --notebook-dir=~/notebooks
 ```

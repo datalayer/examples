@@ -1,16 +1,16 @@
 {
-  "name": "@datalayer-examples/jlab-theme-extensions",
+  "name": "@datalayer-examples/jupyterlab-theme-extensions",
   "version": "0.1.2",
   "description": "JupyterLab Theme Example",
   "keywords": [
     "jupyter",
     "jupyterlab",
     "jupyterlab-extension",
-    "jlab-theme-extensions"
+    "jupyterlab-theme-extensions"
   ],
-  "homepage": "https://github.com/datalayer-jupyter/jlab-theme-extensions",
+  "homepage": "https://github.com/datalayer-jupyter/jupyterlab-theme-extensions",
   "bugs": {
-    "url": "https://github.com/datalayer-jupyter/jlab-theme-extensions/issues"
+    "url": "https://github.com/datalayer-jupyter/jupyterlab-theme-extensions/issues"
   },
   "license": "BSD-3-Clause",
   "author": "Isabela Presedo-Floyd; Eric Charles; Jovyans at Quansight",
@@ -23,7 +23,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/datalayer-jupyter/jlab-theme-extensions.git"
+    "url": "https://github.com/datalayer-jupyter/jupyterlab-theme-extensions.git"
   },
   "scripts": {
     "build": "jlpm run build:lib && jlpm run build:labextension:dev",

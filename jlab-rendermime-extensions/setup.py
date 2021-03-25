@@ -33,7 +33,7 @@ package_data_spec = {
     ]
 }
 
-labext_name = "@datalayer-examples/jlab-rendermime-extensions"
+labext_name = "@datalayer-examples/jupyterlab-rendermime-extensions"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),

@@ -29,5 +29,5 @@ jobs:
         jlpm run eslint:check
         python -m pip install .
 
-        jupyter labextension list 2>&1 | grep -ie "@datalayer-examples/jlab-theme-extensions.*OK"
+        jupyter labextension list 2>&1 | grep -ie "@datalayer-examples/jupyterlab-theme-extensions.*OK"
         python -m jupyterlab.browser_check

@@ -2,22 +2,22 @@
 
 # JupyterLab Rendermime Examples
 
-![](https://raw.githubusercontent.com/datalayer/examples/main/jlab-rendermime-extensions/img/jlab-rendermime-extensions.png "")
+![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime-extensions/img/jupyterlab-rendermime-extensions.png "")
 
 ## Environment
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-rendermime-extensions
+  conda remove -y --all -n jupyterlab-rendermime-extensions
 # Create your conda environment.
 conda create -y \
-  -n jlab-rendermime-extensions \
+  -n jupyterlab-rendermime-extensions \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
   yarn=1.22.5 \
   cookiecutter
-conda activate jlab-rendermime-extensions
+conda activate jupyterlab-rendermime-extensions
 pip install jupyter_packaging
 ```
 
@@ -55,7 +55,7 @@ jupyter labextension develop --overwrite
 ```bash
 # List extensions.
 jupyter labextension list
-pip list | grep jlab-rendermime-extensions
+pip list | grep jupyterlab-rendermime-extensions
 ```
 
 ```bash
@@ -66,7 +66,7 @@ yarn watch
 ```bash
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jlab-rendermime-extensions && \
+conda activate jupyterlab-rendermime-extensions && \
   jupyter lab \
     --watch \
     --ServerApp.token= \
@@ -77,7 +77,7 @@ conda activate jlab-rendermime-extensions && \
 # Only if you have build jupyterlab from source.
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jlab-rendermime-extensions && \
+conda activate jupyterlab-rendermime-extensions && \
   jupyter lab \
     --watch \
     --dev-mode \
@@ -119,13 +119,13 @@ cd jlab_rendermime_extensions && \
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-rendermime-extensions-user
+  conda remove -y --all -n jupyterlab-rendermime-extensions-user
 # Create your conda environment.
 conda create -y \
-  -n jlab-rendermime-extensions-user \
+  -n jupyterlab-rendermime-extensions-user \
   python=3.8 \
   nodejs=14.5.0
-conda activate jlab-rendermime-extensions-user
+conda activate jupyterlab-rendermime-extensions-user
 pip install jupyterlab==3.0.5 ipywidgets==7.6.0
 ```
 
@@ -142,7 +142,7 @@ pip search "JupyterLab3"
 ```
 
 ```bash
-pip install @datalayer-examples/jlab-rendermime-extensions
+pip install @datalayer-examples/jupyterlab-rendermime-extensions
 jupyter labextension list
 jupyter lab --notebook-dir=~/notebooks
 ```
@@ -155,6 +155,6 @@ This repository contains code taken from following sources:
 - https://github.com/jupyterlab/benchmarks
 - https://github.com/jupyterlab/jupyterlab-mp4
 
-![](https://raw.githubusercontent.com/datalayer/examples/main/jlab-rendermime-extensions/img/jlab-rendermime-extensions-certificate.png "")
+![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime-extensions/img/jupyterlab-rendermime-extensions-certificate.png "")
 
-![](https://raw.githubusercontent.com/datalayer/examples/main/jlab-rendermime-extensions/img/jlab-rendermime-extensions-table.png "")
+![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime-extensions/img/jupyterlab-rendermime-extensions-table.png "")

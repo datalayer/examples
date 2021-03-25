@@ -7,7 +7,7 @@ import { NotebookActions } from '@jupyterlab/notebook';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
-const PLUGIN_ID = '@datalayer-examples/jlab-extensions';
+const PLUGIN_ID = '@datalayer-examples/jupyterlab-extensions';
 
 /**
  * Initialization data for the jupyterlab-cell-flash extension.

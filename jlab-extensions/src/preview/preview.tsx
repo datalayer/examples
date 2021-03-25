@@ -28,7 +28,7 @@ export interface IPreviewTracker extends IWidgetTracker<Preview> {}
  * The Preview tracker token.
  */
 export const IPreviewTracker = new Token<IPreviewTracker>(
-  "@datalayer-examples/jlab-extensions:IPreviewTracker"
+  "@datalayer-examples/jupyterlab-extensions:IPreviewTracker"
 );
 
 /**

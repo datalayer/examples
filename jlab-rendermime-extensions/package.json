@@ -1,5 +1,5 @@
 {
-  "name": "@datalayer-examples/jlab-rendermime-extensions",
+  "name": "@datalayer-examples/jupyterlab-rendermime-extensions",
   "version": "0.1.0",
   "description": "A JupyterLab extension with rendering examples.",
   "keywords": [

@@ -33,7 +33,7 @@ package_data_spec = {
     ]
 }
 
-labext_name = "@datalayer-examples/jlab-theme-extensions"
+labext_name = "@datalayer-examples/jupyterlab-theme-extensions"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
@@ -56,7 +56,7 @@ with open("README.md", "r") as fh:
 setup_args = dict(
     name=name,
     version=version,
-    url="https://github.com/datalayer-jupyter/jlab-theme-extensions",
+    url="https://github.com/datalayer-jupyter/jupyterlab-theme-extensions",
     author="Isabela Presedo-Floyd; Eric Charles; Jovyans at Quansight",
     description="JupyterLab Theme Christmas, Designed by Isabela Presedo-Floyd",
     long_description= long_description,

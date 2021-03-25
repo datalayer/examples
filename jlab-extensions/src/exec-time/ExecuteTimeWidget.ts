@@ -16,7 +16,7 @@ import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
 
 import { getTimeDiff, getTimeString } from './utils';
 
-const PLUGIN_ID = '@datalayer-examples/jlab-extensions';
+const PLUGIN_ID = '@datalayer-examples/jupyterlab-extensions';
 
 const EXECUTE_TIME_CLASS = 'execute-time';
 
@@ -59,7 +59,7 @@ export default class ExecuteTimeWidget extends Widget {
       },
       (err: Error) => {
         console.error(
-          `@datalayer-examples/jlab-extensions: Could not load settings, so did not active ${PLUGIN_ID}: ${err}`
+          `@datalayer-examples/jupyterlab-extensions: Could not load settings, so did not active ${PLUGIN_ID}: ${err}`
         );
       }
     );

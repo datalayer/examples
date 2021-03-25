@@ -6,16 +6,16 @@
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-theme-extensions
+  conda remove -y --all -n jupyterlab-theme-extensions
 # Create your conda environment.
 conda create -y \
-  -n jlab-theme-extensions \
+  -n jupyterlab-theme-extensions \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
   yarn=1.22.5 \
   cookiecutter
-conda activate jlab-theme-extensions
+conda activate jupyterlab-theme-extensions
 pip install jupyter_packaging
 ```
 
@@ -54,7 +54,7 @@ cd jlab_theme_extensions && \
 ```bash
 # List extensions.
 jupyter labextension list
-pip list | grep jlab-theme-extensions
+pip list | grep jupyterlab-theme-extensions
 ```
 
 ```bash
@@ -66,7 +66,7 @@ yarn watch
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
 #    --dev-mode \ # you can use dev-mode is you have installed from source
-conda activate jlab-theme-extensions && \
+conda activate jupyterlab-theme-extensions && \
   jupyter lab \
     --watch \
     --ServerApp.token=
@@ -118,13 +118,13 @@ cd jlab_theme_extensions && \
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jlab-theme-extensions-user
+  conda remove -y --all -n jupyterlab-theme-extensions-user
 # Create your conda environment.
 conda create -y \
-  -n jlab-theme-extensions-user \
+  -n jupyterlab-theme-extensions-user \
   python=3.8 \
   nodejs=14.5.0
-conda activate jlab-theme-extensions-user
+conda activate jupyterlab-theme-extensions-user
 pip install --pre jupyterlab==3.0.5
 ```
 
@@ -160,7 +160,7 @@ jupyter lab
 
 ## TODO
 
-Update the Launcher page with something like e.g. https://github.com/fcollonval/jlab-enhanced-launcher
+Update the Launcher page with something like e.g. https://github.com/fcollonval/jupyterlab-enhanced-launcher
 Strip down the variables.css to only the needed css?
 Bring more fancy ui like in https://github.com/timkpaine/jupyterlab_miami_nights: Search tool + neon billboard + Collapser + neon light + Scrollbar + FM-84's "Atlas" (compatible with webKit browsers) + A surprise in the presentation mode (Top menu --> View --> Presention mode)
 
