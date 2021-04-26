@@ -56,7 +56,7 @@ with open("README.md", "r") as fh:
 setup_args = dict(
     name=name,
     version=version,
-    url="https://github.com/datalayer/examples",
+    url="https://github.com/datalayer-examples/examples",
     author="Datalayer",
     description="A JupyterLab extension for rendering table files.",
     long_description= long_description,

@@ -23,7 +23,7 @@ pip install jupyter_packaging
 
 ```bash
 # Install jupyterlab.
-pip install jupyterlab==3.0.5
+pip install jupyterlab==3.1.0a5
 # ...or alternatively, clone and build jupyterlab from source.
 git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
   cd jupyterlab && \
@@ -33,7 +33,7 @@ git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
 ```
 
 ```bash
-pip install ipywidgets==7.6.0
+pip install ipywidgets==8.0.0a4
 ```
 
 ## Develop

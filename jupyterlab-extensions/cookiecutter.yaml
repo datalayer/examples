@@ -3,6 +3,6 @@ default_context:
   python_name: "jupyterlab_extensions"
   labextension_name: "@datalayer-examples/jupyterlab-extensions"
   project_short_description: "JupyterLab 3 Simple Extension"
-  repository: "https://github.com/datalayer/examples"
+  repository: "https://github.com/datalayer-examples/examples"
   has_server_extension: "false"
   has_binder: "n"

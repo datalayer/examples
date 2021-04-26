@@ -1,0 +1,8 @@
+default_context:
+  author_name: "Your Name"
+  python_name: "jupyterlab_logo"
+  labextension_name: "@datalayer-examples/jupyterlab-logo"
+  project_short_description: "JupyterLab Logo"
+  repository: "https://github.com/datalayer-examples/examples"
+  has_server_extension: "false"
+  has_binder: "n"

@@ -1,21 +1,21 @@
 [![Datalayer](https://raw.githubusercontent.com/datalayer/datalayer/main/res/logo/datalayer-25.svg?sanitize=true)](https://datalayer.io)
 
-# JupyterLab Simple Extension Replace
+# JupyterLab Simple Extension Example
 
 ## Environment
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jupyterlab-extensions
+  conda remove -y --all -n jupyterlab-extension-replace
 # Create your conda environment.
 conda create -y \
-  -n jupyterlab-extensions \
+  -n jupyterlab-extension-replace \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
   yarn=1.22.5 \
   cookiecutter
-conda activate jupyterlab-extensions
+conda activate jupyterlab-extension-replace
 pip install jupyter_packaging
 ```
 
@@ -34,15 +34,23 @@ git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
 pip install ipywidgets==8.0.0a4
 ```
 
+## Deactivate
+
+```bash
+# Reade https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#disabledextensions
+# https://github.com/jupyterlab/jupyterlab/blob/d6c3857ac6ff27811f49fd63fcd529b763024f1f/packages/application-extension/src/index.tsx#L956-L972
+jupyter labextension disable @jupyterlab/application-extension:logo
+cat $(dirname $(which jupyter))/../etc/jupyter/labconfig/page_config.json
+```
+
 ## Develop
 
 ```bash
 # Create an extension skeleton with a cookiecutter.
 cookiecutter \
   https://github.com/jupyterlab/extension-cookiecutter-ts \
-  --config-file cookiecutter.yaml \
-  --checkout master && \
-cd jupyterlab_extensions
+  --config-file cookiecutter.yaml
+cd jupyterlab_logo
 ```
 
 ```bash
@@ -53,7 +61,7 @@ jupyter labextension develop --overwrite
 ```bash
 # List extensions.
 jupyter labextension list
-pip list | grep jupyterlab-extensions
+pip list | grep jupyterlab-logo
 ```
 
 ```bash
@@ -64,26 +72,23 @@ yarn watch
 ```bash
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jupyterlab-extensions && \
+conda activate jupyterlab-extension-replace && \
   jupyter lab \
     --watch \
-    --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
-    ./examples
+    --ServerApp.token=
 ```
 
 ```bash
 # Only if you have build jupyterlab from source.
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jupyterlab-extensions && \
+conda activate jupyterlab-extension-replace && \
   jupyter lab \
     --watch \
     --dev-mode \
     --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
-    --extensions-in-dev-mode \
-    ./examples
+    --ServerApp.jpserver_extensions="{'jupyterlab-logo': True}" \
+    --extensions-in-dev-mode 
 ```
 
 ## Build
@@ -119,13 +124,13 @@ cd jupyterlab_extensions && \
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jupyterlab-extensions-user
+  conda remove -y --all -n jupyterlab-extension-replace-user
 # Create your conda environment.
 conda create -y \
-  -n jupyterlab-extensions-user \
+  -n jupyterlab-extension-replace-user \
   python=3.8 \
   nodejs=14.5.0
-conda activate jupyterlab-extensions-user
+conda activate jupyterlab-extension-replace-user
 pip install --pre jupyterlab==3.0.5
 ```
 
@@ -143,7 +148,7 @@ pip search "JupyterLab3"
 ```
 
 ```bash
-pip install @datalayer-examples/jupyterlab-extensions
+pip install @datalayer-examples/jupyterlab-extension-replace
 jupyter labextension list
 jupyter lab --notebook-dir=~/notebooks
 ```
