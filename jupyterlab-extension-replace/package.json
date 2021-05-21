@@ -67,6 +67,9 @@
   "styleModule": "style/index.js",
   "jupyterlab": {
     "extension": true,
-    "outputDir": "jupyterlab_logo/labextension"
+    "outputDir": "jupyterlab_logo/labextension",
+    "disabledExtensions": [
+      "@jupyterlab/application-extension:logo"
+    ]
   }
 }

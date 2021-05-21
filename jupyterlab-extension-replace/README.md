@@ -43,12 +43,18 @@ jupyter labextension disable @jupyterlab/application-extension:logo
 cat $(dirname $(which jupyter))/../etc/jupyter/labconfig/page_config.json
 ```
 
-To deactivate a complete extension, you can set in packages.json
+You can also deactivate a complete extension or a specific plugin with a definition in `package.json`.
 
 ```json
+...
+  "jupyterlab": {
+    ...
     "disabledExtensions": [
-      "@jupyterlab/application-extension"
+      "@jupyterlab/application-extension:logo"
     ],
+    ...
+  }
+...
 ```
 
 ## Develop
