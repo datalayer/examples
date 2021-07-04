@@ -11,7 +11,7 @@ import { Widget } from '@lumino/widgets';
 /**
  * Initialization data for the @datalayer-examples/jupyterlab-logo extension.
  */
-const extension: JupyterFrontEndPlugin<void> = {
+const logo: JupyterFrontEndPlugin<void> = {
   id: '@datalayer-examples/jupyterlab-logo:plugin',
   autoStart: true,
   requires: [ILabShell],
@@ -31,4 +31,4 @@ const extension: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default extension;
+export default logo;

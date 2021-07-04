@@ -1,6 +1,6 @@
 [![Datalayer](https://raw.githubusercontent.com/datalayer/datalayer/main/res/logo/datalayer-25.svg?sanitize=true)](https://datalayer.io)
 
-# JupyterLab Simple Extension Replace
+# JupyterLab Extension EXamples
 
 ## Environment
 
@@ -13,16 +13,18 @@ conda create -y \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
-  yarn=1.22.5 \
-  cookiecutter
+  yarn=1.22.5
 conda activate jupyterlab-extensions
+```
+
+```bash
 pip install jupyter_packaging
 ```
 
 ```bash
-# Install jupyterlab.
-pip install jupyterlab==3.1.0a5
-# ...or alternatively, clone and build jupyterlab from source.
+# Install jupyterLab.
+pip install jupyterlab==3.1.0b0
+# ...or alternatively, clone and build jupyterLab from source.
 git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
   cd jupyterlab && \
   pip install -e . && \
@@ -31,19 +33,10 @@ git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
 ```
 
 ```bash
-pip install ipywidgets==8.0.0a4
+pip install ipywidgets==8.0.0a5
 ```
 
 ## Develop
-
-```bash
-# Create an extension skeleton with a cookiecutter.
-cookiecutter \
-  https://github.com/jupyterlab/extension-cookiecutter-ts \
-  --config-file cookiecutter.yaml \
-  --checkout master && \
-cd jupyterlab_extensions
-```
 
 ```bash
 # Build the extension and link for dev in shell 1.
@@ -73,7 +66,7 @@ conda activate jupyterlab-extensions && \
 ```
 
 ```bash
-# Only if you have build jupyterlab from source.
+# If you have build jupyterlab from source.
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
 conda activate jupyterlab-extensions && \
@@ -100,6 +93,29 @@ jupyter labextension build .
 jupyter lab build
 ```
 
+## Disable
+
+```bash
+# Reade https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#disabledextensions
+# https://github.com/jupyterlab/jupyterlab/blob/d6c3857ac6ff27811f49fd63fcd529b763024f1f/packages/application-extension/src/index.tsx#L956-L972
+jupyter labextension disable @jupyterlab/application-extension:logo
+cat $(dirname $(which jupyter))/../etc/jupyter/labconfig/page_config.json
+```
+
+You can also deactivate a complete extension or a specific plugin with a definition in `package.json`.
+
+```json
+...
+  "jupyterlab": {
+    ...
+    "disabledExtensions": [
+      "@jupyterlab/application-extension:logo"
+    ],
+    ...
+  }
+...
+```
+
 ## Publish
 
 ```bash
@@ -115,7 +131,7 @@ cd jupyterlab_extensions && \
   twine upload dist/*
 ```
 
-## Use
+## Use a Published Release
 
 ```bash
 conda deactivate && \
@@ -148,9 +164,42 @@ jupyter labextension list
 jupyter lab --notebook-dir=~/notebooks
 ```
 
+# Launch JupyterLab with a defined Theme
+
+```bash
+# See https://jupyterlab.readthedocs.io/en/stable/user/directories.html#overridesjson
+cat << EOF >>~/.jupyter/lab/user-settings/overrides.json
+{
+  "@jupyterlab/apputils-extension:themes": {
+    "theme": "JupyterLab Christmas"
+  }
+}
+EOF
+```
+
+```bash
+# Optionally.
+mkdir -p ~/.jupyter/lab/user-settings/\@jupyterlab/apputils-extension && \
+  CONF="{ \"theme\": \"JupyterLab Christmas\" }" && \
+  cat > ~/.jupyter/lab/user-settings/\@jupyterlab/apputils-extension/themes.jupyterlab-settings  <<EOF
+${CONF}
+EOF
+```
+
+```bash
+# JupyterLab will start with the defined theme.
+jupyter lab
+```
+
+## TODO
+
+- [ ] Update the Launcher page with something like e.g. https://github.com/fcollonval/jupyterlab-enhanced-launcher
+- [ ] Strip down the variables.css to only the needed css?
+- [ ] Bring more fancy ui like in https://github.com/timkpaine/jupyterlab_miami_nights: Search tool + neon billboard + Collapser + neon light + Scrollbar + FM-84's "Atlas" (compatible with webKit browsers) + A surprise in the presentation mode (Top menu --> View --> Presention mode)
+
 ## Credits
 
-This folder contains code taken from following sources:
+This folder contains souce code taken from following repositories under MIT-compatible license:
 
 - https://github.com/deshaw/jupyterlab-execute-time
 - https://github.com/ibqn/jupyterlab-codecellbtn
@@ -162,3 +211,19 @@ This folder contains code taken from following sources:
 - https://github.com/nersc/jupyterlab-recents
 - https://github.com/voila-dashboards/voila
 - https://github.com/yuvipanda/jupyterlab-nbmetadata
+
+- https://github.com/jupyterlab/scipy2019-jupyterlab-tutorial
+- https://github.com/jupyterlab/benchmarks
+- https://github.com/jupyterlab/jupyterlab-mp4
+
+![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlab-extensions/img/jupyterlab-rendermime-extensions-certificate.png "")
+
+![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlab-extensions/img/jupyterlab-rendermime-extensions-table.png "")
+
+- https://github.com/jupyterlab/scipy2019-jupyterlab-tutorial
+
+![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime/img/jupyterlab-rendermime-certificate.png "")
+
+- https://github.com/jupyterlab/benchmarks
+
+![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime/img/jupyterlab-rendermime-table.png "")

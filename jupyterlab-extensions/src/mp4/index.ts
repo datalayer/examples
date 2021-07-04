@@ -1,5 +1,4 @@
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
-
 import { Widget } from '@lumino/widgets';
 
 /**

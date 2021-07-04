@@ -34,7 +34,7 @@ class RunAllCellsButtonExtension
     };
     // Create the toolbar button.
     const button = new ToolbarButton({
-      className: 'runAllCellsButton',      
+      className: 'runAllCellsButton',
       iconClass: 'fa fa-fast-forward',
       onClick: runAllCells,
       tooltip: 'Run All Cells'
