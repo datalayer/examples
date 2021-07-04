@@ -1,3 +1,4 @@
+import architecture from './architecture';
 import autoCreate from './auto-create';
 import cellFlash from './cell-flash';
 import christmasTheme from './christmas-theme';
@@ -20,6 +21,7 @@ import topBar from './topbar';
 import '../style/index.css';
 
 export default [
+    architecture,
     autoCreate,
     cellFlash,
     christmasTheme,

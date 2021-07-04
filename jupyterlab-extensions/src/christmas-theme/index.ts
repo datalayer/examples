@@ -13,7 +13,6 @@ const christmasTheme: JupyterFrontEndPlugin<void> = {
   requires: [IThemeManager],
   autoStart: true,
   activate: (app: JupyterFrontEnd, themeManager: IThemeManager) => {
-    console.log('JupyterLab extension jupyterlabextensions is activated!');
     const style = 'jupyterlabextensions/index.css';
     themeManager.register({
       name: 'JupyterLab Christmas',

@@ -29,7 +29,7 @@ interface IResourceSettings extends JSONObject {
  * Initialization data for the jupyterlab-system-monitor extension.
  */
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlabextensions-kernel-memory:plugin',
+  id: 'jupyterlabextensions:kernel-memory',
   autoStart: true,
   requires: [ITopBar],
   optional: [ISettingRegistry],

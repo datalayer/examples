@@ -1,24 +1,10 @@
 import React from 'react';
-
 import { ReactWidget } from '@jupyterlab/apputils';
-
-import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
-} from '@jupyterlab/application';
-
-import {
-  INotebookTracker,
-  NotebookPanel,
-  NotebookActions
-} from '@jupyterlab/notebook';
-
+import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { INotebookTracker, NotebookPanel, NotebookActions } from '@jupyterlab/notebook';
 import { ICellFooter, Cell } from '@jupyterlab/cells';
-
 import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
-
 import { CommandRegistry } from '@lumino/commands';
-
 import { IEditorServices } from '@jupyterlab/codeeditor';
 
 /**
