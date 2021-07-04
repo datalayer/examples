@@ -6,15 +6,15 @@ import {
 import { IThemeManager } from '@jupyterlab/apputils';
 
 /**
- * Initialization data for the @datalayer-examples/jupyterlab-extensions extension.
+ * Initialization data for the jupyterlabextensions extension.
  */
 const christmasTheme: JupyterFrontEndPlugin<void> = {
-  id: '@datalayer-examples/jupyterlab-extensions',
+  id: 'jupyterlabextensions',
   requires: [IThemeManager],
   autoStart: true,
   activate: (app: JupyterFrontEnd, themeManager: IThemeManager) => {
-    console.log('JupyterLab extension @datalayer-examples/jupyterlab-extensions is activated!');
-    const style = '@datalayer-examples/jupyterlab-extensions/index.css';
+    console.log('JupyterLab extension jupyterlabextensions is activated!');
+    const style = 'jupyterlabextensions/index.css';
     themeManager.register({
       name: 'JupyterLab Christmas',
       isLight: true,

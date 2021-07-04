@@ -6,15 +6,15 @@
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jupyterlab-extensions
+  conda remove -y --all -n jupyterlabextensions
 # Create your conda environment.
 conda create -y \
-  -n jupyterlab-extensions \
+  -n jupyterlabextensions \
   python=3.8 \
   twine \
   nodejs=14.5.0 \
   yarn=1.22.5
-conda activate jupyterlab-extensions
+conda activate jupyterlabextensions
 ```
 
 ```bash
@@ -22,9 +22,9 @@ pip install jupyter_packaging
 ```
 
 ```bash
-# Install jupyterLab.
+# Install jupyterlab.
 pip install jupyterlab==3.1.0b0
-# ...or alternatively, clone and build jupyterLab from source.
+# ...or alternatively, clone and build jupyterlab from source.
 git clone https://github.com/jupyterlab/jupyterlab --depth 1 -b master && \
   cd jupyterlab && \
   pip install -e . && \
@@ -46,7 +46,7 @@ jupyter labextension develop --overwrite
 ```bash
 # List extensions.
 jupyter labextension list
-pip list | grep jupyterlab-extensions
+pip list | grep jupyterlabextensions
 ```
 
 ```bash
@@ -57,11 +57,11 @@ yarn watch
 ```bash
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jupyterlab-extensions && \
+conda activate jupyterlabextensions && \
   jupyter lab \
     --watch \
     --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
+    --ServerApp.jpserver_extensions="{'jupyterlabextensions': True}" \
     ./examples
 ```
 
@@ -69,12 +69,12 @@ conda activate jupyterlab-extensions && \
 # If you have build jupyterlab from source.
 # Run and watch jupyterlab in shell 2.
 # Look at the remote entry javascript, a webpack5 feature.
-conda activate jupyterlab-extensions && \
+conda activate jupyterlabextensions && \
   jupyter lab \
     --watch \
     --dev-mode \
     --ServerApp.token= \
-    --ServerApp.jpserver_extensions="{'jupyterlab_extensions': True}" \
+    --ServerApp.jpserver_extensions="{'jupyterlabextensions': True}" \
     --extensions-in-dev-mode \
     ./examples
 ```
@@ -119,13 +119,13 @@ You can also deactivate a complete extension or a specific plugin with a definit
 ## Publish
 
 ```bash
-cd jupyterlab_extensions && \
+cd jupyterlabextensions && \
   yarn build:lib && \
   npm publish --access public
 ```
 
 ```bash
-cd jupyterlab_extensions && \
+cd jupyterlabextensions && \
   pip install -e . && \
   python setup.py sdist bdist_wheel && \
   twine upload dist/*
@@ -135,13 +135,13 @@ cd jupyterlab_extensions && \
 
 ```bash
 conda deactivate && \
-  conda remove -y --all -n jupyterlab-extensions-user
+  conda remove -y --all -n jupyterlabextensions-user
 # Create your conda environment.
 conda create -y \
-  -n jupyterlab-extensions-user \
+  -n jupyterlabextensions-user \
   python=3.8 \
   nodejs=14.5.0
-conda activate jupyterlab-extensions-user
+conda activate jupyterlabextensions-user
 pip install --pre jupyterlab==3.0.5
 ```
 
@@ -159,12 +159,12 @@ pip search "JupyterLab3"
 ```
 
 ```bash
-pip install @datalayer-examples/jupyterlab-extensions
+pip install jupyterlabextensions
 jupyter labextension list
 jupyter lab --notebook-dir=~/notebooks
 ```
 
-# Launch JupyterLab with a defined Theme
+# Launch JupyterLab with a Theme
 
 ```bash
 # See https://jupyterlab.readthedocs.io/en/stable/user/directories.html#overridesjson
@@ -216,9 +216,9 @@ This folder contains souce code taken from following repositories under MIT-comp
 - https://github.com/jupyterlab/benchmarks
 - https://github.com/jupyterlab/jupyterlab-mp4
 
-![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlab-extensions/img/jupyterlab-rendermime-extensions-certificate.png "")
+![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlabextensions/img/jupyterlab-rendermime-extensions-certificate.png "")
 
-![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlab-extensions/img/jupyterlab-rendermime-extensions-table.png "")
+![](https://raw.githubusercontent.com/datalayer-examples/jupyter-examples/main/jupyterlabextensions/img/jupyterlab-rendermime-extensions-table.png "")
 
 - https://github.com/jupyterlab/scipy2019-jupyterlab-tutorial
 
@@ -227,3 +227,6 @@ This folder contains souce code taken from following repositories under MIT-comp
 - https://github.com/jupyterlab/benchmarks
 
 ![](https://raw.githubusercontent.com/datalayer/examples/main/jupyterlab-rendermime/img/jupyterlab-rendermime-table.png "")
+
+- https://github.com/jtpio/jupyter-resource-usage
+- https://github.com/jtpio/jupyterlab-system-monitor

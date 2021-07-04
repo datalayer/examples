@@ -311,7 +311,7 @@ const recents: JupyterFrontEndPlugin<void> = {
         }
       }
     } catch (e) {
-      console.debug(e);
+      console.debug('Error while activing recent plugin', e);
     }
     recentsManager.init();
   },

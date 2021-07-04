@@ -24,10 +24,10 @@ namespace CommandIDs {
 }
 
 /**
- * Initialization data for the @datalayer-examples/jupyterlab-extensions:react extension.
+ * Initialization data for the jupyterlabextensions:react extension.
  */
 const react: JupyterFrontEndPlugin<void> = {
-  id: '@datalayer-examples/jupyterlab-extensions:react',
+  id: 'jupyterlabextensions:react',
   autoStart: true,
   requires: [ICommandPalette, IMainMenu],
   activate: (
@@ -37,8 +37,8 @@ const react: JupyterFrontEndPlugin<void> = {
     ) => {
 
       console.log(
-        '%cJupyterLab extension @datalayer-examples/jupyterlab-extensions:react is activated, Yeah!!!',
-        'font-size: 30px'
+        '%cjupyterlabextensions:react is activated, Yeah!!!',
+        'font-size: 16px'
       );
 
       const { commands, shell } = app;

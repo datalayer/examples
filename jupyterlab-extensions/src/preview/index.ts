@@ -81,7 +81,7 @@ class PreviewRenderButton
  * Initialization data for the jupyterlab-preview extension.
  */
 const preview: JupyterFrontEndPlugin<IPreviewTracker> = {
-  id: "@datalayer-examples/jupyterlab-extensions:plugin",
+  id: "jupyterlabextensions:plugin",
   autoStart: true,
   requires: [INotebookTracker],
   optional: [ICommandPalette, ILayoutRestorer, IMainMenu, ISettingRegistry],

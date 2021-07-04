@@ -8,6 +8,8 @@ import logo from './logo';
 import nbMetadata from './nb-metadata';
 import preview from './preview';
 import pythonFile from './python-file';
+import kernelMemory from './kernel-memory/plugin';
+import ipyresusePlugin from './kernel-memory/pluginIpywidget';
 import react from './react';
 import recents from './recents';
 import runAll from './run-all';
@@ -27,6 +29,8 @@ export default [
     logo,
     nbMetadata,
     pythonFile,
+    kernelMemory,
+    ipyresusePlugin,
     preview,
     react,
     recents,

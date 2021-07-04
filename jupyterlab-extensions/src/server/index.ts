@@ -5,7 +5,7 @@ import {
 import { requestAPI } from './../handler'
 
 const server: JupyterFrontEndPlugin<void> = {
-  id: '@datalayer-examples/server-extension',
+  id: 'jupyterlabextensions/server-extension',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
     requestAPI<any>('get_example')
@@ -14,7 +14,7 @@ const server: JupyterFrontEndPlugin<void> = {
       })
       .catch(reason => {
         console.error(
-          `The @datalayer-examples/server-extension server extension appears to be missing.\n${reason}`
+          `The jupyterlabextensions server extension appears to be missing.\n${reason}`
         );
       });
   }

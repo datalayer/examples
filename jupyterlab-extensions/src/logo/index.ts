@@ -8,15 +8,12 @@ import { circleIcon } from '@jupyterlab/ui-components';
 
 import { Widget } from '@lumino/widgets';
 
-/**
- * Initialization data for the @datalayer-examples/jupyterlab-logo extension.
- */
 const logo: JupyterFrontEndPlugin<void> = {
-  id: '@datalayer-examples/jupyterlab-logo:plugin',
+  id: 'jupyterlabextensions:logo',
   autoStart: true,
   requires: [ILabShell],
   activate: (app: JupyterFrontEnd, shell: ILabShell) => {
-    console.log('JupyterLab extension @datalayer-examples/jupyterlab-logo is activated!');
+    console.log('JupyterLab extension jupyterlabextensions:logo is activated!');
     const logo = new Widget();
     circleIcon.element({
       container: logo.node,
@@ -27,7 +24,7 @@ const logo: JupyterFrontEndPlugin<void> = {
     });
     logo.id = 'jp-MainLogo';
     shell.add(logo, 'top', { rank: 0 });
-    console.log('New JupyterLab logo added to top panel');
+    console.log('The new logo is added');
   }
 };
 

@@ -1,5 +1,5 @@
 """
-jupyterlab_extensions setup
+jupyterlabextensions setup
 """
 import os
 
@@ -12,7 +12,7 @@ import setuptools
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name="jupyterlab_extensions"
+name="jupyterlabextensions"
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
@@ -31,7 +31,7 @@ package_data_spec = {
     ]
 }
 
-labext_name = "@datalayer-examples/jupyterlab-extensions"
+labext_name = "jupyterlabextensions"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "*.*"),
@@ -62,6 +62,8 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         "jupyterlab>=3.0.0rc2,==3.*",
+        'ipywidgets>=8.0.0a5',
+        'psutil'
     ],
     zip_safe=False,
     include_package_data=True,
