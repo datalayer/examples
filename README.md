@@ -6,5 +6,3 @@
 
 - [Jupyter Server Extensions](https://github.com/datalayer-examples/jupyter-examples/tree/main/jupyter-server-extensions)
 - [JupyterLab Extensions](https://github.com/datalayer-examples/jupyter-examples/tree/main/jupyterlab-extensions)
-- [JupyterLab Rendermime Extensions](https://github.com/datalayer-examples/jupyter-examples/tree/main/jupyterlab-rendermime-extensions)
-- [JupyterLab Theme Extensions](https://github.com/datalayer-examples/jupyter-examples/tree/main/jupyterlab-theme-extensions)
