@@ -1,6 +1,6 @@
 [![Datalayer](https://raw.githubusercontent.com/datalayer/datalayer/main/res/logo/datalayer-25.svg?sanitize=true)](https://datalayer.io)
 
-# JupyterLab Extension EXamples
+# JupyterLab Extension Examples
 
 ## Environment
 
@@ -40,6 +40,7 @@ pip install ipywidgets==8.0.0a5
 
 ```bash
 # Build the extension and link for dev in shell 1.
+pip install -e .
 jupyter labextension develop --overwrite
 ```
 
@@ -51,6 +52,7 @@ pip list | grep jupyterlabextensions
 
 ```bash
 # Run and watch the extension in shell 1.
+# jupyter labextension watch
 yarn watch
 ```
 
@@ -96,7 +98,7 @@ jupyter lab build
 ## Disable
 
 ```bash
-# Reade https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#disabledextensions
+# Read https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#disabledextensions
 # https://github.com/jupyterlab/jupyterlab/blob/d6c3857ac6ff27811f49fd63fcd529b763024f1f/packages/application-extension/src/index.tsx#L956-L972
 jupyter labextension disable @jupyterlab/application-extension:logo
 cat $(dirname $(which jupyter))/../etc/jupyter/labconfig/page_config.json
