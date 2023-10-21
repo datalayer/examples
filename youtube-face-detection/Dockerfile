@@ -6,11 +6,11 @@ RUN apt-get update \
     wget \
     git
 
-ARG FN_CONFIG="haarcascade_frontalface_default.xml"
-ENV FACE_CASCADE_FN=${FN_CONFIG}
 ENV RAY_DEDUP_LOGS=0
 
-RUN wget "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/${FACE_CASCADE_FN}" -P /root
+ARG FACE_CASCADE_FN="haarcascade_frontalface_default.xml"
+RUN wget "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/${FACE_CASCADE_FN}" -P /tmp
+ENV MODEL_PATH="/tmp/${FACE_CASCADE_FN}"
 
 RUN pip install "pytube @ git+https://github.com/modal-labs/pytube" \
     opencv-python~=4.7.0.72 \
