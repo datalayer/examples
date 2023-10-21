@@ -8,6 +8,7 @@ RUN apt-get update \
 
 ARG FN_CONFIG="haarcascade_frontalface_default.xml"
 ENV FACE_CASCADE_FN=${FN_CONFIG}
+ENV RAY_DEDUP_LOGS=0
 
 RUN wget "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/${FACE_CASCADE_FN}" -P /root
 
