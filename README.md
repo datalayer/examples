@@ -6,6 +6,16 @@
 
 This repository contains examples for Datalayer.
 
-You will need to install Datalayer with `pip install datalayer`.
+You will need to install Datalayer with `pip install datalayer[run]`.
 
-## 
+## Examples
+
+1. [YouTube Face Detection](#youtube-face-detection)
+
+### [YouTube Face Detection](youtube-face-detection)
+
+Detect faces from this famous video.
+
+<div align="center" style="text-align: center">
+  <img alt="YouTube Face Detection" src="https://datalayer-examples.s3.amazonaws.com/images/youtube-face-detection.png" />
+</div>
