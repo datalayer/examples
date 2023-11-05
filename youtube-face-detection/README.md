@@ -1,11 +1,28 @@
-# Youtube Face Detection
+# YouTube Face Detection
 
-## Conda
-To successfully run this code using conda, first create a custom conda env using the `environment.yml`:
+This repository presents an example of YouTube face detection, inspired by the original source code available at [Modal Labs GitHub](https://github.com/modal-labs/modal-examples/blob/main/03_scaling_out/youtube_face_detection.py). It's a Python project that utilizes OpenCV for detecting faces in YouTube videos.
+
+## Setup
+
+### Local environment setup using Conda
+
+Before running this code, it's essential to set up the required environment. We recommend using Conda for this purpose. Follow these steps:
+
+1. Clone this repository or download the code to your local machine.
+
+2. Navigate to the project directory using your terminal.
+
+3. Create a custom Conda environment by using the provided `environment.yml` file and activate it:
 
 ```bash
 conda env create --file environment.yml
-conda activte datalayer-example-youtube-face-detection
+conda activate datalayer-example-youtube-face-detection
 ```
 
-Secondly, you have to get the model from: https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml
+### Model download
+
+To perform face detection, you need to obtain the Haar Cascade classifier model for frontal face detection. You can download the model from the official OpenCV repository by clicking [here](https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml).
+
+After downloading the model, place it in the project directory.
+
+Now, your environment is set up, and you have the necessary model for face detection. You are ready to run the YouTube face detection code provided in this repository. Enjoy face detection on YouTube videos!
