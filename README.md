@@ -4,18 +4,83 @@
 
 # Ξ Datalayer Examples
 
-This repository contains examples for Datalayer.
+This repository contains Jupyter notebook examples to showcase [Datalayer Run](https://datalayer.run).
 
-You will need to install Datalayer with `pip install datalayer[run]`.
+Datalayer Run allows you to scale from your local JupyterLab on your machine to the cloud, including Kernels with GPU.
+
+First, clone this repository.
+
+```bash
+git clone https://github.com/datalayer/examples.git datalayer-examples
+cd datalayer-examples
+```
+
+To try the examples, we recommend creating a very simple conda environment (with Python and JupyterLab) thanks to the following commands.
+
+```bash
+ENV_NAME=datalayer-examples
+# conda deactivate && conda remove -y --all -n $ENV_NAME # Delete if it already exists.
+conda env create --solver=libmamba -n $ENV_NAME -f ./environment.yaml
+conda activate $ENV_NAME
+jupyter lab
+```
+
+Alternatively, you can just install datalayer-run in your existing environment with `pip install datalayer-run` (this will install JupyterLab version 4.0.3).
+
+Read the [documentation website](https://docs.datalayer.run/docs) to know more how to scale your local notebooks to the cloud.
+
+> Don't worry, it is easy 👍.
+
+You need to create an account, click on the `Datalayer Run` tile in the JupyterLab launcher, wait for your kernels to be ready, and then just assign a Remote Kernel from your Notebook kernel picker.
+
+<div align="center" style="text-align: center">
+  <img alt="Datalayer Run Examples" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/kernel-selector-choice.png" />
+</div>
+
+The next examples will allow you to run code remotely from your local JupyterLab as shown in the following picture.
+
+<div align="center" style="text-align: center">
+  <img alt="Datalayer Run Examples" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/datalayer-run-examples.png" />
+</div>
 
 ## Examples
 
+1. [Simple Python](#simple-python)
+1. [Titanic](#titanic)
+1. [CUDA Vector Add](#cuda-vector-add)
+1. [cuDF](#cudf)
+1. [PyTorch](#pytorch)
 1. [YouTube Face Detection](#youtube-face-detection)
+1. [LLMA](#llma)
 
-### [YouTube Face Detection](youtube-face-detection)
+### [Simple Python](https://github.com/datalayer/examples/tree/main/python-simple)
+
+Simple Python example.
+
+### [Titanic](https://github.com/datalayer/examples/tree/main/titanic)
+
+Titanic example.
+
+### [CUDA Vector Add](https://github.com/datalayer/examples/tree/main/vectoradd-gpu)
+
+CUDA vector addition example.
+
+### [cuDF](https://github.com/datalayer/examples/tree/main/cudf-gpu)
+
+cuDF example.
+
+### [PyTorch](https://github.com/datalayer/examples/tree/main/pytorch-gpu)
+
+PyTorch example.
+
+### [YouTube Face Detection](https://github.com/datalayer/examples/tree/main/youtube-face-detection)
 
 Detect faces from this famous video.
 
 <div align="center" style="text-align: center">
-  <img alt="YouTube Face Detection" src="https://datalayer-examples.s3.amazonaws.com/images/youtube-face-detection.png" />
+  <img alt="YouTube Face Detection" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/youtube-face-detection.png" />
 </div>
+
+### [LLMA](https://github.com/datalayer/examples/tree/main/llama-gpu)
+
+LLMA example.
