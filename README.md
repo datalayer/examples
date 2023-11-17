@@ -4,9 +4,7 @@
 
 # Ξ Datalayer Examples
 
-This repository contains Jupyter notebook examples to showcase [Datalayer Run](https://datalayer.run).
-
-Datalayer Run allows you to scale from your local JupyterLab on your machine to the cloud, including Kernels with GPU.
+This repository contains Jupyter notebook examples to showcase [Datalayer Run](https://datalayer.run). Datalayer Run allows you to scale Jupyter Kernels from your local JupyterLab on your machine to the cloud, including running your Kernels on GPU.
 
 First, clone this repository.
 
@@ -25,19 +23,17 @@ conda activate $ENV_NAME
 jupyter lab
 ```
 
-Alternatively, you can just install datalayer-run in your existing environment with `pip install datalayer-run` (this will install JupyterLab version 4.0.3).
+Alternatively, you can just install the `datalayer-run` package in your existing environment with `pip install datalayer-run` (this will install JupyterLab version 4.0.3).
 
 Read the [documentation website](https://docs.datalayer.run/docs) to know more how to scale your local notebooks to the cloud.
 
-> Don't worry, it is easy 👍.
-
-You need to create an account, click on the `Datalayer Run` tile in the JupyterLab launcher, wait for your kernels to be ready, and then just assign a Remote Kernel from your Notebook kernel picker.
+Don't worry, it is easy 👍. You just need to create an account, click on the `Datalayer Run` tile in the JupyterLab launcher, wait a bit for your Kernels to be ready, and then just assign a Remote Kernel from any Notebook kernel picker.
 
 <div align="center" style="text-align: center">
   <img alt="Datalayer Run Examples" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/kernel-selector-choice.png" />
 </div>
 
-The next examples will allow you to run code remotely from your local JupyterLab as shown in the following picture.
+The examples of this repository showcase the execution of code remotely from your local JupyterLab in various case as shown on the following picture.
 
 <div align="center" style="text-align: center">
   <img alt="Datalayer Run Examples" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/datalayer-run-examples.png" />
