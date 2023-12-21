@@ -14,19 +14,19 @@ clean: ## clean.
 
 build: ## build the image.
 	docker build \
-		-t ${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.6 \
+		-t ${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.7 \
 		.
 
 push: ## push the image.
 	docker push \
-	    ${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.6
+	    ${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.7
 
 start: ## start the container.
 	docker run -it \
 		--name datalayer-jupyter-kernel-youtube \
 		--rm \
 		-p 2522:2522 \
-		${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.6
+		${DATALAYER_DOCKER_REPO}/jupyter-kernel-youtube:0.0.7
 
 logs: ## show container logs.
 	docker logs datalayer-jupyter-kernel-youtube -f

@@ -1,4 +1,4 @@
-FROM datalayer/jupyter-kernel-python:0.0.6
+FROM datalayer/jupyter-kernel-python:0.0.7
 
 USER root
 
