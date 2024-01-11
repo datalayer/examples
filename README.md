@@ -23,7 +23,7 @@ conda activate $ENV_NAME
 jupyter lab
 ```
 
-Alternatively, you can just install the `datalayer-run` package in your existing environment with `pip install datalayer-run` (this will install JupyterLab version 4.0.3).
+Alternatively, you can just install the `jupyter-kernels` package in your existing environment with `pip install jupyter-kernels` (this will install JupyterLab version 4.0.10).
 
 Read the [documentation website](https://docs.datalayer.run/docs) to know more how to scale your local notebooks to the cloud.
 

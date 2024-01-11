@@ -11,5 +11,5 @@ dependencies:
     - datalayer-run
     - jupyter_server==2.10
     - jupyter_client==8.6.0
-    - jupyterlab==4.0.3
+    - jupyterlab==4.0.10
 #    - jupyter-resource-usage==1.0.1
