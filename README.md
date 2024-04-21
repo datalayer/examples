@@ -41,6 +41,7 @@ The examples of this repository showcase the execution of code remotely from you
 
 ## Examples
 
+1. [Instruction Tuning for Mistral 7B on Alpaca Dataset](#instruction-tuning-mistral)
 1. [Simple Python](#simple-python)
 1. [Titanic](#titanic)
 1. [CUDA Vector Add](#cuda-vector-add)
@@ -48,6 +49,10 @@ The examples of this repository showcase the execution of code remotely from you
 1. [PyTorch](#pytorch)
 1. [YouTube Face Detection](#youtube-face-detection)
 1. [LLMA](#llma)
+
+### [Instruction Tuning for Mistral](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
+
+Instruction Tuning for Mistral 7B on `Alpaca Dataset`.
 
 ### [Simple Python](https://github.com/datalayer/examples/tree/main/python-simple)
 
