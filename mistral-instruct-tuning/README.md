@@ -17,7 +17,9 @@ For this process, GPU(s) is required to efficiently fine tune the model. Using a
 Let's pick a question and let's compare before and after fine-tuning.
 
 ```
-You are a powerful text-to-SQL model. Your job is to answer questions about a database. You are given a question and context regarding one or more tables.\n\nYou must output the SQL query that answers the question.
+You are a powerful text-to-SQL model. Your job is to answer questions about a database. You are given a question and context regarding one or more tables.
+
+You must output the SQL query that answers the question.
 
 ### Input:
 Which Class has a Frequency MHz larger than 91.5, and a City of license of hyannis, nebraska?
