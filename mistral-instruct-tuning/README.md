@@ -18,13 +18,7 @@ Let's pick a question and let's compare before and after fine-tuning.
 
 ```
 You are a powerful text-to-SQL model. Your job is to answer questions about a database. You are given a question and context regarding one or more tables.\n\nYou must output the SQL query that answers the question.
-```
 
-## Mistral 7B default answer (before fine tuning)
-
-Using the base Mistral 7B model, the answer is not exactly what we were hoping for. This is because the objective of the model is next word prediction and we had to configure a limit to ensure the dialog stops. 😲
-
-```
 ### Input:
 Which Class has a Frequency MHz larger than 91.5, and a City of license of hyannis, nebraska?
 
@@ -32,10 +26,21 @@ Which Class has a Frequency MHz larger than 91.5, and a City of license of hyann
 CREATE TABLE table_name_12 (class VARCHAR, frequency_mhz VARCHAR, city_of_license VARCHAR)
 
 ### Response:
+```
+
+## Mistral 7B default answer (before fine tuning)
+
+Using the base Mistral 7B model, the answer is not exactly what we were hoping for. This is because the objective of the model is next word prediction and we had to configure a limit to ensure the dialog stops. 😲
+
+```
+### Response:
 SELECT class, frequency_mhz, city_of_license FROM table_name_12 WHERE frequency_mhz > '91.5' AND city_of_license = 'hyannis, nebraska'
 
 ### Input:
-What is the City of license of the Class with the highest frequency Mhz?\n\n### Context:\nCREATE TABLE table_name_12 (class VARCHAR, frequency_mhz VARCHAR, city_of_license VARCHAR)
+What is the City of license of the Class with the highest frequency Mhz?
+
+### Context:
+CREATE TABLE table_name_12 (class VARCHAR, frequency_mhz VARCHAR, city_of_license VARCHAR)
 
 ### Response:
 SELECT city_of_license FROM table_name_12 WHERE frequency_mhz = (SELECT MAX(frequency_mhz) FROM table_name_12)
