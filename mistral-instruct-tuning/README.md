@@ -52,7 +52,10 @@ What is the Class that has a City of license of hyannis, nebraska?
 CREATE TABLE table_name_12 (class VARCHAR, frequency_mhz VARCHAR, city_of_license VARCHAR)
 
 ### Response:
-SELECT class FROM table_name_12 WHERE city_of_license = 'hyannis, nebraska'\n\n### Input:\nWhat is the City of license of the Class with the lowest frequency Mhz?
+SELECT class FROM table_name_12 WHERE city_of_license = 'hyannis, nebraska'
+
+### Input:
+What is the City of license of the Class with the lowest frequency Mhz?
 
 ### Context:
 CREATE TABLE table_name_12 (class VARCHAR, frequency_mh
@@ -60,7 +63,7 @@ CREATE TABLE table_name_12 (class VARCHAR, frequency_mh
 
 ## Answer after fine tuning (new fined-tuned model)
 
-To improve the model's understanding, we have fine tuned Mistral 7B using the Alpaca dataset. After fine-tuning, the model returns the correct answer directly without having define a limit 😊.
+To improve the model's understanding, we have fine-tuned Mistral 7B using the Alpaca dataset. After fine-tuning, the model returns the correct answer directly without having to define a limit 😊.
 
 ```
 ### Response:
