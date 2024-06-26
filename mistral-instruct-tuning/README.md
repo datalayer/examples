@@ -2,7 +2,7 @@
 
 > This example fine-tunes [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-v0.1) using the [Alapca dataset](https://huggingface.co/datasets/tatsu-lab/alpaca).
 
-<img src="https://media.licdn.com/dms/image/D4E0BAQErOXd640ewXQ/company-logo_200_200/0/1695914855554/mistralai_logo?e=2147483647&v=beta&t=McRPi7-Ka5JvTVxqxYg5T3y_TqC1e5eolsb7pYcQLBM"/>
+<img src="https://media.licdn.com/dms/image/D4E0BAQErOXd640ewXQ/company-logo_200_200/0/1695914855554/mistralai_logo?e=2147483647&v=beta&t=McRPi7-Ka5JvTVxqxYg5T3y_TqC1e5eolsb7pYcQLBM" width="100"/>
 
 Mistral 7B is a large language model (LLM) that contains 7.3 billion parameters and is one of the most powerful models for its size. However, this base model is not instruction-tuned, meaning it may struggle to follow instructions and perform specific tasks.
 
