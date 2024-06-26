@@ -23,7 +23,7 @@ To run the examples using Datalayer Run:
   
 *Notebook remote execution*
 
-<img alt="Notebook remote execution" src="test.png" width="900" />
+<img alt="Notebook remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/user-flow-1.png" width="900" />
 
 Datalayer also support the remote execution of code using the CLI. Refer to this [page](https://datalayer.tech/docs/use/cli/) for more information.
 <details>
