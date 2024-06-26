@@ -1,1 +1,0 @@
-# Fast AI Image Classification
