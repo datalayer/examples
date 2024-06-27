@@ -6,7 +6,9 @@
 
 This repository contains Jupyter notebook examples showcasing scenarios where [Datalayer Run](https://datalayer.run) proves highly beneficial. Datalayer Run allows you to **scale Jupyter Kernels from your local JupyterLab or CLI** to the cloud, providing the capability to run your code on powerful GPU(s) and CPU(s). Your **code** is **executed remotely**, leveraging cloud resources for enhanced performance and efficiency. 🚀
 
-💡 Note that you can use any notebook within Datalayer without requiring any code changes. These examples are just designed to showcase 'typical' use cases where scaling is essential.
+The [Technical validation](#technical-validation) section delves into system checks and performance benchmarks to ensure optimal GPU and CPU utilization, while the [Use cases](#use-cases) section explores typical AI scenarios where scaling proves essential.
+
+💡 Note that you can use any notebook within Datalayer without requiring any code changes.
 
 ## Getting Started 
 
@@ -41,12 +43,25 @@ When using the same kernel, variables defined in a notebook can be used in the C
 
 </details>
 
+## Technical validation
+
+1. [GPU sanity checks](#gpu-sanity-checks)
+1. [Performance comparison of CPU and GPU serial and parallel execution](#performance-comparison-of-cpu-and-gpu-serial-and-parallel-execution)
+
+### [GPU sanity checks](https://github.com/datalayer/examples/tree/main/gpu-check)
+
+This notebook contains scripts and tests to perform GPU sanity checks using PyTorch and CUDA. The primary goal of these checks is to **ensure** that the **GPU resources meet the expected requirements**.
+
+### [Performance comparison of CPU and GPU serial and parallel execution](https://github.com/datalayer/examples/tree/main/parallel-comparison)
+
+This notebook explores the performance **differences between serial and parallel execution on CPU and GPU** using PyTorch. We'll compare the execution times of **intensive computational tasks** performed sequentially on CPU and GPU, as well as in parallel configurations.
+
 ## Use cases
 
 1. [Instruction tuning for Mistral 7B on Alpaca dataset](#mistral-instruction-tuning)
-1. [Image classification model training with fast.ai](#instruction-tuning-for-mistral)
+1. [Image classification model training with fast.ai](#image-classifier-with-fastai)
 1. [Face detection on YouTube video with OpenCV](#opencv-face-detection)
-1. [Mistral text generation](#mistral-text-generation)
+1. [Text generation using the Transformers library](#text-generation-with-transformers)
 1. ['Personalized' text-to-image model creation with Dreambooth](#dreambooth)
 
 ### [Mistral instruction tuning](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
@@ -78,9 +93,9 @@ This example utilizes **OpenCV** for **detecting faces** in YouTube videos. It u
 
 It also utilizes **parallel computing across multiple CPUs** to accelerate face detection and video processing tasks, optimizing performance and efficiency. Datalayer further enhances this capability by enabling seamless scaling across multiple CPUs.
 
-### [Mistral text generation](https://github.com/datalayer/examples/tree/main/mistral-text-generation)
+### [Text generation with Transformers](https://github.com/datalayer/examples/tree/main/transformers-text-generation)
 
-This example demonstrates how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Mistral 7B Instruct v0.1**. Mistral 7B Instruct v0.1 is a instruct fine-tuned version of the Mistral-7B-v0.1 generative text model using a variety of publicly available conversation datasets.
+This example demonstrates how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma 7B** model and the HuggingFace Transformers library. We will be using Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
 
 ### [Dreambooth](https://github.com/datalayer/examples/tree/main/dreambooth)
 
