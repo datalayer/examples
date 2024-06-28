@@ -2,4 +2,6 @@
 
 This example demonstrates how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma 7B** model and the HuggingFace Transformers library. We will be using Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
 
+<img src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo-with-title.png" width="200"/>
+
 Text generation can be viewed akin to performing inference tasks, where the model interprets input prompts to generate meaningful and contextually appropriate text responses.
