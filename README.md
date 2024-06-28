@@ -4,13 +4,13 @@
 
 # Ξ Datalayer Examples
 
-This repository contains Jupyter notebook examples showcasing scenarios where [Datalayer RUN](https://datalayer.run) proves highly beneficial. Datalayer RUN allows you to **scale Jupyter Kernels from your local JupyterLab or CLI** to the cloud, providing the capability to run your code on powerful GPU(s) and CPU(s). Your **code** is **executed remotely**, leveraging cloud resources for enhanced performance and efficiency. 🚀
+This repository contains Jupyter notebook examples showcasing scenarios where [Datalayer RUN](https://datalayer.run) proves highly beneficial. Datalayer RUN allows you to **scale Jupyter Kernels** from your local JupyterLab or CLI to the cloud, providing the capability to run your code on **powerful GPU(s) and CPU(s)**. 🚀
 
 The [Technical validation](#technical-validation) section delves into system checks and performance benchmarks to ensure optimal GPU and CPU utilization, while the [Use cases](#use-cases) section explores typical AI scenarios where scaling proves essential.
 
 💡 Note that you can use any notebook within Datalayer without requiring any code changes.
 
-## Getting Started 
+## Getting started 
 
 ```bash
 pip install jupyter-kernels
@@ -19,7 +19,7 @@ cd datalayer-examples
 jupyter lab
 ```
 
-Read the [documentation website](https://docs.datalayer.run/docs) to know more about how setup Datalayer RUN. Don't worry, it is easy 👍 <br />You just need to install the package, open JupyterLab, click on the `Datalayer RUN` tile in the JupyterLab launcher,  create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Kernel from any Notebook kernel picker.
+Read the [documentation website](https://docs.datalayer.run/docs) to know more about how setup Datalayer RUN. Don't worry, it is easy 👍 <br />You just need to install the package, open JupyterLab, click on the `Jupyter kernels` tile in the JupyterLab launcher,  create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Kernel from any Notebook kernel picker.
 
 <img alt="Notebook remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/user-flow-1.png" width="900" />
 
@@ -104,7 +104,7 @@ Datalayer offers the possibility to use **cell-specific Kernels**, allowing you 
 <details>
 <summary><i>Cell Kernel execution</i></summary>
 
-<img alt="Remote notebook execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="900" />
+<img alt="Cell kernel execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="900" />
 
 The remote GPU Kernel is utilized only for the duration of the cell computation, minimizing costs.
 </details>
