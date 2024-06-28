@@ -86,15 +86,15 @@ Datalayer supports the remote execution of code using the **CLI**. Refer to this
 <details>
 <summary><i>CLI remote execution</i></summary>
 
-TODO <img alt="CLI remote execution" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/kernel-selector-choice.png" width="300" />
+<img alt="CLI remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/CLI.png" width="800" />
 </details>
 
 <details>
-<summary><i>Switching between notebook and CLI</i></summary>
+<summary><i>Sharing state between notebook and CLI</i></summary>
 
-TODO <img alt="Remote notebook execution" src="https://datalayer-examples.s3.amazonaws.com/datalayer-run-examples/kernel-selector-choice.png" width="300" />
+<img alt="Remote notebook execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/SharingState.png" width="800" />
 
-When using the same Kernel, variables defined in a notebook can be used in the CLI and vice versa.
+When using the same Kernel, variables defined in a notebook can be used in the CLI and vice versa. This holds also true when using multiple notebooks connected to the same kernel, for example.
 </details>
 
 ### Cell Kernel
