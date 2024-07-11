@@ -104,6 +104,8 @@ Datalayer offers the possibility to use **cell-specific Kernels**, allowing you 
 <details>
 <summary><i>Cell Kernel execution</i></summary>
 
+### [Matrix multiplication](https://github.com/datalayer/examples/tree/main/matrix-multiplication)
+
 <img alt="Cell kernel execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
 
 The remote GPU Kernel is utilized only for the duration of the cell computation, minimizing costs.
