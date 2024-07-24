@@ -43,8 +43,9 @@ This notebook explores the performance **differences between serial and parallel
 1. ['Personalized' text-to-image model creation with Dreambooth](#dreambooth)
 1. [Text generation using the Transformers library](#text-generation-with-transformers)
 1. [Instruction tuning for Mistral 7B on Alpaca dataset](#mistral-instruction-tuning)
+1. [Instruction tuning for Mistral 7B on Alpaca dataset](#mistral-instruction-tuning)
 
-### [OpenCV face detection](https://github.com/datalayer/examples/tree/main/opencv-face-detection)
+### [OpenCV Face Eetection](https://github.com/datalayer/examples/tree/main/opencv-face-detection)
 
 This example utilizes **OpenCV** for **detecting faces** in YouTube videos. It uses a traditional Haar Cascade model, which may have limitations in accuracy compared to modern deep learning-based models. It also utilizes **parallel computing across multiple CPUs** to accelerate face detection and video processing tasks, optimizing performance and efficiency. Datalayer further enhances this capability by enabling seamless scaling across multiple CPUs.
 
@@ -53,7 +54,7 @@ This example utilizes **OpenCV** for **detecting faces** in YouTube videos. It u
     <img src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/rick-ashley-2.png" style="width: 20%;">
 </div>
 
-### [Image classifier with fast.ai](https://github.com/datalayer/examples/tree/main/fastai-classifier)
+### [Image Classifier with Fast.ai](https://github.com/datalayer/examples/tree/main/fastai-classifier)
 
 This example demonstrates how to build a model that **distinguishes cats from dogs** in pictures using the fast.ai library. Due to the computational demands of training a model, a **GPU is required**. 
 
@@ -65,36 +66,44 @@ This example uses the Dreambooth method which takes as input a few images (typic
 
 <img src="https://dreambooth.github.io/DreamBooth_files/accessories.png" width="500"/>
 
-### [Text generation with Transformers](https://github.com/datalayer/examples/tree/main/transformers-text-generation)
+### [Text Generation with Transformers](https://github.com/datalayer/examples/tree/main/transformers-text-generation)
 
 This example demonstrates how to leverage Datalayer's **GPU Kernels** to accelerate text generation using **Gemma 7B** model and the HuggingFace Transformers library. We will be using Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
 
 <img src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo-with-title.png" width="200"/>
 
-### [Mistral instruction tuning](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
+### [Mistral Instruction tTuning](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
 
 **Mistral 7B** is a large language model (LLM) that contains 7.3 billion parameters and is one of the most powerful models for its size. However, this base model is not instruction-tuned, meaning it may struggle to follow instructions and perform specific tasks. By fine-tuning Mistral 7B on the Alpaca dataset using [**torchtune**](https://github.com/pytorch/torchtune), the model will significantly improve its capabilities to perform tasks such as conversation and answering questions accurately. Due to the computational demands of fine-tuning a model, a **GPU is required**.
 
 <img src="https://assets.datalayer.tech/examples/llm-fine-tuning.png" width="500"/>
 
-## Datalayer advanced features
+### [Llama Inference](https://github.com/datalayer/examples/tree/main/llama-inference)
 
-### CLI execution
+Llama Inference.
+
+## Datalayer Advanced Features
+
+### CLI Execution
 
 Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://datalayer.tech/docs/use/cli/) for more information.
 
 <details>
-<summary><i>CLI remote execution</i></summary>
+
+<summary><i>CLI Remote Execution</i></summary>
 
 <img alt="CLI remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/CLI.png" width="800" />
+
 </details>
 
 <details>
-<summary><i>Sharing state between notebook and CLI</i></summary>
 
-<img alt="Remote notebook execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/SharingState.png" width="800" />
+<summary><i>Sharing State between Notebook and CLI</i></summary>
+
+<img alt="Remote Notebook Execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/SharingState.png" width="800" />
 
 When using the same Kernel, variables defined in a notebook can be used in the CLI and vice versa. This holds also true when using multiple notebooks connected to the same kernel, for example.
+
 </details>
 
 ### Cell Kernel
@@ -102,11 +111,13 @@ When using the same Kernel, variables defined in a notebook can be used in the C
 Datalayer offers the possibility to use **cell-specific Kernels**, allowing you to execute specific cells with different kernels. This feature **optimizes costs** by enabling you to, for example, leverage the local CPU for data preparation and reserving the powerful (and often more expensive) GPU resources for intensive computations. 
 
 <details>
+
 <summary><i>Cell Kernel execution</i></summary>
 
-### [Matrix multiplication](https://github.com/datalayer/examples/tree/main/matrix-multiplication)
+### [Matrix Multiplication](https://github.com/datalayer/examples/tree/main/matrix-multiplication)
 
-<img alt="Cell kernel execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
+<img alt="Cell Kernel Execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
 
 The remote GPU Kernel is utilized only for the duration of the cell computation, minimizing costs.
+
 </details>

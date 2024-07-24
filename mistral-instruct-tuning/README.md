@@ -1,3 +1,7 @@
+[![Datalayer](https://assets.datalayer.tech/datalayer-25.svg)](https://datalayer.io)
+
+[![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
+
 # Instruction Tuning for Mistral 7B on Alpaca Dataset
 
 > This example fine-tunes [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-v0.1) using the [Alapca dataset](https://huggingface.co/datasets/tatsu-lab/alpaca).
