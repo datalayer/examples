@@ -68,19 +68,23 @@ This example uses the Dreambooth method which takes as input a few images (typic
 
 ### [Text Generation with Transformers](https://github.com/datalayer/examples/tree/main/transformers-text-generation)
 
-This example demonstrates how to leverage Datalayer's **GPU Kernels** to accelerate text generation using **Gemma 7B** model and the HuggingFace Transformers library. We will be using Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
+Those notebook examples demonstrate how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma** model and the HuggingFace Transformers library.
 
 <img src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo-with-title.png" width="200"/>
 
-### [Mistral Instruction tTuning](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
+#### [Transformers Text Generation](https://github.com/datalayer/examples/tree/main/transformers-text-generation/transformers-text-generation.ipynb)
+
+This notebook uses Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
+
+#### [Sentiment Analysis with Gemma](https://github.com/datalayer/examples/tree/main/transformers-text-generation/gemma-sentiment-analysis.ipynb)
+
+This example demonstrates how you can leverage Datalayer's [**Cell Kernels**](https://github.com/datalayer/examples?tab=readme-ov-file#cell-kernel) feature on JupyterLab to **offload specific tasks**, such as sentiment analysis, **to a remote GPU** while keeping the rest of your code running locally. By selectively using remote resources, you can **optimize both performance and cost**. This hybrid approach is perfect for tasks like sentiment analysis via llm where some parts of the code require more computational resources than others. For a detailed explanation and step-by-step guide on using Cell Kernels, check out our [blog post](https://datalayer.blog/2024/08/23/cell-kernels) on this specific example.
+
+### [Mistral Instruction Tuning](https://github.com/datalayer/examples/tree/main/mistral-instruct-tuning)
 
 **Mistral 7B** is a large language model (LLM) that contains 7.3 billion parameters and is one of the most powerful models for its size. However, this base model is not instruction-tuned, meaning it may struggle to follow instructions and perform specific tasks. By fine-tuning Mistral 7B on the Alpaca dataset using [**torchtune**](https://github.com/pytorch/torchtune), the model will significantly improve its capabilities to perform tasks such as conversation and answering questions accurately. Due to the computational demands of fine-tuning a model, a **GPU is required**.
 
 <img src="https://assets.datalayer.tech/examples/llm-fine-tuning.png" width="500"/>
-
-### [Llama Inference](https://github.com/datalayer/examples/tree/main/llama-inference)
-
-Llama Inference.
 
 ## Datalayer Advanced Features
 
@@ -113,8 +117,6 @@ Datalayer offers the possibility to use **cell-specific Kernels**, allowing you 
 <details>
 
 <summary><i>Cell Kernel execution</i></summary>
-
-### [Matrix Multiplication](https://github.com/datalayer/examples/tree/main/matrix-multiplication)
 
 <img alt="Cell Kernel Execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
 

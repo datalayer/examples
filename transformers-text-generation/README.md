@@ -4,8 +4,19 @@
 
 # Transformers Text Generation
 
-This example demonstrates how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma 7B** model and the HuggingFace Transformers library. We will be using Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
+Those notebook examples demonstrate how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma** model and the HuggingFace Transformers library.
 
 <img src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo-with-title.png" width="200"/>
 
-Text generation can be viewed akin to performing inference tasks, where the model interprets input prompts to generate meaningful and contextually appropriate text responses.
+Text generation can be viewed akin to performing inference tasks, where a model interprets input prompts to generate meaningful and contextually appropriate text responses.
+
+## Transformers Text Generation
+
+This notebook uses Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
+
+## Sentiment Analysis with Gemma
+
+This example demonstrates how you can leverage Datalayer's **Cell Kernels** feature on JupyterLab to offload specific tasks, such as sentiment analysis, to a remote GPU while keeping the rest of your code running locally. By selectively using remote resources, you can optimize both performance and cost. This hybrid approach is perfect for tasks like sentiment analysis via llm where some parts of the code require more computational resources than others.
+
+For a detailed explanation and step-by-step guide on using Cell Kernels, check out our [blog post](https://datalayer.blog/2024/08/23/cell-kernels) on this specific example.
+
