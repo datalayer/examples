@@ -1,4 +1,8 @@
-# Performance comparison of CPU and GPU serial and parallel execution
+[![Datalayer](https://assets.datalayer.tech/datalayer-25.svg)](https://datalayer.io)
+
+[![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
+
+# Performance Comparison of CPU and GPU Serial and Parallel Execution
 
 This notebook explores the performance differences between serial and parallel execution on CPU and GPU using PyTorch. We'll compare the execution times of intensive computational tasks performed sequentially on CPU and GPU, as well as in parallel configurations.
 
