@@ -19,7 +19,7 @@ cd datalayer-examples
 jupyter lab
 ```
 
-Read the [documentation website](https://docs.datalayer.io/docs) to know more about how setup Datalayer. Don't worry, it is easy 👍 <br />You just need to install the package, open JupyterLab, click on the `Jupyter kernels` tile in the JupyterLab launcher,  create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Kernel from any Notebook kernel picker.
+Read the [documentation website](https://docs.datalayer.io) to know more about how setup Datalayer. Don't worry, it is easy 👍 <br />You just need to install the package, open JupyterLab, click on the `Jupyter kernels` tile in the JupyterLab launcher,  create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Kernel from any Notebook kernel picker.
 
 <img alt="Notebook remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/user-flow-1.png" width="900" />
 
@@ -89,7 +89,7 @@ This example demonstrates how you can leverage Datalayer's [**Cell Kernels**](ht
 
 ### CLI Execution
 
-Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://datalayer.tech/docs/use/cli/) for more information.
+Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://docs.datalayer.io/cli/) for more information.
 
 <details>
 
