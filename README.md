@@ -85,6 +85,10 @@ This example demonstrates how you can leverage Datalayer's [**Cell Kernels**](ht
 
 <img src="https://assets.datalayer.tech/examples/llm-fine-tuning.png" width="500"/>
 
+### 6. [llama.cpp](https://github.com/datalayer/examples/tree/main/llama-cpp)
+
+Example of LLM Inference with [Llama CPP](https://llama-cpp-python.readthedocs.io/en/latest).
+
 ## Datalayer Advanced Features
 
 ### CLI Execution
