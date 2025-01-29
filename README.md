@@ -88,7 +88,7 @@ This example demonstrates how you can leverage Datalayer's [**Cell Kernels**](ht
 
 ### 6. [LLM Inference with llama.cpp](https://github.com/datalayer/examples/tree/main/llama-cpp)
 
-In this notebook, we compare the inference performance of the `DeepSeek-R1-Distill-Llama-8B model` using GPU acceleration and CPU only. It demonstrates the significant speedup achieved with GPU offloading and highlights the benefits of quantization (using the GGUF model format) for memory and performance optimization. The [llama.cpp](https://llama-cpp-python.readthedocs.io/en/latest) library is used for efficient inference with support for both CPU and GPU.
+In this notebook, we compare the inference performance of the [`DeepSeek-R1-Distill-Llama-8B`](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B) model using **GPU acceleration** and **CPU only**. It demonstrates the significant speedup achieved with GPU offloading and highlights the benefits of **quantization** (using the GGUF model format) for memory and performance optimization. The [`llama.cpp`](https://llama-cpp-python.readthedocs.io/en/latest) library is used for efficient inference with support for both CPU and GPU.
 
 ## Datalayer Advanced Features
 
