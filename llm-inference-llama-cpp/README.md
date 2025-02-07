@@ -17,7 +17,11 @@ This notebook compares the inference performance of the [`DeepSeek-R1-Distill-Ll
 
 ###  Results
 
-- GPU Inference: 8 seconds (T4 NVIDIA GPU with 16GB GPU memory). TODO
-- CPU Inference: 61 seconds (8 CPUs 32GB RAM). TODO
+- GPU Inference: 8 seconds (T4 NVIDIA GPU with 16GB GPU memory).
+- CPU Inference: 61 seconds (3 CPUs 20GB RAM).
 
 Speedup: **~7-8x faster on GPU.**
+
+## Langchain Llama.cpp Inference
+
+This Notebook gives a general structure to run Llama.cpp inference from a given model with Langchain.

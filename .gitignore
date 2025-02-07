@@ -133,3 +133,5 @@ dmypy.json
 !**/.env
 !.github
 !.devcontainer
+
+untracked_notebooks/*
