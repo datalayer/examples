@@ -43,6 +43,7 @@ This notebook explores the performance **differences between serial and parallel
 1. ['Personalized' text-to-image model creation with Dreambooth](#dreambooth)
 1. [Text generation using the Transformers library](#text-generation-with-transformers)
 1. [Instruction tuning for Mistral 7B on Alpaca dataset](#mistral-instruction-tuning)
+1. [LLM Inference with llama.cpp](#llm-inference-with-llama-cpp)
 
 ### 1. [OpenCV Face Detection](https://github.com/datalayer/examples/tree/main/opencv-face-detection)
 
@@ -84,6 +85,10 @@ This example demonstrates how you can leverage Datalayer's [**Cell Kernels**](ht
 **Mistral 7B** is a large language model (LLM) that contains 7.3 billion parameters and is one of the most powerful models for its size. However, this base model is not instruction-tuned, meaning it may struggle to follow instructions and perform specific tasks. By fine-tuning Mistral 7B on the Alpaca dataset using [**torchtune**](https://github.com/pytorch/torchtune), the model will significantly improve its capabilities to perform tasks such as conversation and answering questions accurately. Due to the computational demands of fine-tuning a model, a **GPU is required**.
 
 <img src="https://assets.datalayer.tech/examples/llm-fine-tuning.png" width="500"/>
+
+### 6. [LLM Inference with llama.cpp](https://github.com/datalayer/examples/tree/main/llama-cpp)
+
+In this notebook, we compare the inference performance of the [`DeepSeek-R1-Distill-Llama-8B`](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B) model using **GPU acceleration** and **CPU only**. It demonstrates the significant speedup achieved with GPU offloading and highlights the benefits of **quantization** (using the GGUF model format) for memory and performance optimization. The [`llama.cpp`](https://llama-cpp-python.readthedocs.io/en/latest) library is used for efficient inference with support for both CPU and GPU.
 
 ## Datalayer Advanced Features
 
