@@ -13,7 +13,7 @@ The [Technical validation](#technical-validation) section delves into system che
 ## Getting started 
 
 ```bash
-pip install datalayer jupyterlab
+pip install datalayer
 git clone https://github.com/datalayer/examples.git datalayer-examples
 cd datalayer-examples
 jupyter lab
@@ -32,9 +32,13 @@ Read the [documentation website](https://docs.datalayer.io) to know more about h
 
 This notebook contains scripts and tests to perform GPU sanity checks using PyTorch and CUDA. The primary goal of these checks is to **ensure** that the **GPU resources meet the expected requirements**.
 
-### 2. [Performance comparison of CPU and GPU serial and parallel execution](https://github.com/datalayer/examples/tree/main/parallel-comparison)
+### 2. [LLM with CPU and GPU performance comparison](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-comparison)
 
-This notebook explores the performance **differences between serial and parallel execution on CPU and GPU** using PyTorch. We'll compare the execution times of **intensive computational tasks** performed sequentially on CPU and GPU, as well as in parallel configurations.
+Compare the performance **CPU and GPU** using PyTorch for LLM cases.
+
+### 2. [Parallel execution performance comparison](https://github.com/datalayer/examples/tree/main/parallel-comparison)
+
+Compare the performance with parallel execution.
 
 ## Use cases
 
