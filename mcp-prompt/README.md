@@ -4,7 +4,7 @@
 
 # Ξ Prompt Examples for Jupyter MCP
 
-These are prompt example you can use with the [Jupyter MCP Server](https://github.com/datalayer/jupyter-mcp-server)
+These are prompt examples you can use with [Jupyter MCP Server](https://github.com/datalayer/jupyter-mcp-server)
 
 ```
 create matplolib examples with many variants in jupyter
