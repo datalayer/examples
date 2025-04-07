@@ -21,7 +21,7 @@ cd datalayer-examples
 jupyter lab
 ```
 
-Read the [documentation website](https://docs.datalayer.io) to know more about how setup Datalayer.
+Read the [documentation website](https://docs.datalayer.app) to know more about how setup Datalayer.
 
 Don't worry, it is easy 👍 You just need to install the package, open JupyterLab, click on the `Jupyter Runtimes` tile in the JupyterLab launcher, create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Runtime from any Notebook kernel picker.
 
@@ -104,7 +104,7 @@ By fine-tuning Mistral 7B on the Alpaca dataset using [**torchtune**](https://gi
 
 ## CLI Execution
 
-Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://docs.datalayer.io/cli) for more information.
+Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://docs.datalayer.app/cli) for more information.
 
 <details>
 

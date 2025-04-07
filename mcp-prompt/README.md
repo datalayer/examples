@@ -17,6 +17,6 @@ before that, install the needed python libraries you will need for the analysis
 
 ```
 create a jupyter notebook that uses biopython to analysis an "Unknown sequence" of DNA/RNA which happens to derive from a cornavirus genome
-the sequence is located at https://raw.githubusercontent.com/datalayer/examples/main/prompt-jupyter-mcp/unknown-sequence.fa
+the sequence is located at https://raw.githubusercontent.com/datalayer/examples/refs/heads/main/mcp-prompt/unknown-sequence.fa
 download the sequence file and write the python code using the biopython library to identify and start to characterize this sequence
 ```
