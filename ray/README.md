@@ -22,7 +22,7 @@ datalayer ray clusters get my-ray --namespace default
 
 ```bash
 JOB_NAME="hello-ray-$(date +%s)"
-datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray-cli/hello_ray.py
+datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray/hello_ray.py
 datalayer ray jobs monitor "${JOB_NAME}" --namespace default
 datalayer ray jobs logs "${JOB_NAME}" --namespace default --tail-lines 200
 ```
@@ -31,7 +31,7 @@ datalayer ray jobs logs "${JOB_NAME}" --namespace default --tail-lines 200
 
 ```bash
 JOB_NAME="pi-monte-carlo-$(date +%s)"
-datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray-cli/pi_monte_carlo.py
+datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray/pi_monte_carlo.py
 datalayer ray jobs monitor "${JOB_NAME}" --namespace default
 datalayer ray jobs logs "${JOB_NAME}" --namespace default --tail-lines 200
 ```
@@ -40,7 +40,7 @@ datalayer ray jobs logs "${JOB_NAME}" --namespace default --tail-lines 200
 
 ```bash
 JOB_NAME="actor-counter-$(date +%s)"
-datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray-cli/actor_counter.py
+datalayer ray jobs submit my-ray --namespace default --job-name "${JOB_NAME}" --py @ray/actor_counter.py
 datalayer ray jobs monitor "${JOB_NAME}" --namespace default
 datalayer ray jobs logs "${JOB_NAME}" --namespace default --tail-lines 200
 ```

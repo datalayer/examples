@@ -2,7 +2,7 @@
 
 [![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
 
-# Ξ Datalayer Examples
+# ☰ Datalayer Examples
 
 Examples for the modern Datalayer platform: **managed agents for data analysis** with governed execution, durable runtimes, and reproducible outputs.
 
@@ -30,7 +30,7 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 ## Example Catalog
 
 1. [GPU checks](https://github.com/datalayer/examples/tree/main/gpu-check)
-2. [PyTorch examples](https://github.com/datalayer/examples/tree/main/pytorch-examples)
+2. [PyTorch examples](https://github.com/datalayer/examples/tree/main/pytorch)
 3. [LLM with CPU vs GPU performance comparison](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-comparison)
 4. [GPU/CPU execution performance comparison](https://github.com/datalayer/examples/tree/main/gpu-cpu)
 5. [OpenCV Face Detection](https://github.com/datalayer/examples/tree/main/image-face-detection-opencv)
@@ -41,11 +41,11 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 10. [Mistral Instruction Tuning](https://github.com/datalayer/examples/tree/main/llm-instruct-tuning-mistral)
 11. [LLM Inference with llama.cpp + LangChain](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-langchain)
 12. [Prompt examples for Jupyter MCP](https://github.com/datalayer/examples/tree/main/prompts)
-13. [Ray CLI examples (`datalayer ray`)](https://github.com/datalayer/examples/tree/main/ray-cli)
+13. [Ray CLI examples (`datalayer ray`)](https://github.com/datalayer/examples/tree/main/ray)
 
 ## Highlight: PyTorch Examples
 
-The [pytorch-examples](https://github.com/datalayer/examples/tree/main/pytorch-examples) folder includes practical PyTorch baselines, starting with matrix multiplication for CPU/GPU throughput analysis.
+The [pytorch](https://github.com/datalayer/examples/tree/main/pytorch) folder includes practical PyTorch baselines, starting with matrix multiplication for CPU/GPU throughput analysis.
 
 It is useful to:
 
@@ -55,7 +55,7 @@ It is useful to:
 
 ## Ray CLI Examples
 
-The [ray-cli](https://github.com/datalayer/examples/tree/main/ray-cli) folder contains Python scripts designed to be submitted with the Datalayer Ray CLI (`datalayer ray jobs submit --py @...`).
+The [ray](https://github.com/datalayer/examples/tree/main/ray) folder contains Python scripts designed to be submitted with the Datalayer Ray CLI (`datalayer ray jobs submit --py @...`).
 
 Included examples:
 
@@ -67,7 +67,7 @@ Included examples:
 
 Datalayer supports remote code execution through the CLI and integrates with managed runtimes and Ray workflows.
 
-See [CLI docs](https://datalayer.ai/docs) and the [Ray examples](https://github.com/datalayer/examples/tree/main/ray-cli) for end-to-end commands.
+See [CLI docs](https://datalayer.ai/docs) and the [Ray examples](https://github.com/datalayer/examples/tree/main/ray) for end-to-end commands.
 
 <details>
 
