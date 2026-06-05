@@ -42,6 +42,7 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 11. [LLM Inference with llama.cpp + LangChain](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-langchain)
 12. [Prompt examples for Jupyter MCP](https://github.com/datalayer/examples/tree/main/prompts)
 13. [Ray CLI examples (`datalayer ray`)](https://github.com/datalayer/examples/tree/main/ray)
+14. [Evals SDK examples (batch + interactive)](https://github.com/datalayer/examples/tree/main/evals)
 
 ## Highlight: PyTorch Examples
 
@@ -62,6 +63,26 @@ Included examples:
 1. `hello_ray.py`: basic distributed map (`square`) with Ray tasks
 2. `pi_monte_carlo.py`: distributed Monte Carlo estimation of pi
 3. `actor_counter.py`: stateful actor pattern with multiple counters
+
+## Evals SDK Examples
+
+The [evals](https://github.com/datalayer/examples/tree/main/evals) folder contains SDK examples for both run modes:
+
+1. `evals_batch_example.py`: deterministic case-set execution (`run_mode=batch`)
+2. `evals_interactive_example.py`: event/live-window evaluation (`run_mode=interactive`)
+
+Run them with the packaged make targets:
+
+```bash
+cd evals
+make help
+make evals-batch-local
+make evals-batch-cloud
+make evals-interactive-local
+make evals-interactive-cloud
+make evals-batch-local-proxy
+make evals-interactive-local-proxy
+```
 
 ## CLI
 
