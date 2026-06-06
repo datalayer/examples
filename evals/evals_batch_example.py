@@ -28,7 +28,7 @@ from datalayer_core.utils.urls import DatalayerURLs
 DEFAULT_LOCAL_IAM_URL = 'http://localhost:9700/api/iam/'
 DEFAULT_LOCAL_RUNTIMES_URL = 'http://localhost:9500/api/runtimes/'
 DEFAULT_LOCAL_AI_AGENTS_URL = 'http://localhost:4400/api/ai-agents/'
-DEFAULT_AGENT_SPEC_ID = 'demo-evals'
+DEFAULT_AGENT_SPEC_ID = 'example-evals'
 
 
 def _normalize_service_url(raw_url: str | None, service_suffix: str) -> str | None:
@@ -53,10 +53,13 @@ def _resolve_environment(args: argparse.Namespace) -> tuple[str, str, str, str]:
         )
 
     if requested == 'sdk-proxy':
+        runtimes_url = args.runtimes_url
+        if args.execution_target != 'cloud':
+            runtimes_url = runtimes_url or DEFAULT_LOCAL_RUNTIMES_URL
         return (
             'sdk',
             args.iam_url or DEFAULT_LOCAL_IAM_URL,
-            args.runtimes_url or DEFAULT_LOCAL_RUNTIMES_URL,
+            runtimes_url,
             args.ai_agents_url or DEFAULT_LOCAL_AI_AGENTS_URL,
         )
 
@@ -906,7 +909,7 @@ def parse_args() -> argparse.Namespace:
         dest='agent_spec_id',
         default=None,
         help=(
-            'Agent specification id. Defaults to demo-evals when omitted. '
+            'Agent specification id. Defaults to example-evals when omitted. '
             'Accepts both --agent-spec-id and --agentspec-id.'
         ),
     )
@@ -1043,6 +1046,7 @@ def main() -> None:
     runtime_pod_name = ''
     local_agent_base_url = args.local_agent_base_url
     auto_started_runtime_process: subprocess.Popen[Any] | None = None
+    effective_execution_target = args.execution_target
     if not args.no_agent and args.execution_target == 'cloud':
         print('Launching cloud runtime for batch execution...')
         runtime_pod_name = _launch_cloud_runtime(
@@ -1053,7 +1057,7 @@ def main() -> None:
         )
         print(f'Using runtime pod: {runtime_pod_name}')
         print('Note: cloud runtime termination is user-managed; stop it explicitly when finished.')
-    if not args.no_agent and args.execution_target == 'local':
+    if not args.no_agent and effective_execution_target == 'local':
         if args.auto_start_local_agent_runtime:
             local_agent_base_url, auto_started_runtime_process = _start_local_agent_runtime(
                 base_url=local_agent_base_url,
@@ -1102,7 +1106,7 @@ def main() -> None:
                     'synthetic': True,
                 }
             else:
-                if args.execution_target == 'local':
+                if effective_execution_target == 'local':
                     local_chat_result = _run_local_agent_chat(
                         base_url=local_agent_base_url,
                         local_agent_id=args.local_agent_id,
@@ -1131,18 +1135,18 @@ def main() -> None:
                     }
                     intentional_failure = False
                     interaction_mode = 'sdk-direct-local-agent-chat-api'
-                elif args.execution_target == 'cloud':
+                elif effective_execution_target == 'cloud':
                     run_status = 'running'
                     metrics = {}
                     run_report = {}
                     intentional_failure = False
                 else:
                     raise RuntimeError(
-                        f"Unsupported execution target '{args.execution_target}'"
+                        f"Unsupported execution target '{effective_execution_target}'"
                     )
 
             submitted_code = None
-            if not args.no_agent and args.execution_target == 'cloud':
+            if not args.no_agent and effective_execution_target == 'cloud':
                 submitted_code = _build_submitted_code(total_cases, run_pass_rate, 'batch')
 
             run_payload = client.evals_create_run(
@@ -1154,7 +1158,7 @@ def main() -> None:
                     'run_mode': 'batch',
                     'run_environment': args.run_environment,
                     'backend_run_environment': backend_run_environment,
-                    'execution_target': args.execution_target,
+                    'execution_target': effective_execution_target,
                     'no_agent': bool(args.no_agent),
                     'synthetic': bool(args.no_agent),
                     'dry_run': bool(args.no_agent),
@@ -1169,7 +1173,7 @@ def main() -> None:
                     'run_index': index + 1,
                     'scenario': 'regression-suite',
                     'runtime_pod_name': runtime_pod_name or None,
-                    'runtime_termination_policy': 'user_managed' if args.execution_target == 'cloud' else None,
+                    'runtime_termination_policy': 'user_managed' if effective_execution_target == 'cloud' else None,
                     'submitted_code': submitted_code,
                     'interaction_mode': interaction_mode,
                     'agent_prompt': interaction_prompt or None,

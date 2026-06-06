@@ -58,7 +58,7 @@ Default local proxy endpoints used by examples for `sdk-proxy`:
 For `sdk-proxy` local target runs, start `agent-runtimes` first. Example:
 
 ```bash
-agent-runtimes serve --host 127.0.0.1 --port 8765 --agent-id demo-evals --agent-name default
+agent-runtimes serve --host 127.0.0.1 --port 8765 --agent-id example-evals --agent-name default
 ```
 
 Also ensure local ai-agents proxy is reachable (default `http://localhost:4400`).
@@ -68,12 +68,18 @@ If not, start local services first (for example `p pf-local`).
 
 ```bash
 make help
+```
+
+```bash
 make evals-batch-local
 make evals-batch-cloud
 make evals-batch-local-proxy
 make evals-batch-cloud-proxy
 make evals-batch-local-proxy SYNTHETIC=1
 make evals-batch-synthetic-proxy
+```
+
+```bash
 make evals-interactive-local
 make evals-interactive-cloud
 make evals-interactive-local-proxy
@@ -100,7 +106,7 @@ python evals_batch_example.py \
   --eval-name batch-demo \
   --run-environment sdk-proxy \
   --execution-target cloud \
-  --agentspec-id demo-evals \
+  --agentspec-id example-evals \
   --run-status completed \
   --clean
 ```
@@ -194,7 +200,7 @@ python evals_interactive_example.py \
   --execution-target local \
   --local-agent-base-url http://127.0.0.1:8000 \
   --local-agent-id default \
-  --agentspec-id demo-evals \
+  --agentspec-id example-evals \
   --run-status running \
   --clean
 ```
@@ -248,13 +254,19 @@ After running one of the examples, generate an evalset-level comparison report w
 1. List evalsets in the SDK lane and copy the target evalset ID:
 
 ```bash
-datalayer evals evals list --run-environment sdk
+datalayer evals evalsets ls --run-environment sdk
 ```
 
-2. Generate the comparison report:
+2. Generate the report:
 
 ```bash
-datalayer evals evals compare-report <evalset_id>
+datalayer evals report <evalset_id>
+```
+
+Legacy alias (still supported):
+
+```bash
+datalayer evals evalsets compare-report <evalset_id>
 ```
 
 Useful options:
@@ -262,6 +274,8 @@ Useful options:
 - `--run-limit 100` to increase runs fetched per experiment.
 - `--account-uid <uid>` for org/account context.
 - `--raw` to print JSON report output.
+- `--output evals-report.md` to save the markdown report to a file.
+- `--export` to export report data to `report.csv`.
 - `--ai-agents-url <url>` and `--token <token>` for explicit endpoint/auth.
 
 ## Agent Invocation Modes
@@ -270,7 +284,7 @@ The examples now support two modes:
 
 - **Default (no `--synthetic`)**: experiments are configured with explicit execution metadata:
   - `execution_target` (`cloud` or `local`)
-  - `agent_spec_id` (set with `--agentspec-id`; defaults to `demo-evals` if omitted)
+  - `agent_spec_id` (set with `--agentspec-id`; defaults to `example-evals` if omitted)
   - runtime settings (`environment_name`) or local settings (`local_agent_base_url`, `local_agent_id`)
 - **`--synthetic`**: uses synthetic metrics/status behavior without requiring synthetic agent-spec defaults.
 
@@ -336,7 +350,7 @@ python evals_interactive_example.py \
   --execution-target local \
   --local-agent-base-url http://127.0.0.1:8000 \
   --local-agent-id default \
-  --agentspec-id demo-evals \
+  --agentspec-id example-evals \
   --run-status running \
   --clean
 ```
