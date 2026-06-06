@@ -25,7 +25,7 @@ jupyter lab
 
 You can run existing notebooks as-is, then attach local or remote runtimes from JupyterLab.
 
-<img alt="Notebook remote execution" src="https://images.datalayer.io/legacy/examples/user-flow-1.png" width="900" />
+<img alt="Notebook remote execution" src="https://images.datalayer.io/examples/user-flow-1.png" width="900" />
 
 ## Example Catalog
 
@@ -94,7 +94,7 @@ See [CLI docs](https://datalayer.ai/docs) and the [Ray examples](https://github.
 
 <summary><i>CLI Remote Execution</i></summary>
 
-<img alt="CLI remote execution" src="https://images.datalayer.io/legacy/examples/CLI.png" width="800" />
+<img alt="CLI remote execution" src="https://images.datalayer.io/examples/CLI.png" width="800" />
 
 </details>
 
@@ -102,7 +102,7 @@ See [CLI docs](https://datalayer.ai/docs) and the [Ray examples](https://github.
 
 <summary><i>Sharing State between Notebook and CLI</i></summary>
 
-<img alt="Remote Notebook Execution" src="https://images.datalayer.io/legacy/examples/SharingState.png" width="800" />
+<img alt="Remote Notebook Execution" src="https://images.datalayer.io/examples/SharingState.png" width="800" />
 
 When using the same Kernel, variables defined in a notebook can be reused in the CLI and vice versa.
 
