@@ -1,22 +1,19 @@
 [![Datalayer](https://assets.datalayer.tech/datalayer-25.svg)](https://datalayer.ai)
 
-# Ray CLI Examples for `datalayer ray`
+# Ray CLI Examples
 
 These examples are designed to be submitted with the Datalayer Ray CLI.
 
 ## Prerequisites
 
-Before running these examples, make sure you have an account on [datalayer.ai](https://datalayer.ai).
-
-```bash
-export DATALAYER_RUN_URL=https://r-eastus.datalayer.run
-export DATALAYER_API_KEY=<your-token>
-```
+Before running these examples, make sure you have an account on [Datalayer AI](https://datalayer.ai).
 
 ## Create a Cluster
 
 ```bash
+datalaeyr ray clusters ls
 datalayer ray clusters create my-ray --namespace default --worker-replicas 1
+datalayer ray clusters ls # my-ray should be added to the list.
 datalayer ray clusters get my-ray --namespace default
 ```
 
