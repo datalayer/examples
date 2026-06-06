@@ -32,7 +32,7 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 1. [GPU checks](https://github.com/datalayer/examples/tree/main/gpu-check)
 2. [PyTorch examples](https://github.com/datalayer/examples/tree/main/pytorch)
 3. [LLM with CPU vs GPU performance comparison](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-comparison)
-4. [GPU/CPU execution performance comparison](https://github.com/datalayer/examples/tree/main/gpu-cpu)
+4. [GPU/CPU execution performance comparison](https://github.com/datalayer/examples/tree/main/gpu-vs-cpu)
 5. [OpenCV Face Detection](https://github.com/datalayer/examples/tree/main/image-face-detection-opencv)
 6. [Image Classifier with fast.ai](https://github.com/datalayer/examples/tree/main/image-classifier-fastai)
 7. [Dreambooth](https://github.com/datalayer/examples/tree/main/image-diffusion-dreambooth)

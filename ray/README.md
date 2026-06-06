@@ -6,6 +6,8 @@ These examples are designed to be submitted with the Datalayer Ray CLI.
 
 ## Prerequisites
 
+Before running these examples, make sure you have an account on [datalayer.ai](https://datalayer.ai).
+
 ```bash
 export DATALAYER_RUN_URL=https://r-eastus.datalayer.run
 export DATALAYER_API_KEY=<your-token>
