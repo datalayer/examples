@@ -1,18 +1,20 @@
-[![Datalayer](https://assets.datalayer.tech/datalayer-25.svg)](https://datalayer.io)
+[![Datalayer](https://assets.datalayer.tech/datalayer-25.svg)](https://datalayer.ai)
 
 [![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
 
-# Ξ Datalayer Examples
+# ☰ Datalayer Examples
 
-This repository contains Jupyter notebook examples showcasing scenarios where [Datalayer](https://datalayer.io) proves highly beneficial.
+Examples for the modern Datalayer platform: **managed agents for data analysis** with governed execution, durable runtimes, and reproducible outputs.
 
-Datalayer allows you to **scale runtimes** from your local JupyterLab or CLI to the cloud, providing the capability to run your code on **powerful GPU(s) and CPU(s)**. 🚀
+Use this repository to explore:
 
-The first examples delves into system checks and performance benchmarks to ensure optimal GPU and CPU utilization, the next ones explore typical AI scenarios where scaling proves essential.
+1. Notebook-based AI and ML workflows on CPU/GPU
+2. CLI-first remote execution and Ray job orchestration
+3. Agent-oriented prompt workflows (MCP, Skills, Guardrails...)
 
-💡 Note that you can use any notebook within Datalayer without requiring any code changes.
+Read more on [datalayer.ai](https://datalayer.ai) and in the [documentation](https://datalayer.ai/docs).
 
-## Getting started 
+## Getting Started
 
 ```bash
 pip install datalayer
@@ -21,96 +23,78 @@ cd datalayer-examples
 jupyter lab
 ```
 
-Read the [documentation website](https://docs.datalayer.io) to know more about how setup Datalayer.
+You can run existing notebooks as-is, then attach local or remote runtimes from JupyterLab.
 
-Don't worry, it is easy 👍 You just need to install the package, open JupyterLab, click on the `Jupyter Runtimes` tile in the JupyterLab launcher, create an account, wait a bit for your Kernels to be ready, and then just assign a Remote Runtime from any Notebook kernel picker.
+<img alt="Notebook remote execution" src="https://images.datalayer.io/examples/user-flow-1.png" width="900" />
 
-<img alt="Notebook remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/user-flow-1.png" width="900" />
+## Example Catalog
 
-1. [GPU sanity checks](#gpu-sanity-checks)
-1. [Performance comparison of CPU and GPU serial and parallel execution](#performance-comparison-of-cpu-and-gpu-serial-and-parallel-execution)
-1. [Parallel execution performance comparison](#parallel-execution-performance-comparison)
-1. [Face detection on YouTube video with OpenCV](#opencv-face-detection)
-1. [Image classification model training with fast.ai](#image-classifier-with-fastai)
-1. ['Personalized' text-to-image model creation with Dreambooth](#dreambooth)
-1. [Text generation using the Transformers library](#text-generation-with-transformers)
-1. [Instruction tuning for Mistral 7B on Alpaca dataset](#mistral-instruction-tuning)
-1. [LLM Inference with llama.cpp](#llm-inference-with-llama-cpp)
+1. [GPU checks](https://github.com/datalayer/examples/tree/main/gpu-check)
+2. [PyTorch examples](https://github.com/datalayer/examples/tree/main/pytorch)
+3. [LLM with CPU vs GPU performance comparison](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-comparison)
+4. [GPU/CPU execution performance comparison](https://github.com/datalayer/examples/tree/main/gpu-vs-cpu)
+5. [OpenCV Face Detection](https://github.com/datalayer/examples/tree/main/image-face-detection-opencv)
+6. [Image Classifier with fast.ai](https://github.com/datalayer/examples/tree/main/image-classifier-fastai)
+7. [Dreambooth](https://github.com/datalayer/examples/tree/main/image-diffusion-dreambooth)
+8. [Text Generation with Transformers](https://github.com/datalayer/examples/tree/main/llm-text-generation-transformers)
+9. [Sentiment Analysis with Gemma](https://github.com/datalayer/examples/tree/main/sentiment-analysis-gemma)
+10. [Mistral Instruction Tuning](https://github.com/datalayer/examples/tree/main/llm-instruct-tuning-mistral)
+11. [LLM Inference with llama.cpp + LangChain](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-langchain)
+12. [Prompt examples for Jupyter MCP](https://github.com/datalayer/examples/tree/main/prompts)
+13. [Ray CLI examples (`datalayer ray`)](https://github.com/datalayer/examples/tree/main/ray)
+14. [Evals SDK examples (batch + interactive)](https://github.com/datalayer/examples/tree/main/evals)
 
-### [GPU sanity checks](https://github.com/datalayer/examples/tree/main/check-gpu)
+## Highlight: PyTorch Examples
 
-This notebook contains scripts and tests to perform GPU sanity checks using PyTorch and CUDA. The primary goal of these checks is to **ensure** that the **GPU resources meet the expected requirements**.
+The [pytorch](https://github.com/datalayer/examples/tree/main/pytorch) folder includes practical PyTorch baselines, starting with matrix multiplication for CPU/GPU throughput analysis.
 
-### [LLM with CPU and GPU performance comparison](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-comparison)
+It is useful to:
 
-In this notebook, we compare the inference performance of the [`DeepSeek-R1-Distill-Llama-8B`](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B) model using **GPU acceleration** and **CPU only**.
+1. validate runtime and CUDA readiness
+2. compare CPU and GPU execution characteristics on your setup
+3. establish reproducible performance baselines before model training or inference experiments
 
-It demonstrates the significant speedup achieved with GPU offloading and highlights the benefits of **quantization** (using the GGUF model format) for memory and performance optimization.
+## Ray CLI Examples
 
-### [Parallel execution performance comparison](https://github.com/datalayer/examples/tree/main/parallel-execution)
+The [ray](https://github.com/datalayer/examples/tree/main/ray) folder contains Python scripts designed to be submitted with the Datalayer Ray CLI (`datalayer ray jobs submit --py @...`).
 
-Compare the performance with parallel execution.
+Included examples:
 
-### [OpenCV Face Detection](https://github.com/datalayer/examples/tree/main/image-face-detection-opencv)
+1. `hello_ray.py`: basic distributed map (`square`) with Ray tasks
+2. `pi_monte_carlo.py`: distributed Monte Carlo estimation of pi
+3. `actor_counter.py`: stateful actor pattern with multiple counters
 
-This example utilizes **OpenCV** for **detecting faces** in YouTube videos. It uses a traditional Haar Cascade model, which may have limitations in accuracy compared to modern deep learning-based models. It also utilizes **parallel computing across multiple CPUs** to accelerate face detection and video processing tasks, optimizing performance and efficiency. Datalayer further enhances this capability by enabling seamless scaling across multiple CPUs.
+## Evals SDK Examples
 
-<div style="display: flex;">
-    <img src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/rick-ashley-1.png" style="width: 20%;">
-    <img src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/rick-ashley-2.png" style="width: 20%;">
-</div>
+The [evals](https://github.com/datalayer/examples/tree/main/evals) folder contains SDK examples for both run modes:
 
-### [Image Classifier with Fast.ai](https://github.com/datalayer/examples/tree/main/image-classifier-fastai)
+1. `evals_batch_example.py`: deterministic case-set execution (`run_mode=batch`)
+2. `evals_interactive_example.py`: event/live-window evaluation (`run_mode=interactive`)
 
-This example demonstrates how to build a model that **distinguishes cats from dogs** in pictures using the fast.ai library. Due to the computational demands of training a model, a **GPU is required**. 
+Run them with the packaged make targets:
 
-<img src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*rAbCk0T4rksShBcPQjWC0A.gif" width="400"/>
+```bash
+cd evals
+make help
+make evals-batch-local
+make evals-batch-cloud
+make evals-interactive-local
+make evals-interactive-cloud
+make evals-batch-local-proxy
+make evals-interactive-local-proxy
+```
 
-### [Dreambooth](https://github.com/datalayer/examples/tree/main/image-diffusion-dreambooth)
+## CLI
 
-This example uses the Dreambooth method which takes as input a few images (typically 3-5 images suffice) of a subject (e.g., a specific dog) and the corresponding class name (e.g. "dog"), and returns a **fine-tuned/'personalized' text-to-image model** (source: [Dreambooth](https://dreambooth.github.io/)). To do this fune-tuning process, **GPU is required**.
+Datalayer supports remote code execution through the CLI and integrates with managed runtimes and Ray workflows.
 
-<img src="https://dreambooth.github.io/DreamBooth_files/accessories.png" width="500"/>
-
-### [Text Generation with Transformers](https://github.com/datalayer/examples/tree/main/llm-text-generation-transformers)
-
-Those notebook examples demonstrate how to leverage Datalayer's **GPU kernels** to accelerate text generation using **Gemma** model and the HuggingFace Transformers library.
-
-<img src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo-with-title.png" width="200"/>
-
-#### [Transformers Text Generation](https://github.com/datalayer/examples/tree/main/llm--text-generation-transformer/llm--text-generation-transformers.ipynb)
-
-This notebook uses Gemma-7b and Gemma-7b-it which is the instruct fine-tuned version of Gemma-7b.
-
-#### [Sentiment Analysis with Gemma](https://github.com/datalayer/examples/tree/main/sentiment-analysis-gemma/sentiment-analysis-gemma.ipynb)
-
-This example demonstrates how you can leverage Datalayer's [**Cell Runtimes**](https://github.com/datalayer/examples?tab=readme-ov-file#cell-kernel) feature on JupyterLab to **offload specific tasks**, such as sentiment analysis, **to a remote GPU** while keeping the rest of your code running locally. By selectively using remote resources, you can **optimize both performance and cost**.
-
-This hybrid approach is perfect for tasks like sentiment analysis via llm where some parts of the code require more computational resources than others. For a detailed explanation and step-by-step guide on using Cell Kernels, check out our [blog post](https://datalayer.blog/2024/08/23/cell-kernels) on this specific example.
-
-### [Mistral Instruction Tuning](https://github.com/datalayer/examples/tree/main/llm-instruct-tuning-mistral)
-
-**Mistral 7B** is a large language model (LLM) that contains 7.3 billion parameters and is one of the most powerful models for its size. However, this base model is not instruction-tuned, meaning it may struggle to follow instructions and perform specific tasks.
-
-By fine-tuning Mistral 7B on the Alpaca dataset using [**torchtune**](https://github.com/pytorch/torchtune), the model will significantly improve its capabilities to perform tasks such as conversation and answering questions accurately. Due to the computational demands of fine-tuning a model, a **GPU is required**.
-
-<img src="https://assets.datalayer.tech/examples/llm-fine-tuning.png" width="500"/>
-
-### [LLM Inference with llama.cpp](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-langchain)
-
-[`llama.cpp`](https://llama-cpp-python.readthedocs.io) library is used for efficient inference with support for GPU.
-
-[LangChain](https://www.langchain.com) is used.
-
-## CLI Execution
-
-Datalayer supports the remote execution of code using the **CLI**. Refer to this [page](https://docs.datalayer.io/cli) for more information.
+See [CLI docs](https://datalayer.ai/docs) and the [Ray examples](https://github.com/datalayer/examples/tree/main/ray) for end-to-end commands.
 
 <details>
 
 <summary><i>CLI Remote Execution</i></summary>
 
-<img alt="CLI remote execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/CLI.png" width="800" />
+<img alt="CLI remote execution" src="https://images.datalayer.io/examples/CLI.png" width="800" />
 
 </details>
 
@@ -118,17 +102,17 @@ Datalayer supports the remote execution of code using the **CLI**. Refer to this
 
 <summary><i>Sharing State between Notebook and CLI</i></summary>
 
-<img alt="Remote Notebook Execution" src="https://datalayer-assets.s3.us-west-2.amazonaws.com/examples/SharingState.png" width="800" />
+<img alt="Remote Notebook Execution" src="https://images.datalayer.io/examples/SharingState.png" width="800" />
 
-When using the same Kernel, variables defined in a notebook can be used in the CLI and vice versa. This holds also true when using multiple notebooks connected to the same kernel, for example.
+When using the same Kernel, variables defined in a notebook can be reused in the CLI and vice versa.
 
 </details>
 
-## Cell Runtime
+## JupyterLab
 
-Datalayer offers the possibility to use **cell-specific Runtime**, allowing you to execute specific cells with different kernels.
+Datalayer supports **cell-specific runtimes** so you can run specific cells on different compute targets.
 
-This feature **optimizes costs** by enabling you to, for example, leverage the local CPU for data preparation and reserving the powerful (and often more expensive) GPU resources for intensive computations. 
+This lets you optimize cost and performance, for example by using local CPU for data prep and remote GPU for intensive cells.
 
 <details>
 
@@ -136,6 +120,6 @@ This feature **optimizes costs** by enabling you to, for example, leverage the l
 
 <img alt="Cell Runtime Execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
 
-The remote GPU Runtime is utilized only for the duration of the cell computation, minimizing costs.
+The remote GPU runtime is used only for the duration of selected cell computation.
 
 </details>
