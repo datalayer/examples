@@ -25,16 +25,15 @@ from datalayer_core.runtimes.agent_runtime import (
     compute_time_reservation_minutes,
     create_cloud_agent_runtime,
     resolve_environment_burning_rate,
+    teardown_agent_execution_resources,
 )
 from datalayer_core.runtimes.local import (
     LocalAgentRuntime,
-    delete_local_agents,
     ensure_local_agent,
     run_cloud_agent_chat,
     run_local_agent_chat,
     runtime_route_candidates,
     start_local_agent_runtime,
-    terminate_local_agent_runtime,
 )
 from datalayer_core.utils.urls import DatalayerURLs
 
@@ -634,7 +633,6 @@ def main() -> None:
         print(f'Using runtime pod: {runtime_pod_name}')
         if cloud_runtime_ingress:
             print(f'Runtime ingress: {cloud_runtime_ingress}')
-        print('Note: cloud runtime termination is user-managed; stop it explicitly when finished.')
     if not args.no_agent and args.execution_target == 'local':
         if args.auto_start_local_agent_runtime:
             local_runtime = start_local_agent_runtime(
@@ -811,7 +809,7 @@ def main() -> None:
                     'run_index': index + 1,
                     'scenario': 'live-monitoring',
                     'runtime_pod_name': runtime_pod_name or None,
-                    'runtime_termination_policy': 'user_managed' if args.execution_target == 'cloud' else None,
+                    'runtime_termination_policy': 'auto_terminate_after_report' if args.execution_target == 'cloud' else None,
                     'submitted_code': submitted_code,
                     'interaction_mode': interaction_mode,
                     'agent_prompt': interaction_prompt or None,
@@ -912,16 +910,32 @@ def main() -> None:
         except Exception as exc:
             print(f'Warning: unable to generate auto report ({exc})')
 
-    if local_runtime is not None:
-        total_agents, deleted_agents = delete_local_agents(
-            base_url=local_agent_base_url,
-            token=token,
-        )
+    cleanup = teardown_agent_execution_resources(
+        client,
+        execution_target=args.execution_target,
+        cloud_runtime_or_pod_name=runtime_pod_name,
+        local_base_url=local_agent_base_url,
+        local_agent_name=args.local_agent_id,
+        token=token,
+        local_runtime=local_runtime,
+    )
+    if cleanup.get('cloud_runtime_terminated'):
+        print(f'Terminated cloud runtime: {runtime_pod_name}')
+    elif args.execution_target == 'cloud' and runtime_pod_name:
         print(
-            'Local runtime cleanup: '
-            f'deleted {deleted_agents}/{total_agents} agent(s).'
+            'Warning: cloud runtime termination was not confirmed. '
+            f'pod={runtime_pod_name}'
         )
-        terminate_local_agent_runtime(local_runtime)
+
+    if cleanup.get('local_agent_deleted'):
+        print(f'Terminated local agent registration: {args.local_agent_id}')
+    elif args.execution_target == 'local' and not args.no_agent:
+        print(
+            'Warning: local agent teardown was not confirmed. '
+            f'agent={args.local_agent_id}'
+        )
+
+    if cleanup.get('local_runtime_terminated'):
         print('Stopped auto-started local agent-runtimes server.')
 
     print('Done.')
