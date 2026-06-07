@@ -13,7 +13,7 @@ Before running these examples, make sure you have an account on [Datalayer AI](h
 ## Create a Cluster
 
 ```bash
-datalaeyr ray clusters ls
+datalayer ray clusters ls
 datalayer ray clusters create my-ray --namespace default --worker-replicas 1
 datalayer ray clusters ls # my-ray should be added to the list.
 datalayer ray clusters get my-ray --namespace default

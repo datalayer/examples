@@ -34,6 +34,26 @@ Use `--synthetic` to keep deterministic synthetic behavior (seeded metrics/statu
 
 Each script currently creates 5 experiments and 3 runs per experiment.
 
+## What Is Compared During Evals
+
+Comparison happens at two levels:
+
+- Run-level comparison (within one experiment): compare two runs A vs B from the same experiment configuration.
+- Experiment-level comparison (within one evalset): compare experiments that share the same case baseline.
+
+What should stay fixed for valid comparison:
+
+- Same evalset cases and schemas.
+- Same run mode (`batch` or `interactive`) for the compared runs.
+- Similar run windows when you interpret drift/trend.
+
+Typical interpretation in reports and UI:
+
+- Latest pass rate: current quality snapshot for each experiment.
+- Baseline pass rate: early-window reference in the same experiment.
+- Drift: latest - baseline.
+- Pairwise delta: selected run A - run B.
+
 ## Prerequisites
 
 - Python 3.10+
@@ -58,7 +78,7 @@ Default local proxy endpoints used by examples for `sdk-proxy`:
 For `sdk-proxy` local target runs, start `agent-runtimes` first. Example:
 
 ```bash
-agent-runtimes serve --host 127.0.0.1 --port 8765 --agent-id example-evals --agent-name default
+agent-runtimes serve --host 127.0.0.1 --port 8765 --agent-id example-simple --agent-name default
 ```
 
 Also ensure local ai-agents proxy is reachable (default `http://localhost:4400`).
@@ -92,8 +112,8 @@ Target behavior:
 
 - `evals-*-local` uses local execution target.
 - `evals-*-cloud` uses cloud execution target.
-- `evals-*-proxy-local` uses local execution target and auto-starts an `agent-runtimes` server on a random free port, then bootstraps the local agent (via `POST /api/v1/agents`). These make targets export `DATALAYER_EVALS_MODE=$(LOCAL_AGENT_EVALS_MODE)` and `DATALAYER_EVALS_EMIT_LIVE_EVENTS=$(LOCAL_AGENT_EVALS_EMIT_LIVE_EVENTS)` so local runtime eval emission is enabled by default.
-- `evals-*-proxy-cloud` keeps sdk-proxy endpoints but forces cloud execution target.
+- `evals-*-local-proxy` uses local execution target and auto-starts an `agent-runtimes` server on a random free port, then bootstraps the local agent (via `POST /api/v1/agents`). These make targets export `DATALAYER_EVALS_MODE=$(LOCAL_AGENT_EVALS_MODE)` and `DATALAYER_EVALS_EMIT_LIVE_EVENTS=$(LOCAL_AGENT_EVALS_EMIT_LIVE_EVENTS)` so local runtime eval emission is enabled by default.
+- `evals-*-cloud-proxy` keeps sdk-proxy endpoints but forces cloud execution target.
 
 Note: GNU make parses flags like `--synthetic` as make options, so use `SYNTHETIC=1` or the `*-synthetic` targets.
 
@@ -106,7 +126,7 @@ python evals_batch_example.py \
   --eval-name batch-demo \
   --run-environment sdk-proxy \
   --execution-target cloud \
-  --agentspec-id example-evals \
+  --agentspec-id example-simple \
   --run-status completed \
   --clean
 ```
@@ -116,6 +136,15 @@ Batch cloud note:
 - Batch cloud mode now launches a runtime pod and submits code for execution.
 - Runs should transition to terminal states (`completed`/`failed`) instead of staying queued.
 - If your environment has no runtime capacity, creation can still fail before execution starts.
+- The script now auto-generates both markdown and CSV reports at the end:
+  - `report-<timestamp>.md`
+  - `report-<timestamp>.csv`
+- To disable that behavior, pass `--no-auto-report`.
+
+Failure visibility note:
+
+- Auto reports now include a "Latest Failed Run Diagnostics" section with failure type/message, execution URL, and detail excerpt when available.
+- The CSV includes per-run failure columns (`failure_stage`, `failure_type`, `failure_message`, `execution_url`, `detail_excerpt`).
 
 ### Cloud execution check
 
@@ -200,7 +229,7 @@ python evals_interactive_example.py \
   --execution-target local \
   --local-agent-base-url http://127.0.0.1:8000 \
   --local-agent-id default \
-  --agentspec-id example-evals \
+  --agentspec-id example-simple \
   --run-status running \
   --clean
 ```
@@ -263,6 +292,12 @@ datalayer evals evalsets ls --run-environment sdk
 datalayer evals report <evalset_id>
 ```
 
+If `<evalset_id>` is omitted, the CLI uses the latest updated evalset automatically:
+
+```bash
+datalayer evals report
+```
+
 Legacy alias (still supported):
 
 ```bash
@@ -278,13 +313,32 @@ Useful options:
 - `--export` to export report data to `report.csv`.
 - `--ai-agents-url <url>` and `--token <token>` for explicit endpoint/auth.
 
+## CLI Spec Files For Repeatable Setup
+
+The CLI supports creating evalsets and experiments from JSON spec files.
+
+Create an evalset from file:
+
+```bash
+datalayer evals evalsets create --spec-file .github/evals/no-codemode.evalset.json
+```
+
+Create an experiment from file:
+
+```bash
+datalayer evals experiments create --spec-file .github/evals/experiment.json
+```
+
+This is useful in CI/GitHub Actions where you want reproducible eval definitions checked into git.
+
 ## Agent Invocation Modes
 
 The examples now support two modes:
 
 - **Default (no `--synthetic`)**: experiments are configured with explicit execution metadata:
   - `execution_target` (`cloud` or `local`)
-  - `agent_spec_id` (set with `--agentspec-id`; defaults to `example-evals` if omitted)
+  - `agent_spec_id` (set with `--agentspec-id`; defaults to `example-simple` if omitted)
+  - `agent_spec` (set with `--agentspec`; URL or local YAML/JSON path; overrides `--agentspec-id`)
   - runtime settings (`environment_name`) or local settings (`local_agent_base_url`, `local_agent_id`)
 - **`--synthetic`**: uses synthetic metrics/status behavior without requiring synthetic agent-spec defaults.
 
@@ -292,6 +346,7 @@ Flag note:
 
 - Use `--agentspec-id <id>` as the primary flag.
 - `--agent-spec-id <id>` is also accepted as an alias.
+- Use `--agentspec <url-or-path>` to bootstrap cloud runtime creation from a full spec payload (`--agent-spec` is accepted as an alias).
 
 This allows exercising the same experiment/run model while keeping a deterministic test fallback.
 
@@ -350,7 +405,7 @@ python evals_interactive_example.py \
   --execution-target local \
   --local-agent-base-url http://127.0.0.1:8000 \
   --local-agent-id default \
-  --agentspec-id example-evals \
+  --agentspec-id example-simple \
   --run-status running \
   --clean
 ```

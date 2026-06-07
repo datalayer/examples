@@ -8,27 +8,39 @@ Creates one evalset, five experiments, and three runs per experiment using run_m
 from __future__ import annotations
 
 import argparse
-import atexit
-import math
 import json
 import os
 import socket
-import subprocess
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
-from urllib import error as urlerror
-from urllib import request as urlrequest
 from urllib.parse import urlparse
 
 from datalayer_core import DatalayerClient
+from datalayer_core.cli.commands.agents import _load_agent_spec
+from datalayer_core.runtimes.agent_runtime import (
+    compute_time_reservation_minutes,
+    create_cloud_agent_runtime,
+    resolve_environment_burning_rate,
+)
+from datalayer_core.runtimes.local import (
+    LocalAgentRuntime,
+    delete_local_agents,
+    ensure_local_agent,
+    run_cloud_agent_chat,
+    run_local_agent_chat,
+    runtime_route_candidates,
+    start_local_agent_runtime,
+    terminate_local_agent_runtime,
+)
 from datalayer_core.utils.urls import DatalayerURLs
 
 
 DEFAULT_LOCAL_IAM_URL = 'http://localhost:9700/api/iam/'
 DEFAULT_LOCAL_RUNTIMES_URL = 'http://localhost:9500/api/runtimes/'
 DEFAULT_LOCAL_AI_AGENTS_URL = 'http://localhost:4400/api/ai-agents/'
-DEFAULT_AGENT_SPEC_ID = 'example-evals'
+DEFAULT_AGENT_SPEC_ID = 'example-simple'
 
 
 def _normalize_service_url(raw_url: str | None, service_suffix: str) -> str | None:
@@ -278,13 +290,13 @@ def _launch_cloud_runtime(
     environment_name: str,
     evalset_name: str,
     cloud_credits_limit: float,
-) -> str:
-    burning_rate = _resolve_environment_burning_rate(client, environment_name)
-
-    # create_runtime computes credits as burning_rate * 60 * time_reservation
-    time_reservation_minutes = max(
-        1,
-        int(math.ceil(float(cloud_credits_limit) / (burning_rate * 60.0))),
+    agent_spec_id: str,
+    agent_spec: dict[str, Any] | None,
+) -> Any:
+    burning_rate = resolve_environment_burning_rate(client, environment_name)
+    time_reservation_minutes = compute_time_reservation_minutes(
+        credits_limit=cloud_credits_limit,
+        burning_rate=burning_rate,
     )
     requested_credits = burning_rate * 60.0 * time_reservation_minutes
     print(
@@ -295,63 +307,13 @@ def _launch_cloud_runtime(
         f'effective_credits={requested_credits:.2f}'
     )
 
-    runtime = client.create_runtime(
+    return create_cloud_agent_runtime(
+        client,
+        environment_name=environment_name,
         name=f'evals-batch-{evalset_name[:24]}',
-        environment=environment_name,
+        agent_spec_id=agent_spec_id,
+        agent_spec=agent_spec,
         time_reservation=time_reservation_minutes,
-    )
-    pod_name = str(getattr(runtime, 'pod_name', '') or '').strip()
-    if not pod_name:
-        raise RuntimeError('Runtime creation succeeded but pod_name is missing.')
-    return pod_name
-
-
-def _resolve_environment_burning_rate(
-    client: DatalayerClient,
-    environment_name: str,
-) -> float:
-    def _to_float(value: Any) -> float | None:
-        try:
-            if value is None:
-                return None
-            parsed = float(value)
-            if parsed > 0:
-                return parsed
-        except (TypeError, ValueError):
-            return None
-        return None
-
-    response = client._list_environments()  # type: ignore[attr-defined]
-    if not response.get('success', True):
-        raise RuntimeError(
-            f"Failed to list environments: {response.get('message', 'Unknown error')}"
-        )
-    environments = response.get('environments')
-    if not isinstance(environments, list):
-        raise RuntimeError('Failed to list environments: invalid environments payload.')
-
-    matched_environment: dict[str, Any] | None = None
-    for raw_env in environments:
-        if isinstance(raw_env, dict) and str(raw_env.get('name') or '') == environment_name:
-            matched_environment = raw_env
-            break
-
-    if matched_environment is None:
-        available = [str(env.get('name') or '') for env in environments if isinstance(env, dict)]
-        raise RuntimeError(
-            f"Environment '{environment_name}' not found for cloud runtime launch. "
-            f'Available environments: {available}'
-        )
-
-    parsed = _to_float(matched_environment.get('burning_rate'))
-    if parsed is not None:
-        return parsed
-
-    available_keys = sorted(matched_environment.keys())
-    raise RuntimeError(
-        f"Environment '{environment_name}' is missing a positive burning rate in backend payload. "
-        f'Checked key: burning_rate. '
-        f'Environment keys: {available_keys}'
     )
 
 
@@ -386,278 +348,6 @@ def _extract_case_prompt(case: dict[str, Any]) -> str:
     return ''
 
 
-def _extract_local_agent_output(payload: dict[str, Any]) -> Any:
-    for key in ('output', 'response', 'result', 'actual_output'):
-        if key in payload:
-            return payload.get(key)
-
-    results = payload.get('results')
-    if isinstance(results, list) and results:
-        first = results[0]
-        if isinstance(first, dict):
-            for key in ('output', 'response', 'result', 'actual_output'):
-                if key in first:
-                    return first.get(key)
-            return first
-    return payload
-
-
-def _extract_local_agent_metrics(
-    payload: dict[str, Any],
-    *,
-    total_cases: int,
-    default_pass_rate: float,
-) -> dict[str, Any]:
-    metrics = payload.get('metrics')
-    if isinstance(metrics, dict) and metrics:
-        return dict(metrics)
-
-    total = int(payload.get('total_cases') or total_cases)
-    passed = int(payload.get('passed') or round(default_pass_rate * total))
-    failed = int(payload.get('failed') or max(0, total - passed))
-    pass_rate_raw = payload.get('pass_rate')
-    if isinstance(pass_rate_raw, (int, float)):
-        pass_rate = float(pass_rate_raw)
-    else:
-        pass_rate = (passed / total) if total > 0 else default_pass_rate
-    avg_score_raw = payload.get('avg_score')
-    avg_score = float(avg_score_raw) if isinstance(avg_score_raw, (int, float)) else round(pass_rate * 0.9 + 0.08, 4)
-    return {
-        'pass_rate': pass_rate,
-        'total_cases': total,
-        'passed': passed,
-        'failed': failed,
-        'avg_score': avg_score,
-    }
-
-
-def _extract_text_from_vercel_stream(raw: str) -> str:
-    text_parts: list[str] = []
-    for line in raw.splitlines():
-        if not line.startswith('data: '):
-            continue
-        payload = line[6:].strip()
-        if not payload or payload == '[DONE]':
-            continue
-        try:
-            event = json.loads(payload)
-        except json.JSONDecodeError:
-            continue
-
-        if isinstance(event, str):
-            if event.strip():
-                text_parts.append(event)
-            continue
-        if not isinstance(event, dict):
-            continue
-
-        for key in ('delta', 'text', 'content', 'outputText', 'textDelta'):
-            value = event.get(key)
-            if isinstance(value, str) and value:
-                text_parts.append(value)
-
-    return ''.join(text_parts).strip()
-
-
-def _run_local_agent_chat(
-    *,
-    base_url: str,
-    local_agent_id: str,
-    token: str,
-    prompt: str,
-) -> dict[str, Any]:
-    endpoint = f"{base_url.rstrip('/')}/api/v1/vercel-ai/{local_agent_id}"
-    message_id = f'evals-{int(time.time() * 1000)}'
-    parts = [
-        {
-            'type': 'text',
-            'text': prompt,
-        }
-    ]
-    payload = {
-        'trigger': 'submit-message',
-        'id': f'chat-{message_id}',
-        'message': {
-            'id': message_id,
-            'role': 'user',
-            'parts': parts,
-        },
-        'messages': [
-            {
-                'id': message_id,
-                'role': 'user',
-                'parts': parts,
-            }
-        ],
-    }
-    req = urlrequest.Request(
-        endpoint,
-        data=json.dumps(payload).encode('utf-8'),
-        headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}',
-        },
-        method='POST',
-    )
-    try:
-        with urlrequest.urlopen(req, timeout=300) as response:
-            raw = response.read().decode('utf-8')
-    except urlerror.HTTPError as exc:
-        body = exc.read().decode('utf-8', errors='replace')
-        raise RuntimeError(f'Local agent chat failed ({exc.code}): {body or "unknown error"}') from exc
-    except urlerror.URLError as exc:
-        raise RuntimeError(f'Local agent chat request failed: {exc.reason}') from exc
-
-    output_text = _extract_text_from_vercel_stream(raw)
-    return {
-        'status': 'completed',
-        'output': {
-            'text': output_text,
-            'raw_stream_excerpt': raw[:2000],
-        },
-    }
-
-
-def _find_random_free_port(host: str = '127.0.0.1') -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind((host, 0))
-        return int(sock.getsockname()[1])
-
-
-def _wait_for_local_runtime(base_url: str, timeout_seconds: int = 25) -> None:
-    endpoint = f"{base_url.rstrip('/')}/health"
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        req = urlrequest.Request(endpoint, method='GET')
-        try:
-            with urlrequest.urlopen(req, timeout=2):
-                return
-        except Exception:
-            time.sleep(0.5)
-    raise RuntimeError(
-        f'Local agent-runtimes server did not become ready at {endpoint} within {timeout_seconds}s.'
-    )
-
-
-def _build_agent_runtime_env() -> tuple[dict[str, str], list[str]]:
-    runtime_env = os.environ.copy()
-    mapped_targets: list[str] = []
-    mappings = {
-        'DATALAYER_BEDROCK_AWS_ACCESS_KEY_ID': 'AWS_ACCESS_KEY_ID',
-        'DATALAYER_BEDROCK_AWS_SECRET_ACCESS_KEY': 'AWS_SECRET_ACCESS_KEY',
-        'DATALAYER_BEDROCK_AWS_DEFAULT_REGION': 'AWS_DEFAULT_REGION',
-    }
-    for source, target in mappings.items():
-        value = (runtime_env.get(source) or '').strip()
-        if value:
-            runtime_env[target] = value
-            mapped_targets.append(target)
-    return runtime_env, mapped_targets
-
-
-def _start_local_agent_runtime(
-    *,
-    base_url: str,
-    local_agent_id: str,
-    agent_spec_id: str,
-    local_agent_log_level: str,
-) -> tuple[str, subprocess.Popen[Any]]:
-    parsed = urlparse(base_url)
-    scheme = parsed.scheme or 'http'
-    host = parsed.hostname or '127.0.0.1'
-    port = _find_random_free_port(host)
-    runtime_base_url = f'{scheme}://{host}:{port}'
-
-    command = [
-        'agent-runtimes',
-        'serve',
-        '--host',
-        host,
-        '--port',
-        str(port),
-        '--protocol',
-        'vercel-ai',
-        '--agent-id',
-        agent_spec_id,
-        '--agent-name',
-        local_agent_id,
-        '--log-level',
-        local_agent_log_level,
-    ]
-    runtime_env, mapped_targets = _build_agent_runtime_env()
-    if mapped_targets:
-        print(
-            'Launching local agent-runtimes with Bedrock env mapping: '
-            f"DATALAYER_BEDROCK_* -> {', '.join(mapped_targets)}"
-        )
-    else:
-        print(
-            'Launching local agent-runtimes without DATALAYER_BEDROCK_* mapping '
-            '(no DATALAYER_BEDROCK_AWS_* variables detected).'
-        )
-    process = subprocess.Popen(command, env=runtime_env)
-
-    def _cleanup() -> None:
-        _terminate_local_runtime_process(process)
-
-    atexit.register(_cleanup)
-    _wait_for_local_runtime(runtime_base_url)
-    return runtime_base_url, process
-
-
-def _terminate_local_runtime_process(process: subprocess.Popen[Any]) -> None:
-    if process.poll() is not None:
-        return
-    process.terminate()
-    try:
-        process.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        process.kill()
-
-
-def _delete_local_agents(*, base_url: str, token: str) -> tuple[int, int]:
-    list_req = urlrequest.Request(
-        f"{base_url.rstrip('/')}/api/v1/agents",
-        headers={'Authorization': f'Bearer {token}'},
-        method='GET',
-    )
-    try:
-        with urlrequest.urlopen(list_req, timeout=30) as response:
-            raw = response.read().decode('utf-8')
-    except Exception as exc:
-        print(f'Warning: unable to list local agents for cleanup ({exc})')
-        return (0, 0)
-
-    try:
-        payload = json.loads(raw) if raw else {}
-    except json.JSONDecodeError:
-        payload = {}
-
-    agents = payload.get('agents') if isinstance(payload, dict) else []
-    if not isinstance(agents, list):
-        agents = []
-
-    deleted = 0
-    for agent in agents:
-        if not isinstance(agent, dict):
-            continue
-        agent_id = str(agent.get('id') or '').strip()
-        if not agent_id:
-            continue
-        delete_req = urlrequest.Request(
-            f"{base_url.rstrip('/')}/api/v1/agents/{agent_id}",
-            headers={'Authorization': f'Bearer {token}'},
-            method='DELETE',
-        )
-        try:
-            with urlrequest.urlopen(delete_req, timeout=30):
-                deleted += 1
-        except Exception as exc:
-            print(f'Warning: unable to delete local agent {agent_id} ({exc})')
-
-    return (len(agents), deleted)
-
-
 def _assert_http_service_reachable(service_name: str, base_url: str) -> None:
     parsed = urlparse(base_url)
     host = parsed.hostname or 'localhost'
@@ -674,99 +364,6 @@ def _assert_http_service_reachable(service_name: str, base_url: str) -> None:
         raise RuntimeError(
             f"{service_name} service is not reachable at {base_url}. "
             "Start local proxies/services first (for example: p pf-local)."
-        ) from exc
-
-
-def _ensure_local_agent(
-    *,
-    base_url: str,
-    local_agent_id: str,
-    token: str,
-    agent_spec_id: str,
-) -> None:
-    list_req = urlrequest.Request(
-        f"{base_url.rstrip('/')}/api/v1/agents",
-        headers={'Authorization': f'Bearer {token}'},
-        method='GET',
-    )
-    try:
-        with urlrequest.urlopen(list_req, timeout=30) as response:
-            raw = response.read().decode('utf-8')
-        payload = json.loads(raw) if raw else {}
-    except Exception:
-        payload = {}
-
-    existing_agents = payload.get('agents') if isinstance(payload, dict) else []
-    if not isinstance(existing_agents, list):
-        existing_agents = []
-    for agent in existing_agents:
-        if not isinstance(agent, dict):
-            continue
-        existing_id = str(agent.get('id') or '').strip()
-        existing_name = str(agent.get('name') or '').strip()
-        if local_agent_id and (existing_id == local_agent_id or existing_name == local_agent_id):
-            existing_transport = str(agent.get('transport') or '').strip().lower()
-            if existing_transport in {'vercel-ai', 'vercel_ai'}:
-                return
-
-            # Replace mismatched transport registration so local real interactions
-            # use the Vercel AI chat endpoint.
-            delete_target = existing_id or local_agent_id
-            delete_req = urlrequest.Request(
-                f"{base_url.rstrip('/')}/api/v1/agents/{delete_target}",
-                headers={'Authorization': f'Bearer {token}'},
-                method='DELETE',
-            )
-            try:
-                with urlrequest.urlopen(delete_req, timeout=30):
-                    pass
-            except Exception as exc:
-                raise RuntimeError(
-                    'Local agent exists with incompatible transport '
-                    f"'{existing_transport or 'unknown'}' and could not be replaced: {exc}"
-                ) from exc
-            break
-
-    endpoint = f"{base_url.rstrip('/')}/api/v1/agents"
-    payload = {
-        'name': local_agent_id,
-        'description': 'Local eval runner agent created by evals_batch_example.py',
-        'agent_library': 'pydantic-ai',
-        'transport': 'vercel-ai',
-        'agent_spec_id': agent_spec_id,
-        'enable_skills': True,
-        'tools': [],
-    }
-    req = urlrequest.Request(
-        endpoint,
-        data=json.dumps(payload).encode('utf-8'),
-        headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}',
-        },
-        method='POST',
-    )
-    try:
-        with urlrequest.urlopen(req, timeout=120):
-            return
-    except urlerror.HTTPError as exc:
-        body = exc.read().decode('utf-8', errors='replace')
-        if exc.code == 409 and 'already exists' in body.lower():
-            return
-        raise RuntimeError(
-            f'Local agent bootstrap failed ({exc.code}): {body or "unknown error"}'
-        ) from exc
-    except urlerror.URLError as exc:
-        parsed = urlparse(base_url)
-        host = parsed.hostname or '127.0.0.1'
-        port = parsed.port or 8000
-        scheme = parsed.scheme or 'http'
-        raise RuntimeError(
-            'Local agent bootstrap request failed: '
-            f'{exc.reason}. Start agent-runtimes first, for example: '
-            f'agent-runtimes serve --host {host} --port {port} '
-            f'--agent-id {agent_spec_id} --agent-name {local_agent_id} '
-            f'(base URL: {scheme}://{host}:{port}).'
         ) from exc
 
 
@@ -877,6 +474,37 @@ def _watch_run_statuses(
         time.sleep(max(1, interval_seconds))
 
 
+def _write_markdown_report(
+    *,
+    client: DatalayerClient,
+    evalset_id: str,
+    account_uid: str | None,
+    run_limit: int = 50,
+) -> tuple[Path, Path]:
+    """Generate markdown + CSV reports by reusing the datalayer-core report API."""
+    from datalayer_core.cli.commands.evals import (
+        _report_data,
+        _report_markdown,
+        _write_report_csv,
+    )
+
+    report = _report_data(
+        client=client,
+        evalset_id=evalset_id,
+        run_limit=run_limit,
+        account_uid=account_uid,
+    )
+    markdown = _report_markdown(report, run_limit=run_limit, colorize=False)
+
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    markdown_path = Path(f'report-{timestamp}.md')
+    csv_path = Path(f'report-{timestamp}.csv')
+    markdown_path.write_text(markdown + '\n', encoding='utf-8')
+    _write_report_csv(report, csv_path)
+
+    return markdown_path, csv_path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='Create one evalset, five experiments, and three runs per experiment in batch mode.'
@@ -909,8 +537,19 @@ def parse_args() -> argparse.Namespace:
         dest='agent_spec_id',
         default=None,
         help=(
-            'Agent specification id. Defaults to example-evals when omitted. '
+            'Agent specification id. Defaults to example-simple when omitted. '
             'Accepts both --agent-spec-id and --agentspec-id.'
+        ),
+    )
+    parser.add_argument(
+        '--agentspec',
+        '--agent-spec',
+        dest='agent_spec',
+        default=None,
+        help=(
+            'Agent spec source as YAML/JSON URL or local file path. '
+            'When provided, overrides --agentspec-id. '
+            'Accepts both --agentspec and --agent-spec.'
         ),
     )
     parser.add_argument('--environment-name', default='ai-agents-env')
@@ -941,6 +580,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument('--no-agent', dest='no_agent', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--dry-run', dest='no_agent', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument(
+        '--no-auto-report',
+        dest='auto_report',
+        action='store_false',
+        default=True,
+        help='Skip automatic markdown report generation at the end of the run.',
+    )
     parser.add_argument('--clean', action='store_true', help='Accepted for compatibility; currently no-op.')
     return parser.parse_args()
 
@@ -952,7 +598,13 @@ def main() -> None:
         raise RuntimeError('Set DATALAYER_API_KEY or TEST_DATALAYER_API_KEY first.')
 
     account_uid = os.environ.get('DATALAYER_ACCOUNT_UID')
+    if args.agent_spec and args.agent_spec_id:
+        raise RuntimeError('Use either --agentspec or --agentspec-id, not both.')
+
     agent_spec_id = (args.agent_spec_id or '').strip() or _resolve_default_agent_spec_id()
+    agent_spec: dict[str, Any] | None = None
+    if args.agent_spec:
+        agent_spec = _load_agent_spec(str(args.agent_spec))
     backend_run_environment, iam_url, runtimes_url, ai_agents_url = _resolve_environment(args)
     pass_rate = min(1.0, max(0.0, float(args.pass_rate)))
     run_count = 3
@@ -968,11 +620,15 @@ def main() -> None:
         _assert_http_service_reachable('ai-agents', urls.ai_agents_url)
         if args.execution_target == 'cloud':
             _assert_http_service_reachable('runtimes', urls.runtimes_url)
-    ui_url = (
-        args.ui_url
-        or os.environ.get('DATALAYER_UI_URL')
-        or ('http://localhost:3063' if 'localhost' in urls.ai_agents_url or '127.0.0.1' in urls.ai_agents_url else urls.ai_agents_url)
-    ).rstrip('/')
+    run_url = (os.environ.get('DATALAYER_RUN_URL') or '').strip().rstrip('/')
+    if args.execution_target == 'cloud' and run_url and not args.ui_url:
+        ui_url = run_url
+    else:
+        ui_url = (
+            args.ui_url
+            or os.environ.get('DATALAYER_UI_URL')
+            or ('http://localhost:3063' if 'localhost' in urls.ai_agents_url or '127.0.0.1' in urls.ai_agents_url else urls.ai_agents_url)
+        ).rstrip('/')
 
     client = DatalayerClient(urls=urls, token=token)
     evalset_name = args.eval_name.strip() or _generated_evalset_name('sdk', 'batch')
@@ -1045,30 +701,38 @@ def main() -> None:
         )
     runtime_pod_name = ''
     local_agent_base_url = args.local_agent_base_url
-    auto_started_runtime_process: subprocess.Popen[Any] | None = None
+    local_runtime: LocalAgentRuntime | None = None
+    cloud_runtime_ingress = ''
     effective_execution_target = args.execution_target
     if not args.no_agent and args.execution_target == 'cloud':
         print('Launching cloud runtime for batch execution...')
-        runtime_pod_name = _launch_cloud_runtime(
+        cloud_runtime = _launch_cloud_runtime(
             client,
             args.environment_name,
             evalset_name,
             float(args.cloud_credits_limit),
+            agent_spec_id,
+            agent_spec,
         )
+        runtime_pod_name = str(getattr(cloud_runtime, 'pod_name', '') or '').strip()
+        cloud_runtime_ingress = str(getattr(cloud_runtime, 'ingress', '') or '').strip()
         print(f'Using runtime pod: {runtime_pod_name}')
+        if cloud_runtime_ingress:
+            print(f'Runtime ingress: {cloud_runtime_ingress}')
         print('Note: cloud runtime termination is user-managed; stop it explicitly when finished.')
     if not args.no_agent and effective_execution_target == 'local':
         if args.auto_start_local_agent_runtime:
-            local_agent_base_url, auto_started_runtime_process = _start_local_agent_runtime(
-                base_url=local_agent_base_url,
-                local_agent_id=args.local_agent_id,
+            local_runtime = start_local_agent_runtime(
                 agent_spec_id=agent_spec_id,
-                local_agent_log_level=args.local_agent_log_level,
+                agent_name=args.local_agent_id,
+                host=urlparse(local_agent_base_url).hostname or '127.0.0.1',
+                log_level=args.local_agent_log_level,
             )
+            local_agent_base_url = local_runtime.base_url
             print(f'Started local agent-runtimes server at {local_agent_base_url}')
-        _ensure_local_agent(
+        ensure_local_agent(
             base_url=local_agent_base_url,
-            local_agent_id=args.local_agent_id,
+            agent_name=args.local_agent_id,
             token=token,
             agent_spec_id=agent_spec_id,
         )
@@ -1107,9 +771,9 @@ def main() -> None:
                 }
             else:
                 if effective_execution_target == 'local':
-                    local_chat_result = _run_local_agent_chat(
+                    local_chat_result = run_local_agent_chat(
                         base_url=local_agent_base_url,
-                        local_agent_id=args.local_agent_id,
+                        agent_name=args.local_agent_id,
                         token=token,
                         prompt=interaction_prompt,
                     )
@@ -1118,7 +782,10 @@ def main() -> None:
                     has_output = bool(
                         str((local_chat_result.get('output') or {}).get('text') or '').strip()
                     )
-                    effective_pass_rate = run_pass_rate if has_output else max(0.0, run_pass_rate - 0.5)
+                    if run_status == 'failed':
+                        effective_pass_rate = 0.0
+                    else:
+                        effective_pass_rate = run_pass_rate if has_output else max(0.0, run_pass_rate - 0.5)
                     passed = int(round(effective_pass_rate * total_cases))
                     failed = max(0, total_cases - passed)
                     metrics = {
@@ -1133,20 +800,75 @@ def main() -> None:
                         'interaction_mode': 'sdk-direct-local-agent-chat-api',
                         'agent_chat': local_chat_result,
                     }
+                    failure_cause = local_chat_result.get('failure_cause')
+                    if isinstance(failure_cause, dict) and failure_cause:
+                        run_report['failure_cause'] = failure_cause
                     intentional_failure = False
                     interaction_mode = 'sdk-direct-local-agent-chat-api'
                 elif effective_execution_target == 'cloud':
-                    run_status = 'running'
-                    metrics = {}
-                    run_report = {}
-                    intentional_failure = False
+                    if not cloud_runtime_ingress:
+                        # No ingress available: defer execution to the backend.
+                        run_status = 'running'
+                        metrics = {}
+                        run_report = {}
+                        intentional_failure = False
+                    else:
+                        cloud_chat_result = run_cloud_agent_chat(
+                            ingress=cloud_runtime_ingress,
+                            token=token,
+                            prompt=interaction_prompt,
+                            route_candidates=runtime_route_candidates(
+                                agent_name=args.local_agent_id,
+                                agent_spec_id=agent_spec_id,
+                                pod_name=runtime_pod_name,
+                            ),
+                        )
+                        cloud_status = str(
+                            cloud_chat_result.get('status') or 'completed'
+                        ).strip().lower()
+                        run_status = (
+                            'failed' if cloud_status in {'failed', 'error'} else 'completed'
+                        )
+                        has_output = bool(
+                            str(
+                                (cloud_chat_result.get('output') or {}).get('text') or ''
+                            ).strip()
+                        )
+                        if run_status == 'failed':
+                            effective_pass_rate = 0.0
+                        else:
+                            effective_pass_rate = (
+                                run_pass_rate if has_output else max(0.0, run_pass_rate - 0.5)
+                            )
+                        passed = int(round(effective_pass_rate * total_cases))
+                        failed = max(0, total_cases - passed)
+                        metrics = {
+                            'pass_rate': effective_pass_rate,
+                            'total_cases': total_cases,
+                            'passed': passed,
+                            'failed': failed,
+                            'avg_score': round(effective_pass_rate * 0.9 + 0.08, 4),
+                        }
+                        interaction_output = cloud_chat_result.get('output')
+                        run_report = {
+                            'interaction_mode': 'sdk-direct-cloud-agent-chat-api',
+                            'agent_chat': cloud_chat_result,
+                        }
+                        failure_cause = cloud_chat_result.get('failure_cause')
+                        if isinstance(failure_cause, dict) and failure_cause:
+                            run_report['failure_cause'] = failure_cause
+                        intentional_failure = False
+                        interaction_mode = 'sdk-direct-cloud-agent-chat-api'
                 else:
                     raise RuntimeError(
                         f"Unsupported execution target '{effective_execution_target}'"
                     )
 
             submitted_code = None
-            if not args.no_agent and effective_execution_target == 'cloud':
+            if (
+                not args.no_agent
+                and effective_execution_target == 'cloud'
+            ):
                 submitted_code = _build_submitted_code(total_cases, run_pass_rate, 'batch')
 
             run_payload = client.evals_create_run(
@@ -1210,8 +932,20 @@ def main() -> None:
         local_agent_id=args.local_agent_id,
     )
 
-    if auto_started_runtime_process is not None:
-        total_agents, deleted_agents = _delete_local_agents(
+    if args.auto_report:
+        try:
+            report_markdown_path, report_csv_path = _write_markdown_report(
+                client=client,
+                evalset_id=evalset_id,
+                account_uid=account_uid,
+            )
+            print(f'Auto report written: {report_markdown_path}')
+            print(f'Auto report CSV written: {report_csv_path}')
+        except Exception as exc:
+            print(f'Warning: unable to generate auto report ({exc})')
+
+    if local_runtime is not None:
+        total_agents, deleted_agents = delete_local_agents(
             base_url=local_agent_base_url,
             token=token,
         )
@@ -1219,10 +953,12 @@ def main() -> None:
             'Local runtime cleanup: '
             f'deleted {deleted_agents}/{total_agents} agent(s).'
         )
-        _terminate_local_runtime_process(auto_started_runtime_process)
+        terminate_local_agent_runtime(local_runtime)
         print('Stopped auto-started local agent-runtimes server.')
 
     print('Done.')
+    if effective_execution_target == 'cloud' and run_url and runtime_pod_name:
+        print(f'Cloud runtime URL: {run_url}/agents/{runtime_pod_name}')
     print(f'Track in UI: {ui_url}/evals')
 
 
