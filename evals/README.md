@@ -16,14 +16,6 @@ These examples are intentionally **SDK-lane only** (`run_environment=sdk`).
 
 If you need evalsets in the UI lane (`run_environment=ui`), create them from the Evals UI.
 
-## Examples Location
-
-Use this repository path as the canonical location of examples:
-
-- https://github.com/datalayer/examples/tree/main/evals
-
-## Files
-
 - `evals_batch_example.py`: create evalset -> 5 experiments -> 3 runs per experiment in batch mode.
 - `evals_interactive_example.py`: create evalset -> 5 experiments -> 3 runs per experiment in interactive mode.
 - `Makefile`: convenience targets for sdk/sdk-proxy runs and proxy service URLs.
@@ -63,17 +55,23 @@ Typical interpretation in reports and UI:
 Optional:
 
 - `DATALAYER_ACCOUNT_UID` for organization scoping
-- local proxy service URLs (`LOCAL_IAM_URL`, `LOCAL_RUNTIMES_URL`, `LOCAL_AI_AGENTS_URL`)
+- local proxy service URLs (`DATALAYER_IAM_URL`, `DATALAYER_RUNTIMES_URL`, `DATALAYER_AI_AGENTS_URL`)
 
-Default local proxy endpoints used by examples for `sdk-proxy`:
+Default local proxy base URLs used by examples:
 
-- `LOCAL_IAM_URL=http://localhost:9700/api/iam/`
-- `LOCAL_RUNTIMES_URL=http://localhost:9500/api/runtimes/`
-- `LOCAL_AI_AGENTS_URL=http://localhost:4400/api/ai-agents/`
-- `LOCAL_AGENT_BASE_URL=http://localhost:8765`
-- `LOCAL_AGENT_ID=default`
-- `LOCAL_AGENT_EVALS_MODE=interactive`
-- `LOCAL_AGENT_EVALS_EMIT_LIVE_EVENTS=true`
+- `DATALAYER_IAM_URL=http://localhost:9700`
+- `DATALAYER_RUNTIMES_URL=http://localhost:9500`
+- `DATALAYER_AI_AGENTS_URL=http://localhost:4400`
+- `AGENT_RUNTIME_BASE_URL=http://localhost:8765`
+- `AGENT_RUNTIME_ID=default`
+- `AGENT_EVALS_MODE=interactive`
+- `AGENT_EVALS_EMIT_LIVE_EVENTS=true`
+
+For `sdk-proxy`, the scripts append service paths automatically:
+
+- IAM: `/api/iam`
+- Runtimes: `/api/runtimes`
+- AI Agents: `/api/ai-agents`
 
 For `sdk-proxy` local target runs, start `agent-runtimes` first. Example:
 
@@ -95,6 +93,7 @@ make evals-batch-local
 make evals-batch-cloud
 make evals-batch-local-proxy
 make evals-batch-cloud-proxy
+make evals-batch-synthetic
 make evals-batch-local-proxy SYNTHETIC=1
 make evals-batch-synthetic-proxy
 ```
@@ -104,6 +103,7 @@ make evals-interactive-local
 make evals-interactive-cloud
 make evals-interactive-local-proxy
 make evals-interactive-cloud-proxy
+make evals-interactive-synthetic
 make evals-interactive-local-proxy SYNTHETIC=1
 make evals-interactive-synthetic-proxy
 ```
@@ -112,8 +112,10 @@ Target behavior:
 
 - `evals-*-local` uses local execution target.
 - `evals-*-cloud` uses cloud execution target.
-- `evals-*-local-proxy` uses local execution target and auto-starts an `agent-runtimes` server on a random free port, then bootstraps the local agent (via `POST /api/v1/agents`). These make targets export `DATALAYER_EVALS_MODE=$(LOCAL_AGENT_EVALS_MODE)` and `DATALAYER_EVALS_EMIT_LIVE_EVENTS=$(LOCAL_AGENT_EVALS_EMIT_LIVE_EVENTS)` so local runtime eval emission is enabled by default.
+- `evals-*-local-proxy` uses local execution target and auto-starts an `agent-runtimes` server on a random free port, then bootstraps the local agent (via `POST /api/v1/agents`). These make targets export `AGENT_EVALS_MODE` and `AGENT_EVALS_EMIT_LIVE_EVENTS` so local runtime eval emission is enabled by default.
 - `evals-*-cloud-proxy` keeps sdk-proxy endpoints but forces cloud execution target.
+- `evals-*-synthetic` runs synthetic no-agent behavior in `sdk` mode.
+- `evals-*-synthetic-proxy` runs synthetic no-agent behavior in `sdk-proxy` mode.
 
 Note: GNU make parses flags like `--synthetic` as make options, so use `SYNTHETIC=1` or the `*-synthetic` targets.
 
@@ -143,7 +145,7 @@ Batch cloud note:
 
 Failure visibility note:
 
-- Auto reports now include a "Latest Failed Run Diagnostics" section with failure type/message, execution URL, and detail excerpt when available.
+- Auto reports include a "Latest Failed Run Diagnostics" section with failure type/message, execution URL, and detail excerpt when available.
 - The CSV includes per-run failure columns (`failure_stage`, `failure_type`, `failure_message`, `execution_url`, `detail_excerpt`).
 
 ### Cloud execution check

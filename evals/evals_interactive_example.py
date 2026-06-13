@@ -38,10 +38,22 @@ from datalayer_core.runtimes.local import (
 from datalayer_core.utils.urls import DatalayerURLs
 
 
-DEFAULT_LOCAL_IAM_URL = 'http://localhost:9700/api/iam/'
-DEFAULT_LOCAL_RUNTIMES_URL = 'http://localhost:9500/api/runtimes/'
-DEFAULT_LOCAL_AI_AGENTS_URL = 'http://localhost:4400/api/ai-agents/'
+DEFAULT_DATALAYER_IAM_URL = 'http://localhost:9700'
+DEFAULT_DATALAYER_RUNTIMES_URL = 'http://localhost:9500'
+DEFAULT_DATALAYER_AI_AGENTS_URL = 'http://localhost:4400'
 DEFAULT_AGENT_SPEC_ID = 'example-simple'
+
+
+def _append_service_path(raw_url: str | None, service_suffix: str) -> str | None:
+    if not raw_url:
+        return None
+    value = raw_url.strip().rstrip('/')
+    suffix = service_suffix.strip()
+    if not suffix.startswith('/'):
+        suffix = f'/{suffix}'
+    if value.endswith(suffix):
+        return value
+    return f'{value}{suffix}'
 
 
 def _normalize_service_url(raw_url: str | None, service_suffix: str) -> str | None:
@@ -68,9 +80,15 @@ def _resolve_environment(args: argparse.Namespace) -> tuple[str, str, str, str]:
     if requested == 'sdk-proxy':
         return (
             'sdk',
-            args.iam_url or DEFAULT_LOCAL_IAM_URL,
-            args.runtimes_url or DEFAULT_LOCAL_RUNTIMES_URL,
-            args.ai_agents_url or DEFAULT_LOCAL_AI_AGENTS_URL,
+            _append_service_path(args.iam_url or DEFAULT_DATALAYER_IAM_URL, '/api/iam'),
+            _append_service_path(
+                args.runtimes_url or DEFAULT_DATALAYER_RUNTIMES_URL,
+                '/api/runtimes',
+            ),
+            _append_service_path(
+                args.ai_agents_url or DEFAULT_DATALAYER_AI_AGENTS_URL,
+                '/api/ai-agents',
+            ),
         )
 
     raise ValueError(f'Unsupported run environment: {args.run_environment}')
@@ -441,9 +459,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--total-cases', type=int, default=10)
     parser.add_argument('--model-name', default='openai:gpt-5-mini')
     parser.add_argument('--prompt-version', default='v1')
-    parser.add_argument('--iam-url', default=None)
-    parser.add_argument('--runtimes-url', default=None)
-    parser.add_argument('--ai-agents-url', default=None)
+    parser.add_argument('--iam-url', default=os.environ.get('DATALAYER_IAM_URL'))
+    parser.add_argument('--runtimes-url', default=os.environ.get('DATALAYER_RUNTIMES_URL'))
+    parser.add_argument('--ai-agents-url', default=os.environ.get('DATALAYER_AI_AGENTS_URL'))
     parser.add_argument('--ui-url', default=None)
     parser.add_argument('--execution-target', default='cloud', choices=['cloud', 'local'])
     parser.add_argument(
@@ -474,8 +492,14 @@ def parse_args() -> argparse.Namespace:
         default=100.0,
         help='Target credits reservation for cloud runtime creation.',
     )
-    parser.add_argument('--local-agent-base-url', default='http://localhost:8765')
-    parser.add_argument('--local-agent-id', default='default')
+    parser.add_argument(
+        '--local-agent-base-url',
+        default=os.environ.get('AGENT_RUNTIME_BASE_URL', 'http://localhost:8765'),
+    )
+    parser.add_argument(
+        '--local-agent-id',
+        default=os.environ.get('AGENT_RUNTIME_ID', 'default'),
+    )
     parser.add_argument(
         '--local-agent-log-level',
         default='info',
