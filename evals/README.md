@@ -15,9 +15,7 @@ It contains two runnable scripts:
 
 - Python 3.10+
 - `datalayer_core` installed
-- One API key exported in your shell:
-  - `DATALAYER_API_KEY`
-  - or `TEST_DATALAYER_API_KEY`
+- `DATALAYER_API_KEY` exported in your shell
 
 ## Quick Start
 
@@ -124,7 +122,7 @@ You can also set a default billing context with:
 
 ## Troubleshooting
 
-- If authentication fails, verify `DATALAYER_API_KEY` (or `TEST_DATALAYER_API_KEY`) is set.
+- If authentication fails, verify `DATALAYER_API_KEY` is set.
 - If local/proxy runs fail, start required local services first.
 - If cloud runs fail, check runtime capacity and service connectivity.
 

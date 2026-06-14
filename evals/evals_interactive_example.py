@@ -537,9 +537,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    token = os.environ.get('DATALAYER_API_KEY') or os.environ.get('TEST_DATALAYER_API_KEY')
+    token = os.environ.get('DATALAYER_API_KEY')
     if not token:
-        raise RuntimeError('Set DATALAYER_API_KEY or TEST_DATALAYER_API_KEY first.')
+        raise RuntimeError('Set DATALAYER_API_KEY first.')
 
     account_uid = args.billable_account_uid
     if args.agent_spec and args.agent_spec_id:
