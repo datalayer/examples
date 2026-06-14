@@ -462,6 +462,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--iam-url', default=os.environ.get('DATALAYER_IAM_URL'))
     parser.add_argument('--runtimes-url', default=os.environ.get('DATALAYER_RUNTIMES_URL'))
     parser.add_argument('--ai-agents-url', default=os.environ.get('DATALAYER_AI_AGENTS_URL'))
+    parser.add_argument(
+        '--billable-account-uid',
+        default=os.environ.get('DATALAYER_BILLABLE_ACCOUNT_UID'),
+        help='Optional billable account UID for eval API calls.',
+    )
     parser.add_argument('--ui-url', default=None)
     parser.add_argument('--execution-target', default='cloud', choices=['cloud', 'local'])
     parser.add_argument(
@@ -536,7 +541,7 @@ def main() -> None:
     if not token:
         raise RuntimeError('Set DATALAYER_API_KEY or TEST_DATALAYER_API_KEY first.')
 
-    account_uid = os.environ.get('DATALAYER_ACCOUNT_UID')
+    account_uid = args.billable_account_uid
     if args.agent_spec and args.agent_spec_id:
         raise RuntimeError('Use either --agentspec or --agentspec-id, not both.')
 
