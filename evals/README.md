@@ -145,17 +145,56 @@ make evals-interactive-cloud
 Report highlights now include:
 
 - experiment overview and rankings (latest, drift, stability)
+- a **Per-Case Outcomes** section: pass rate for every case across all runs,
+  plus a per-agentspec breakdown (codemode vs no-codemode)
 - within-agentspec pairwise latest-pass deltas
 - cross-agentspec pairwise latest-pass deltas
 - Heatmaps section (run windows and consecutive deltas)
 - per-experiment run timeline + failure diagnostics
-- an `Appendix: Run Details` section listing every fetched run; each Run ID
-  links straight to the run-details overlay in the UI
+- an `Appendix: Run Details` section listing every fetched run; each run block
+  now includes a **Per-Case Results** table (pass/fail, score, category,
+  difficulty) and each Run ID links straight to the run-details overlay in the UI
+
+The CSV report mirrors this: in addition to `experiment` and `run` rows it now
+emits one `case` row per case per run (`case_name`, `case_status`, `case_score`,
+`case_category`, `case_difficulty`) so you can pivot results per case.
 
 ## Understanding the Synthetic Content
 
 The two scripts generate **deterministic, self-explanatory evalsets** so you
 can learn how comparisons work without depending on live model output.
+
+### How cases, runs, and experiments relate
+
+Evals are organized as a strict hierarchy. Reading it top-down:
+
+```text
+Evalset (e.g. "Text Normalization")
+└── Cases               ← the fixed test inputs + expected outputs (shared by every run)
+    │                      e.g. uppercase-basic, trim-and-uppercase, unicode-latin
+    │
+    └── Experiment       ← one agentspec/config under test (e.g. codemode vs no-codemode)
+        └── Run          ← one execution of ALL cases at a point in time
+            └── Case result   ← pass/fail + score for ONE case in that run
+```
+
+Key relationships:
+
+- A **case** is a single test (`inputs` + `expected_output` + `metadata`). The
+  set of cases is defined once on the evalset and **does not change** between
+  runs — that is what makes runs comparable.
+- An **experiment** pins one agentspec/configuration. Every target here creates
+  experiments for **two** agentspecs (`example-evals` and
+  `example-evals-nocodemode`) so you can compare codemode vs no-codemode.
+- A **run** executes the **whole case set** once. Its `pass_rate` is
+  `passed_cases / total_cases`, i.e. an aggregate **over the cases**.
+- A **case result** is the per-case outcome inside a run: did *this* case pass,
+  what score did it get. Aggregating case results **across runs** tells you
+  which cases are reliable and which ones regress.
+
+So "per-case metrics" are simply case results rolled up along two axes:
+**down a column** (one case across many runs → is it flaky?) and **across a
+row** (all cases in one run → which case dragged the pass rate down?).
 
 ### The evalsets and their cases
 
@@ -189,6 +228,25 @@ concise answer, JSON formatting). Each case carries assertion-style
   run returns the un-normalized input (batch) or a placeholder refusal
   (interactive). That is why a lower-`pass_rate` run visibly shows a worse
   output next to the same prompt.
+
+### How per-case results are generated (synthetic)
+
+Every run also stores a **per-case breakdown** under `metrics.case_results`, so
+the UI run-details overlay and the report show *which* cases passed — not just
+the aggregate pass rate. The synthetic generator is deliberately didactic:
+
+- Each case gets a deterministic **difficulty weight** derived from its
+  metadata (`difficulty` for batch: easy/medium; `priority` for interactive:
+  high/critical/...). Higher weight = harder.
+- For a given run pass rate, the number of passing cases tracks that pass rate,
+  and the **hardest cases fail first**. So when a run regresses, you can see the
+  difficult cases drop out before the easy ones.
+- `passed`, `failed`, `total_cases`, and `avg_score` on the run are recomputed
+  from these per-case outcomes, so the aggregate always agrees with the table.
+
+This makes the relationship concrete: open two runs of the same experiment and
+the per-case tables show the *same cases* with different pass/fail columns — the
+exact rows that explain the pass-rate delta.
 
 ### Reading "Pass-rate delta (A - B)"
 

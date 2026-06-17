@@ -8,6 +8,7 @@ Creates one evalset, five experiments, and three runs per experiment using run_m
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import socket
@@ -330,6 +331,144 @@ def _pass_rate_for_index(base_pass_rate: float, index: int) -> float:
     if index == 1:
         return max(0.0, min(1.0, base_pass_rate))
     return max(0.0, min(1.0, base_pass_rate - 0.15))
+
+
+def _stable_unit(*parts: object) -> float:
+    key = '|'.join(str(part) for part in parts)
+    digest = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    # Use 12 hex chars (~48 bits) for a stable pseudo-random unit interval.
+    return int(digest[:12], 16) / float(0xFFFFFFFFFFFF)
+
+
+def _case_weight(case: dict[str, Any], idx: int, run_seed: str = '') -> float:
+    """Deterministic 'difficulty' weight in [0, 1] with run-level variation."""
+    metadata = case.get('metadata') or {}
+    difficulty = str(metadata.get('difficulty') or '').strip().lower()
+    priority = str(metadata.get('priority') or '').strip().lower()
+    base = {'easy': 0.20, 'medium': 0.55, 'hard': 0.85}.get(difficulty)
+    if base is None:
+        base = {'low': 0.25, 'medium': 0.50, 'high': 0.70, 'critical': 0.90}.get(
+            priority, 0.50
+        )
+    case_name = str(case.get('name') or f'case-{idx}')
+    # Keep the base difficulty shape, but introduce per-run jitter so case
+    # ordering is not identical across every run.
+    order_jitter = (_stable_unit('case-order', run_seed, case_name, idx) - 0.5) * 0.30
+    static_jitter = (idx % 5) * 0.005
+    return max(0.01, min(0.99, base + static_jitter + order_jitter))
+
+
+def _synthetic_output_fails_case(case: dict[str, Any], output_text: str) -> bool:
+    expected_text = str((case.get('expected_output') or {}).get('text') or '').strip()
+    actual_text = str(output_text or '').strip()
+    if not expected_text:
+        return False
+    return actual_text != expected_text
+
+
+def _build_case_results(
+    cases: list[dict[str, Any]],
+    run_pass_rate: float | None,
+    run_status: str,
+    run_seed: str = '',
+    forced_failed_case_names: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Derive deterministic per-case outcomes for a single run.
+
+    The number of passing cases tracks the run pass rate, and the *hardest*
+    cases (highest weight) fail first, so a regressed run visibly drops its
+    most difficult cases before the easy ones. This makes the per-case tables
+    in the UI and report self-explanatory.
+    """
+    total = len(cases)
+    if total == 0 or run_pass_rate is None:
+        return []
+    bounded = max(0.0, min(1.0, float(run_pass_rate)))
+    passed_count = int(round(bounded * total))
+    if run_status in {'failed', 'error'}:
+        passed_count = min(passed_count, total - 1)
+    passed_count = max(0, min(total, passed_count))
+    failed_count = total - passed_count
+    ranked = sorted(
+        range(total),
+        key=lambda i: (
+            _case_weight(cases[i], i, run_seed),
+            _stable_unit('rank-tie', run_seed, cases[i].get('name') or i, i),
+        ),
+        reverse=True,
+    )
+    failing = set(ranked[:failed_count])
+    forced_failed_case_names = forced_failed_case_names or set()
+    for idx, case in enumerate(cases):
+        case_name = str(case.get('name') or '')
+        if case_name and case_name in forced_failed_case_names:
+            failing.add(idx)
+    if run_status in {'failed', 'error'} and not failing:
+        failing.add(ranked[0])
+    for candidate_idx in ranked:
+        if len(failing) >= failed_count:
+            break
+        failing.add(candidate_idx)
+    results: list[dict[str, Any]] = []
+    for idx, case in enumerate(cases):
+        metadata = case.get('metadata') or {}
+        passed = idx not in failing
+        weight = _case_weight(case, idx, run_seed)
+        case_name = str(case.get('name') or f'case-{idx}')
+        score_jitter = (_stable_unit('case-score', run_seed, case_name, idx) - 0.5) * 0.10
+        if passed:
+            score = round(min(1.0, max(0.0, 0.82 + (1.0 - weight) * 0.15 + score_jitter)), 4)
+        else:
+            score = round(min(1.0, max(0.0, 0.45 - weight * 0.25 + score_jitter)), 4)
+        results.append(
+            {
+                'name': case.get('name'),
+                'passed': passed,
+                'status': 'passed' if passed else 'failed',
+                'score': score,
+                'category': metadata.get('category'),
+                'difficulty': metadata.get('difficulty') or metadata.get('priority'),
+            }
+        )
+    return results
+
+
+def _augment_metrics_with_cases(
+    metrics: dict[str, Any],
+    cases: list[dict[str, Any]],
+    run_status: str,
+    run_seed: str = '',
+    forced_failed_case_names: set[str] | None = None,
+) -> dict[str, Any]:
+    """Return metrics enriched with a coherent per-case breakdown.
+
+    ``passed``/``failed``/``total_cases``/``avg_score`` are recomputed from the
+    per-case outcomes so the aggregate numbers always agree with the per-case
+    table shown in the UI and report.
+    """
+    case_results = _build_case_results(
+        cases,
+        metrics.get('pass_rate'),
+        run_status,
+        run_seed=run_seed,
+        forced_failed_case_names=forced_failed_case_names,
+    )
+    if not case_results:
+        return metrics
+    passed = sum(1 for item in case_results if item['passed'])
+    failed = len(case_results) - passed
+    avg_score = round(
+        sum(float(item['score']) for item in case_results) / len(case_results), 4
+    )
+    return {
+        **metrics,
+        'total_cases': len(case_results),
+        'passed': passed,
+        'failed': failed,
+        'avg_score': avg_score,
+        'case_results': case_results,
+    }
+
 
 
 def _build_submitted_code(total_cases: int, run_pass_rate: float, run_mode: str) -> str:
@@ -875,6 +1014,8 @@ def main() -> None:
             )
         for index in range(run_count):
             run_pass_rate = _pass_rate_for_index(pass_rate, index)
+            run_seed = f'batch:{experiment_id}:{index}:{run_pass_rate:.4f}'
+            forced_failed_case_names: set[str] = set()
             # Always surface the same canonical case as the representative
             # interaction so run-to-run comparisons are apples-to-apples: the
             # prompt is identical across runs and only the agent output and
@@ -886,6 +1027,7 @@ def main() -> None:
             if args.no_agent:
                 run_status = no_agent_first_run_status if index == 0 else _run_status_for_index(index)
                 intentional_failure = _is_intentional_failure(index, run_status)
+                run_seed = f'{run_seed}:{run_status}'
                 run_passed_cases = int(round(run_pass_rate * total_cases))
                 run_failed_cases = max(0, total_cases - run_passed_cases)
                 metrics: dict[str, Any] = {
@@ -908,6 +1050,13 @@ def main() -> None:
                     )
                 else:
                     produced_text = expected_text
+                representative_case_failed = _synthetic_output_fails_case(
+                    representative_case,
+                    produced_text,
+                )
+                forced_failed_case_names = {
+                    str(representative_case.get('name') or '')
+                } if representative_case_failed else set()
                 interaction_output = {
                     'text': produced_text,
                     'expected_text': expected_text,
@@ -953,6 +1102,7 @@ def main() -> None:
                         run_report['failure_cause'] = failure_cause
                     intentional_failure = False
                     interaction_mode = 'sdk-direct-local-agent-chat-api'
+                    run_seed = f'{run_seed}:{run_status}'
                 elif effective_execution_target == 'cloud':
                     runtime_bundle = cloud_runtime_by_agentspec.get(current_agent_spec_id) or {}
                     runtime_pod_name = str(runtime_bundle.get('pod_name') or '')
@@ -963,6 +1113,7 @@ def main() -> None:
                         metrics = {}
                         run_report = {}
                         intentional_failure = False
+                        run_seed = f'{run_seed}:{run_status}'
                     else:
                         cloud_chat_result = run_cloud_agent_chat(
                             ingress=cloud_runtime_ingress,
@@ -1010,6 +1161,7 @@ def main() -> None:
                             run_report['failure_cause'] = failure_cause
                         intentional_failure = False
                         interaction_mode = 'sdk-direct-cloud-agent-chat-api'
+                        run_seed = f'{run_seed}:{run_status}'
                 else:
                     raise RuntimeError(
                         f"Unsupported execution target '{effective_execution_target}'"
@@ -1021,6 +1173,16 @@ def main() -> None:
                 and effective_execution_target == 'cloud'
             ):
                 submitted_code = _build_submitted_code(total_cases, run_pass_rate, 'batch')
+
+            # Attach a coherent per-case breakdown so the UI and report can show
+            # per-case metrics (not just the aggregate pass rate).
+            metrics = _augment_metrics_with_cases(
+                metrics,
+                cases,
+                run_status,
+                run_seed=run_seed,
+                forced_failed_case_names=forced_failed_case_names,
+            )
 
             run_payload = client.evals_create_run(
                 experiment_id,
