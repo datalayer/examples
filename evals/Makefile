@@ -17,7 +17,7 @@ SYNTHETIC ?= 0
 SYNTHETIC_FLAG := $(if $(filter 1 true yes on,$(SYNTHETIC)),--synthetic,)
 
 # Optional agent spec selection for cloud runtimes. Provide at most one:
-#   make evals-batch-cloud AGENTSPEC_ID=example-simple
+#   make evals-batch-cloud AGENTSPEC_ID=example-evals
 #   make evals-batch-cloud AGENTSPEC=./my-agent.yaml
 AGENTSPEC ?=
 AGENTSPEC_ID ?=

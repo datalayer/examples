@@ -39,7 +39,7 @@ from datalayer_core.utils.urls import DatalayerURLs
 DEFAULT_DATALAYER_IAM_URL = 'http://localhost:9700'
 DEFAULT_DATALAYER_RUNTIMES_URL = 'http://localhost:9500'
 DEFAULT_DATALAYER_AI_AGENTS_URL = 'http://localhost:4400'
-DEFAULT_AGENT_SPEC_ID = 'example-simple'
+DEFAULT_AGENT_SPEC_ID = 'example-evals'
 
 
 def _append_service_path(raw_url: str | None, service_suffix: str) -> str | None:
@@ -561,7 +561,7 @@ def parse_args() -> argparse.Namespace:
         dest='agent_spec_id',
         default=None,
         help=(
-            'Agent specification id. Defaults to example-simple when omitted. '
+            'Agent specification id. Defaults to example-evals when omitted. '
             'Accepts both --agent-spec-id and --agentspec-id.'
         ),
     )
