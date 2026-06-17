@@ -544,6 +544,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--runtimes-url', default=os.environ.get('DATALAYER_RUNTIMES_URL'))
     parser.add_argument('--ai-agents-url', default=os.environ.get('DATALAYER_AI_AGENTS_URL'))
     parser.add_argument(
+        '--api-key',
+        default=os.environ.get('DATALAYER_API_KEY'),
+        help='Datalayer API key. Defaults to DATALAYER_API_KEY env var.',
+    )
+    parser.add_argument(
         '--billable-account-uid',
         default=os.environ.get('DATALAYER_BILLABLE_ACCOUNT_UID'),
         help='Optional billable account UID for eval API calls.',
@@ -618,9 +623,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    token = os.environ.get('DATALAYER_API_KEY')
+    token = (args.api_key or os.environ.get('DATALAYER_API_KEY') or '').strip()
     if not token:
-        raise RuntimeError('Set DATALAYER_API_KEY first.')
+        raise RuntimeError('Set DATALAYER_API_KEY or pass --api-key.')
 
     account_uid = args.billable_account_uid
     if args.agent_spec and args.agent_spec_id:
@@ -751,6 +756,7 @@ def main() -> None:
                 agent_name=args.local_agent_id,
                 host=urlparse(local_agent_base_url).hostname or '127.0.0.1',
                 log_level=args.local_agent_log_level,
+                disable_tool_approvals=True,
             )
             local_agent_base_url = local_runtime.base_url
             print(f'Started local agent-runtimes server at {local_agent_base_url}')
@@ -759,6 +765,7 @@ def main() -> None:
             agent_name=args.local_agent_id,
             token=token,
             agent_spec_id=agent_spec_id,
+            disable_tool_approvals=True,
         )
         print(
             f'Using local agent execution at {local_agent_base_url.rstrip("/")} '

@@ -61,6 +61,12 @@ Batch with cloud target:
 make evals-batch-cloud
 ```
 
+Batch with interactive API key + billable account prompts:
+
+```bash
+make evals-batch-cloud-billable-account
+```
+
 Interactive with cloud target:
 
 ```bash
@@ -101,6 +107,7 @@ You can also set a default billing context with:
 - `make help`: print the list of available targets and short descriptions.
 - `make evals-batch-local`: run batch mode in sdk lane with a local execution target.
 - `make evals-batch-cloud`: run batch mode in sdk lane with a cloud execution target.
+- `make evals-batch-cloud-billable-account`: prompt for API key and billable account UID, then run batch mode in sdk lane with cloud execution target.
 - `make evals-batch-local-proxy`: run batch mode in sdk-proxy lane with a local execution target.
 - `make evals-batch-cloud-proxy`: run batch mode in sdk-proxy lane with a cloud execution target.
 - `make evals-batch-synthetic`: run batch mode in sdk lane with synthetic no-agent behavior.

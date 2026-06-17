@@ -669,6 +669,7 @@ def main() -> None:
                 agent_name=args.local_agent_id,
                 host=urlparse(local_agent_base_url).hostname or '127.0.0.1',
                 log_level=args.local_agent_log_level,
+                disable_tool_approvals=True,
             )
             local_agent_base_url = local_runtime.base_url
             print(f'Started local agent-runtimes server at {local_agent_base_url}')
@@ -677,6 +678,7 @@ def main() -> None:
             agent_name=args.local_agent_id,
             token=token,
             agent_spec_id=agent_spec_id,
+            disable_tool_approvals=True,
         )
         print(
             f'Using local agent execution at {local_agent_base_url.rstrip("/")} '
