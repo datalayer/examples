@@ -21,19 +21,19 @@ from urllib.parse import urlparse
 
 from datalayer_core import DatalayerClient
 from datalayer_core.cli.commands.agents import _load_agent_spec
-from datalayer_core.runtimes.agent_runtime import (
+from datalayer_core.agents import (
     compute_time_reservation_minutes,
     create_cloud_agent_runtime,
     resolve_environment_burning_rate,
     teardown_agent_execution_resources,
-)
-from datalayer_core.runtimes.local import (
     LocalAgentRuntime,
     ensure_local_agent,
+    start_local_agent_runtime,
+)
+from datalayer_core.agents.agent_local import (
     run_cloud_agent_chat,
     run_local_agent_chat,
     runtime_route_candidates,
-    start_local_agent_runtime,
 )
 from datalayer_core.utils.urls import DatalayerURLs
 
@@ -42,6 +42,12 @@ DEFAULT_DATALAYER_IAM_URL = 'http://localhost:9700'
 DEFAULT_DATALAYER_RUNTIMES_URL = 'http://localhost:9500'
 DEFAULT_DATALAYER_AI_AGENTS_URL = 'http://localhost:4400'
 DEFAULT_AGENT_SPEC_ID = 'example-evals'
+DEFAULT_AGENT_SPEC_IDS = ['example-evals', 'example-evals-nocodemode']
+DEFAULT_AGENT_SPEC_NAME_BY_ID = {
+    'example-evals': 'Example Evals Agent',
+    'example-evals-nocodemode': 'Example Evals Agent (No Codemode)',
+}
+BASE_EXPERIMENT_COUNT = 5
 
 
 def _append_service_path(raw_url: str | None, service_suffix: str) -> str | None:
@@ -182,6 +188,57 @@ def _resolve_default_agent_spec_id() -> str:
     return DEFAULT_AGENT_SPEC_ID
 
 
+def _resolve_default_agent_spec_ids() -> list[str]:
+    return list(DEFAULT_AGENT_SPEC_IDS)
+
+
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    for value in values:
+        normalized = value.strip()
+        if not normalized or normalized in deduped:
+            continue
+        deduped.append(normalized)
+    return deduped
+
+
+def _parse_agent_spec_ids(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return _dedupe_preserve_order(str(raw).split(','))
+
+
+def _resolve_agent_spec_variants(args: argparse.Namespace) -> list[dict[str, Any]]:
+    selected_ids: list[str] = []
+    if args.agent_spec_id:
+        selected_ids.append(str(args.agent_spec_id))
+    selected_ids.extend(_parse_agent_spec_ids(args.agent_spec_ids))
+    selected_ids = _dedupe_preserve_order(selected_ids)
+
+    if args.agent_spec:
+        if len(selected_ids) > 1:
+            raise RuntimeError('Use --agentspec with one agentspec id only.')
+        resolved_id = selected_ids[0] if selected_ids else _resolve_default_agent_spec_id()
+        loaded_spec = _load_agent_spec(str(args.agent_spec))
+        return [
+            {
+                'id': resolved_id,
+                'name': str(loaded_spec.get('name') or DEFAULT_AGENT_SPEC_NAME_BY_ID.get(resolved_id, resolved_id)),
+                'spec': loaded_spec,
+            }
+        ]
+
+    resolved_ids = selected_ids or _resolve_default_agent_spec_ids()
+    return [
+        {
+            'id': spec_id,
+            'name': DEFAULT_AGENT_SPEC_NAME_BY_ID.get(spec_id, spec_id),
+            'spec': None,
+        }
+        for spec_id in resolved_ids
+    ]
+
+
 def _is_intentional_failure(index: int, run_status: str) -> bool:
     return index >= 2 and run_status == 'failed'
 
@@ -279,6 +336,28 @@ def _extract_case_prompt(case: dict[str, Any]) -> str:
         except TypeError:
             return str(inputs)
     return ''
+
+
+def _synthetic_pass_text(case: dict[str, Any]) -> str:
+    """Build a plausible passing answer for a case from its expectations.
+
+    Used by the synthetic (``--no-agent``) mode so a healthy run shows an
+    output that actually satisfies the case assertions, making the contrast
+    with a regressed run obvious in the comparison panel.
+    """
+    expected = case.get('expected_output')
+    if isinstance(expected, dict):
+        if expected.get('label') == 'refusal':
+            return "I can't help with that request."
+        if expected.get('format') == 'json':
+            keys = expected.get('required_keys') or []
+            body = ', '.join(f'"{key}": "..."' for key in keys)
+            return '{' + body + '}'
+        contains = expected.get('contains')
+        if isinstance(contains, list) and contains:
+            tokens = ', '.join(str(token) for token in contains)
+            return f'Sure — here is a concise answer mentioning {tokens}.'
+    return 'Synthetic passing answer.'
 
 
 def _assert_http_service_reachable(service_name: str, base_url: str) -> None:
@@ -440,7 +519,7 @@ def _write_markdown_report(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Create one evalset, five experiments, and three runs per experiment in interactive mode.'
+        description='Create one evalset, experiments for one or more agentspecs, and three runs per experiment in interactive mode.'
     )
     parser.add_argument('--eval-name', default='')
     parser.add_argument('--run-status', default='running', choices=['queued', 'running', 'completed', 'failed', 'cancelled'])
@@ -477,6 +556,16 @@ def parse_args() -> argparse.Namespace:
         help=(
             'Agent specification id. Defaults to example-evals when omitted. '
             'Accepts both --agent-spec-id and --agentspec-id.'
+        ),
+    )
+    parser.add_argument(
+        '--agent-spec-ids',
+        '--agentspec-ids',
+        dest='agent_spec_ids',
+        default=None,
+        help=(
+            'Comma-separated agentspec ids. Defaults to '
+            'example-evals,example-evals-nocodemode when omitted.'
         ),
     )
     parser.add_argument(
@@ -542,13 +631,16 @@ def main() -> None:
         raise RuntimeError('Set DATALAYER_API_KEY first.')
 
     account_uid = args.billable_account_uid
-    if args.agent_spec and args.agent_spec_id:
-        raise RuntimeError('Use either --agentspec or --agentspec-id, not both.')
+    if args.agent_spec and args.agent_spec_id and args.agent_spec_ids:
+        raise RuntimeError('Use either --agentspec-id or --agentspec-ids with --agentspec, not both.')
 
-    agent_spec_id = (args.agent_spec_id or '').strip() or _resolve_default_agent_spec_id()
-    agent_spec: dict[str, Any] | None = None
-    if args.agent_spec:
-        agent_spec = _load_agent_spec(str(args.agent_spec))
+    agent_spec_variants = _resolve_agent_spec_variants(args)
+    print(
+        'Agentspec variants: '
+        + ', '.join(
+            f"{variant['id']} ({variant['name']})" for variant in agent_spec_variants
+        )
+    )
     backend_run_environment, iam_url, runtimes_url, ai_agents_url = _resolve_environment(args)
     pass_rate = min(1.0, max(0.0, float(args.pass_rate)))
     run_count = 3
@@ -596,42 +688,54 @@ def main() -> None:
 
     print('[2/4] Creating experiments...')
     experiment_specs = [
-        {'name': 'interactive-experiment-1', 'index': 1},
-        {'name': 'interactive-experiment-2', 'index': 2},
-        {'name': 'interactive-experiment-3', 'index': 3},
-        {'name': 'interactive-experiment-4', 'index': 4},
-        {'name': 'interactive-experiment-5', 'index': 5},
+        {'name': f'interactive-experiment-{index}', 'index': index}
+        for index in range(1, BASE_EXPERIMENT_COUNT + 1)
     ]
-    experiment_ids: list[tuple[str, str, int]] = []
-    for spec in experiment_specs:
-        experiment_payload = client.evals_create_experiment(
-            name=spec['name'],
-            evalset_id=evalset_id,
-            description='Experiment created by evals_interactive_example.py',
-            status='draft',
-            config={
-                'run_mode': 'interactive',
-                'execution_target': args.execution_target,
-                'no_agent': bool(args.no_agent),
-                'dry_run': bool(args.no_agent),
-                'agent_spec_id': agent_spec_id,
-                'environment_name': args.environment_name,
-                'local_agent_base_url': args.local_agent_base_url,
-                'local_agent_id': args.local_agent_id,
-                'model': args.model_name,
-                'prompt_version': args.prompt_version,
-            },
-            summary={
-                'launch_source': 'python-interactive-example',
-                'experiment_index': spec['index'],
-            },
-            account_uid=account_uid,
-        )
-        experiment_id = str((experiment_payload.get('experiment') or {}).get('id') or '')
-        if not experiment_id:
-            raise RuntimeError(f'Unexpected experiment response: {experiment_payload}')
-        experiment_ids.append((spec['name'], experiment_id, spec['index']))
-        print(f"Created experiment {spec['index']}/5: {experiment_id} ({spec['name']})")
+    experiment_ids: list[tuple[str, str, int, str, str]] = []
+    total_experiments = len(experiment_specs) * len(agent_spec_variants)
+    created_experiments = 0
+    for variant_index, variant in enumerate(agent_spec_variants, start=1):
+        variant_id = str(variant['id'])
+        variant_name = str(variant['name'])
+        for spec in experiment_specs:
+            experiment_name = f"{spec['name']}-{variant_id}"
+            experiment_payload = client.evals_create_experiment(
+                name=experiment_name,
+                evalset_id=evalset_id,
+                description='Experiment created by evals_interactive_example.py',
+                status='draft',
+                config={
+                    'run_mode': 'interactive',
+                    'execution_target': args.execution_target,
+                    'no_agent': bool(args.no_agent),
+                    'dry_run': bool(args.no_agent),
+                    'agent_spec_id': variant_id,
+                    'agent_spec_name': variant_name,
+                    'agent_spec': {'id': variant_id, 'name': variant_name},
+                    'environment_name': args.environment_name,
+                    'local_agent_base_url': args.local_agent_base_url,
+                    'local_agent_id': args.local_agent_id,
+                    'model': args.model_name,
+                    'prompt_version': args.prompt_version,
+                },
+                summary={
+                    'launch_source': 'python-interactive-example',
+                    'experiment_index': spec['index'],
+                    'agentspec_variant_index': variant_index,
+                    'agent_spec_id': variant_id,
+                    'agent_spec_name': variant_name,
+                },
+                account_uid=account_uid,
+            )
+            experiment_id = str((experiment_payload.get('experiment') or {}).get('id') or '')
+            if not experiment_id:
+                raise RuntimeError(f'Unexpected experiment response: {experiment_payload}')
+            experiment_ids.append((experiment_name, experiment_id, spec['index'], variant_id, variant_name))
+            created_experiments += 1
+            print(
+                f'Created experiment {created_experiments}/{total_experiments}: '
+                f'{experiment_id} ({experiment_name})'
+            )
 
     print(f'[3/4] Creating {run_count} run(s) per experiment...')
     if args.no_agent and run_count >= 3:
@@ -647,25 +751,33 @@ def main() -> None:
     local_agent_base_url = args.local_agent_base_url
     local_runtime: LocalAgentRuntime | None = None
     cloud_runtime_ingress = ''
+    cloud_runtime_by_agentspec: dict[str, dict[str, str]] = {}
+    primary_agentspec_id = str(agent_spec_variants[0]['id'])
     if not args.no_agent and args.execution_target == 'cloud':
-        print('Launching cloud runtime for interactive execution...')
-        cloud_runtime = _launch_cloud_runtime(
-            client,
-            args.environment_name,
-            evalset_name,
-            float(args.cloud_credits_limit),
-            agent_spec_id,
-            agent_spec,
-        )
-        runtime_pod_name = str(getattr(cloud_runtime, 'pod_name', '') or '').strip()
-        cloud_runtime_ingress = str(getattr(cloud_runtime, 'ingress', '') or '').strip()
-        print(f'Using runtime pod: {runtime_pod_name}')
-        if cloud_runtime_ingress:
-            print(f'Runtime ingress: {cloud_runtime_ingress}')
+        for variant in agent_spec_variants:
+            variant_id = str(variant['id'])
+            print(f'Launching cloud runtime for interactive execution ({variant_id})...')
+            cloud_runtime = _launch_cloud_runtime(
+                client,
+                args.environment_name,
+                evalset_name,
+                float(args.cloud_credits_limit),
+                variant_id,
+                variant.get('spec'),
+            )
+            pod_name = str(getattr(cloud_runtime, 'pod_name', '') or '').strip()
+            ingress = str(getattr(cloud_runtime, 'ingress', '') or '').strip()
+            cloud_runtime_by_agentspec[variant_id] = {
+                'pod_name': pod_name,
+                'ingress': ingress,
+            }
+            print(f'Using runtime pod ({variant_id}): {pod_name}')
+            if ingress:
+                print(f'Runtime ingress ({variant_id}): {ingress}')
     if not args.no_agent and args.execution_target == 'local':
         if args.auto_start_local_agent_runtime:
             local_runtime = start_local_agent_runtime(
-                agent_spec_id=agent_spec_id,
+                agent_spec_id=primary_agentspec_id,
                 agent_name=args.local_agent_id,
                 host=urlparse(local_agent_base_url).hostname or '127.0.0.1',
                 log_level=args.local_agent_log_level,
@@ -677,7 +789,7 @@ def main() -> None:
             base_url=local_agent_base_url,
             agent_name=args.local_agent_id,
             token=token,
-            agent_spec_id=agent_spec_id,
+            agent_spec_id=primary_agentspec_id,
             disable_tool_approvals=True,
         )
         print(
@@ -686,11 +798,24 @@ def main() -> None:
         )
     run_ids: list[str] = []
     last_run_expected_failure = False
-    for experiment_name, experiment_id, experiment_index in experiment_ids:
+    for experiment_name, experiment_id, experiment_index, current_agent_spec_id, current_agent_spec_name in experiment_ids:
         print(f'Creating runs for {experiment_name}...')
+        if not args.no_agent and args.execution_target == 'local':
+            ensure_local_agent(
+                base_url=local_agent_base_url,
+                agent_name=args.local_agent_id,
+                token=token,
+                agent_spec_id=current_agent_spec_id,
+                disable_tool_approvals=True,
+            )
         for index in range(run_count):
             run_pass_rate = _pass_rate_for_index(pass_rate, index)
-            interaction_prompt = _extract_case_prompt(cases[index % len(cases)])
+            # Always surface the same canonical case as the representative
+            # interaction so run-to-run comparisons are apples-to-apples: the
+            # prompt is identical across runs and only the agent output and
+            # pass rate change.
+            representative_case = cases[0]
+            interaction_prompt = _extract_case_prompt(representative_case)
             interaction_output: Any = None
             interaction_mode = 'synthetic' if args.no_agent else 'ai-agents-run-api'
             if args.no_agent:
@@ -705,10 +830,23 @@ def main() -> None:
                     'failed': run_failed_cases,
                     'avg_score': round(run_pass_rate * 0.9 + 0.08, 4),
                 }
-                interaction_output = {
-                    'synthetic': True,
-                    'expected_output': cases[index % len(cases)].get('expected_output'),
-                }
+                # Make the synthetic output reflect run quality so the
+                # pass-rate delta is easy to interpret: a healthy run returns
+                # the expected answer, a regressed/failed run returns a
+                # placeholder refusal/empty answer.
+                expected_output = representative_case.get('expected_output')
+                if intentional_failure or run_pass_rate < 1.0:
+                    interaction_output = {
+                        'synthetic': True,
+                        'text': '(no usable answer — regressed run)',
+                        'expected_output': expected_output,
+                    }
+                else:
+                    interaction_output = {
+                        'synthetic': True,
+                        'text': _synthetic_pass_text(representative_case),
+                        'expected_output': expected_output,
+                    }
                 run_report: dict[str, Any] = {
                     'interaction_mode': 'synthetic',
                     'synthetic': True,
@@ -750,6 +888,9 @@ def main() -> None:
                         run_report['failure_cause'] = failure_cause
                     interaction_mode = 'sdk-direct-local-agent-chat-api'
                 elif args.execution_target == 'cloud':
+                    runtime_bundle = cloud_runtime_by_agentspec.get(current_agent_spec_id) or {}
+                    runtime_pod_name = str(runtime_bundle.get('pod_name') or '')
+                    cloud_runtime_ingress = str(runtime_bundle.get('ingress') or '')
                     if not cloud_runtime_ingress:
                         # No ingress available: defer execution to the backend.
                         run_status = 'running'
@@ -763,7 +904,7 @@ def main() -> None:
                             prompt=interaction_prompt,
                             route_candidates=runtime_route_candidates(
                                 agent_name=args.local_agent_id,
-                                agent_spec_id=agent_spec_id,
+                                agent_spec_id=current_agent_spec_id,
                                 pod_name=runtime_pod_name,
                             ),
                         )
@@ -828,7 +969,8 @@ def main() -> None:
                     'no_agent': bool(args.no_agent),
                     'synthetic': bool(args.no_agent),
                     'dry_run': bool(args.no_agent),
-                    'agent_spec_id': agent_spec_id,
+                    'agent_spec_id': current_agent_spec_id,
+                    'agent_spec_name': current_agent_spec_name,
                     'environment_name': args.environment_name,
                     'local_agent_base_url': local_agent_base_url,
                     'local_agent_id': args.local_agent_id,
@@ -860,7 +1002,8 @@ def main() -> None:
             run_ids.append(run_id)
             print(
                 f'Launched run {index + 1}/{run_count} for {experiment_name}: '
-                f'run_id={run_id}, status={run_status}, agent_id={args.local_agent_id}'
+                f'run_id={run_id}, status={run_status}, '
+                f'agent_spec_id={current_agent_spec_id}, agent_id={args.local_agent_id}'
             )
 
             if args.no_agent or args.execution_target == 'local':
@@ -888,6 +1031,7 @@ def main() -> None:
                             'run_id': run_id,
                             'run_mode': 'interactive',
                             'execution_target': args.execution_target,
+                            'agent_spec_id': current_agent_spec_id,
                             'source': event_source,
                             'input': interaction_prompt,
                             'prompt': interaction_prompt,
@@ -941,36 +1085,53 @@ def main() -> None:
         except Exception as exc:
             print(f'Warning: unable to generate auto report ({exc})')
 
-    cleanup = teardown_agent_execution_resources(
-        client,
-        execution_target=args.execution_target,
-        cloud_runtime_or_pod_name=runtime_pod_name,
-        local_base_url=local_agent_base_url,
-        local_agent_name=args.local_agent_id,
-        token=token,
-        local_runtime=local_runtime,
-    )
-    if cleanup.get('cloud_runtime_terminated'):
-        print(f'Terminated cloud runtime: {runtime_pod_name}')
-    elif args.execution_target == 'cloud' and runtime_pod_name:
-        print(
-            'Warning: cloud runtime termination was not confirmed. '
-            f'pod={runtime_pod_name}'
+    if args.execution_target == 'cloud' and cloud_runtime_by_agentspec:
+        for variant_id, runtime_bundle in cloud_runtime_by_agentspec.items():
+            pod_name = str(runtime_bundle.get('pod_name') or '')
+            cleanup = teardown_agent_execution_resources(
+                client,
+                execution_target='cloud',
+                cloud_runtime_or_pod_name=pod_name,
+                local_base_url=local_agent_base_url,
+                local_agent_name=args.local_agent_id,
+                token=token,
+                local_runtime=None,
+            )
+            if cleanup.get('cloud_runtime_terminated'):
+                print(f'Terminated cloud runtime ({variant_id}): {pod_name}')
+            elif pod_name:
+                print(
+                    'Warning: cloud runtime termination was not confirmed. '
+                    f'pod={pod_name} spec={variant_id}'
+                )
+    else:
+        cleanup = teardown_agent_execution_resources(
+            client,
+            execution_target=args.execution_target,
+            cloud_runtime_or_pod_name=runtime_pod_name,
+            local_base_url=local_agent_base_url,
+            local_agent_name=args.local_agent_id,
+            token=token,
+            local_runtime=local_runtime,
         )
+        if cleanup.get('local_agent_deleted'):
+            print(f'Terminated local agent registration: {args.local_agent_id}')
+        elif args.execution_target == 'local' and not args.no_agent:
+            print(
+                'Warning: local agent teardown was not confirmed. '
+                f'agent={args.local_agent_id}'
+            )
 
-    if cleanup.get('local_agent_deleted'):
-        print(f'Terminated local agent registration: {args.local_agent_id}')
-    elif args.execution_target == 'local' and not args.no_agent:
-        print(
-            'Warning: local agent teardown was not confirmed. '
-            f'agent={args.local_agent_id}'
-        )
-
-    if cleanup.get('local_runtime_terminated'):
-        print('Stopped auto-started local agent-runtimes server.')
+        if cleanup.get('local_runtime_terminated'):
+            print('Stopped auto-started local agent-runtimes server.')
 
     print('Done.')
-    if args.execution_target == 'cloud' and run_url and runtime_pod_name:
+    if args.execution_target == 'cloud' and run_url and cloud_runtime_by_agentspec:
+        for variant_id, runtime_bundle in cloud_runtime_by_agentspec.items():
+            pod_name = str(runtime_bundle.get('pod_name') or '')
+            if pod_name:
+                print(f'Cloud runtime URL ({variant_id}): {run_url}/agents/{pod_name}')
+    elif args.execution_target == 'cloud' and run_url and runtime_pod_name:
         print(f'Cloud runtime URL: {run_url}/agents/{runtime_pod_name}')
     print(f'Track in UI: {ui_url}/evals')
 

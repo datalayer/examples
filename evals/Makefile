@@ -15,15 +15,22 @@ EVAL_WATCH_INTERVAL ?= 2
 CLOUD_CREDITS_LIMIT ?= 100
 SYNTHETIC ?= 0
 SYNTHETIC_FLAG := $(if $(filter 1 true yes on,$(SYNTHETIC)),--synthetic,)
+SYNTHETIC_AGENTSPEC_IDS ?= example-evals,example-evals-nocodemode
+SYNTHETIC_AGENTSPEC_IDS_FLAG := $(if $(strip $(SYNTHETIC_AGENTSPEC_IDS)),--agentspec-ids $(SYNTHETIC_AGENTSPEC_IDS),)
 
-# Optional agent spec selection for cloud runtimes. Provide at most one:
+# Optional agent spec selection for cloud runtimes.
+# Multi-agentspec defaults are handled by the scripts when none is provided.
+# Examples:
 #   make evals-batch-cloud AGENTSPEC_ID=example-evals
+#   make evals-batch-cloud AGENTSPEC_IDS="example-evals,example-evals-nocodemode"
 #   make evals-batch-cloud AGENTSPEC=./my-agent.yaml
 AGENTSPEC ?=
 AGENTSPEC_ID ?=
+AGENTSPEC_IDS ?=
 AGENTSPEC_FLAG := $(if $(strip $(AGENTSPEC)),--agentspec $(AGENTSPEC),)
 AGENTSPEC_ID_FLAG := $(if $(strip $(AGENTSPEC_ID)),--agentspec-id $(AGENTSPEC_ID),)
-AGENTSPEC_FLAGS := $(AGENTSPEC_FLAG) $(AGENTSPEC_ID_FLAG)
+AGENTSPEC_IDS_FLAG := $(if $(strip $(AGENTSPEC_IDS)),--agentspec-ids $(AGENTSPEC_IDS),)
+AGENTSPEC_FLAGS := $(AGENTSPEC_FLAG) $(AGENTSPEC_ID_FLAG) $(AGENTSPEC_IDS_FLAG)
 CLOUD_DEFAULT_ENV_RESET := env -u DATALAYER_IAM_URL -u DATALAYER_RUNTIMES_URL -u DATALAYER_AI_AGENTS_URL
 
 .PHONY: help evals-batch-local evals-batch-cloud evals-batch-cloud-billable-account evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
@@ -53,11 +60,11 @@ evals-batch-local-proxy: ## Run batch example via local proxy endpoints in SDK l
 evals-batch-cloud-proxy: ## Run batch example via local proxy endpoints in SDK lane with cloud target
 	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-synthetic: ## Run batch example in SDK lane with synthetic (no-agent) behavior
-	@python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --synthetic
+evals-batch-synthetic: ## Run batch synthetic comparison across example-evals and example-evals-nocodemode
+	@python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-batch-synthetic-proxy: ## Run batch example via local proxy endpoints in SDK lane with synthetic (no-agent) behavior
-	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --synthetic
+evals-batch-synthetic-proxy: ## Run batch synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
+	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
 evals-interactive-local: ## Run interactive example in SDK lane using direct endpoints with local agent target
 	@python evals_interactive_example.py --run-environment sdk --run-status running --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --execution-target local --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(SYNTHETIC_FLAG)
@@ -71,9 +78,9 @@ evals-interactive-local-proxy: ## Run interactive example via local proxy endpoi
 evals-interactive-cloud-proxy: ## Run interactive example via local proxy endpoints in SDK lane with cloud target
 	@python evals_interactive_example.py --run-environment sdk-proxy --run-status running --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-synthetic: ## Run interactive example in SDK lane with synthetic (no-agent) behavior
-	@python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --synthetic
+evals-interactive-synthetic: ## Run interactive synthetic comparison across example-evals and example-evals-nocodemode
+	@python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-interactive-synthetic-proxy: ## Run interactive example via local proxy endpoints in SDK lane with synthetic (no-agent) behavior
-	@python evals_interactive_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --synthetic
+evals-interactive-synthetic-proxy: ## Run interactive synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
+	@python evals_interactive_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
