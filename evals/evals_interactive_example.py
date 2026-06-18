@@ -780,7 +780,7 @@ def main() -> None:
     if not token:
         raise RuntimeError('Set DATALAYER_API_KEY first.')
 
-    account_uid = args.billable_account_uid
+    account_uid = str(args.billable_account_uid or '').strip() or None
     if args.agent_spec and args.agent_spec_id and args.agent_spec_ids:
         raise RuntimeError('Use either --agentspec-id or --agentspec-ids with --agentspec, not both.')
 

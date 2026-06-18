@@ -301,7 +301,7 @@ Common flags you will use:
 - `--execution-target local|cloud`: choose where the agent execution happens
 - `--agentspec-ids <id1,id2,...>`: run the same evalset across multiple agentspec variants
 - `--agentspec-id <id>`: run a single agentspec variant (backward-compatible)
-- `--billable-account-uid <account_uid>`: run eval calls in a specific billable account context
+- `--billable-account-uid <account_uid>`: optional billable account context; omit to use the default account context
 - `--synthetic`: run deterministic test behavior without agent calls
 - `--clean`: remove previously created resources for the same eval name
 
@@ -310,7 +310,7 @@ To override synthetic target defaults in Makefile-based runs:
 - `make evals-batch-synthetic SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
 - `make evals-interactive-synthetic SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
 
-You can also set a default billing context with:
+You can optionally set a default billing context with:
 
 - `DATALAYER_BILLABLE_ACCOUNT_UID`
 
@@ -322,7 +322,7 @@ Batch:
 
 - `make evals-batch-local`: batch, sdk (direct) lane, local agent target.
 - `make evals-batch-cloud`: batch, sdk (direct) lane, cloud target.
-- `make evals-batch-cloud-billable-account`: batch, sdk (direct) lane, cloud target; prompts for API key + billable account UID.
+- `make evals-batch-cloud-billable-account`: batch, sdk (direct) lane, cloud target; prompts for API key + optional billable account UID (press Enter to skip billing override).
 - `make evals-batch-synthetic`: batch, sdk (direct) lane, synthetic no-agent behavior.
 - `make evals-batch-local-proxy`: batch, sdk-proxy lane, local agent target.
 - `make evals-batch-cloud-proxy`: batch, sdk-proxy lane, cloud target.
