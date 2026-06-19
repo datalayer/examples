@@ -131,12 +131,32 @@ def _is_intentional_failure(index: int, run_status: str) -> bool:
     return index >= 2 and run_status == 'failed'
 
 
-def _pass_rate_for_index(base_pass_rate: float, index: int) -> float:
+def _pass_rate_for_index(base_pass_rate: float, index: int, run_seed: str = '') -> float:
     if index == 0:
-        return max(0.0, min(1.0, base_pass_rate - 0.1))
-    if index == 1:
-        return max(0.0, min(1.0, base_pass_rate))
-    return max(0.0, min(1.0, base_pass_rate - 0.18))
+        target = base_pass_rate - 0.1
+    elif index == 1:
+        target = base_pass_rate
+    else:
+        target = base_pass_rate - 0.18
+    # Layer a per-run seeded jitter on top so runs within an experiment drift
+    # instead of collapsing onto the same quantized pass rate.
+    jitter = (_stable_unit('run-pass-rate', run_seed, index) - 0.5) * 0.24 if run_seed else 0.0
+    return max(0.0, min(1.0, target + jitter))
+
+
+def _experiment_pass_rate(
+    base_pass_rate: float, experiment_index: int, experiment_id: str = ''
+) -> float:
+    """Spread experiments around the base pass rate.
+
+    Without this every experiment shares the same base rate and lands on the
+    same quantized value (e.g. all 60%). A deterministic per-experiment offset
+    gives the dashboard real variation and drift while staying reproducible.
+    """
+    spread = (
+        _stable_unit('experiment-pass-rate', experiment_index, experiment_id) - 0.5
+    ) * 0.6
+    return max(0.05, min(0.98, base_pass_rate + spread))
 
 
 def _stable_unit(*parts: object) -> float:
@@ -707,7 +727,11 @@ def main() -> None:
                 disable_tool_approvals=True,
             )
         for index in range(run_count):
-            run_pass_rate = _pass_rate_for_index(pass_rate, index)
+            run_pass_rate = _pass_rate_for_index(
+                _experiment_pass_rate(pass_rate, experiment_index, experiment_id),
+                index,
+                run_seed=f'{experiment_id}:{index}',
+            )
             run_seed = f'interactive:{experiment_id}:{index}:{run_pass_rate:.4f}'
             forced_failed_case_names: set[str] = set()
             # Always surface the same canonical case as the representative
