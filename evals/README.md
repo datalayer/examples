@@ -14,6 +14,25 @@ It contains two runnable scripts:
 - `evals_batch_example.py`: deterministic eval runs with `run_mode=batch`
 - `evals_interactive_example.py`: event-style eval runs with `run_mode=interactive`
 
+Each script loads its evalset from a colocated JSON spec file:
+
+- `evals_batch.evalset.json`
+- `evals_interactive.evalset.json`
+
+Both scripts now include first-class evaluator configuration in the evalset payload:
+
+- per-case `evaluators` arrays (for example
+  `{"name": "equals_expected", "arguments": {}}`)
+- evalset-level `evalset_evaluators`
+- evalset-level `report_evaluators`
+
+This keeps evaluator configuration explicit and aligned with Pydantic evaluator
+semantics across case-level and global/report-level checks.
+
+You can point either script at a custom spec with:
+
+- `--evalset-spec-file <path-to.evalset.json>`
+
 ## Target Matrix
 
 Every `make` target is a combination of three axes:
@@ -159,6 +178,10 @@ The CSV report mirrors this: in addition to `experiment` and `run` rows it now
 emits one `case` row per case per run (`case_name`, `case_status`, `case_score`,
 `case_category`, `case_difficulty`) so you can pivot results per case.
 
+Canonical semantics for per-case scores, case-vs-report evaluator modeling, and
+agent-backed vs synthetic interpretation now live in the UI docs:
+[Evals](https://datalayer.ai/docs/evals).
+
 ## Understanding the Synthetic Content
 
 The two scripts generate **deterministic, self-explanatory evalsets** so you
@@ -198,7 +221,7 @@ row** (all cases in one run → which case dragged the pass rate down?).
 
 ### The evalsets and their cases
 
-`evals_batch_example.py` builds a **Text Normalization** evalset. Every case is
+`evals_batch.evalset.json` defines a **Text Normalization** evalset. Every case is
 the same kind of task (normalize text to uppercase), so the suite is coherent
 and the expected output is unambiguous:
 
@@ -210,7 +233,7 @@ and the expected output is unambiguous:
 | `numeric-token-preserved` | `Version 2.1` | `VERSION 2.1` | Numbers preserved |
 | `unicode-latin` | `cafe` | `CAFE` | Unicode handling |
 
-`evals_interactive_example.py` builds a **Live Assistant** evalset where each
+`evals_interactive.evalset.json` defines a **Live Assistant** evalset where each
 case checks a different agent behavior (greeting latency, safety refusal,
 concise answer, JSON formatting). Each case carries assertion-style
 `expected_output` (e.g. `contains`, `label: refusal`, `format: json`).
@@ -282,7 +305,6 @@ that case changed pass/fail status between those runs. If a case stays passing
 the synthetic data is fully reproducible, so run-to-run deltas always trace back
 to a concrete pass/fail change rather than to randomness.
 
-
 ### Reading "Pass-rate delta (A - B)"
 
 In the **Compare Runs Within One Experiment** panel you pick run **A** (the run
@@ -332,13 +354,13 @@ python evals_interactive_example.py --help
 Common flags you will use:
 
 - `--eval-name <name>`: set the evalset name
+- `--evalset-spec-file <path>`: load schema/cases/evaluators from a JSON evalset spec file
 - `--run-environment sdk|sdk-proxy`: choose direct SDK or local proxy endpoints
 - `--execution-target local|cloud`: choose where the agent execution happens
-- `--agentspec-ids <id1,id2,...>`: run the same evalset across multiple agentspec variants
-- `--agentspec-id <id>`: run a single agentspec variant (backward-compatible)
+- `--agent-spec-ids <id1,id2,...>`: run the same evalset across multiple agentspec variants
+- `--agent-spec-id <id>`: run a single agentspec variant
 - `--billable-account-uid <account_uid>`: optional billable account context; omit to use the default account context
 - `--synthetic`: run deterministic test behavior without agent calls
-- `--clean`: remove previously created resources for the same eval name
 
 To override synthetic target defaults in Makefile-based runs:
 

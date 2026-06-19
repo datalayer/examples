@@ -1,0 +1,155 @@
+{
+  "name": "text-normalization-batch-example",
+  "description": "Batch evalset used by evals_batch_example.py",
+  "run_environment": "sdk",
+  "kind": "batch",
+  "tags": ["examples", "batch", "text-normalization", "multi-agentspec"],
+  "metadata": {
+    "scenario": "text-normalization",
+    "agentspec_ids": ["example-evals", "example-evals-nocodemode"],
+    "comparison_mode": "same-evalset-multiple-agentspecs"
+  },
+  "schema": {
+    "schema_version": "1.0",
+    "kind": "batch",
+    "title": "Text Normalization Evalset",
+    "description": "Showcases input/output/metadata schemas for text normalization tasks.",
+    "input_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "NormalizationInput",
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "examples": ["hello world", "  Paris  "]
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "fr", "es", "de", "it"],
+          "default": "en"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["uppercase", "lowercase", "titlecase"],
+          "default": "uppercase"
+        },
+        "preserve_punctuation": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "output_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "NormalizationOutput",
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "examples": ["HELLO WORLD", "PARIS"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "detected_language": {
+          "type": "string",
+          "enum": ["en", "fr", "es", "de", "it", "unknown"]
+        },
+        "tokens": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "metadata_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "CaseMetadata",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["normalization", "formatting", "unicode", "mixed-content"]
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "owner": {
+          "type": "string",
+          "format": "email"
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "evalset_evaluators": [
+    {
+      "name": "equals_expected",
+      "arguments": {}
+    }
+  ],
+  "report_evaluators": [
+    {
+      "name": "pass_rate_threshold",
+      "arguments": {
+        "min_pass_rate": 0.8
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "uppercase-basic",
+      "inputs": {"text": "hello world"},
+      "expected_output": {"text": "HELLO WORLD"},
+      "evaluators": [{"name": "equals_expected", "arguments": {}}],
+      "metadata": {"category": "normalization", "difficulty": "easy"}
+    },
+    {
+      "name": "trim-and-uppercase",
+      "inputs": {"text": "  Paris  "},
+      "expected_output": {"text": "PARIS"},
+      "evaluators": [{"name": "equals_expected", "arguments": {}}],
+      "metadata": {"category": "normalization", "difficulty": "easy"}
+    },
+    {
+      "name": "punctuation-preserved",
+      "inputs": {"text": "hello, world!"},
+      "expected_output": {"text": "HELLO, WORLD!"},
+      "evaluators": [{"name": "equals_expected", "arguments": {}}],
+      "metadata": {"category": "formatting", "difficulty": "medium"}
+    },
+    {
+      "name": "numeric-token-preserved",
+      "inputs": {"text": "Version 2.1"},
+      "expected_output": {"text": "VERSION 2.1"},
+      "evaluators": [{"name": "equals_expected", "arguments": {}}],
+      "metadata": {"category": "mixed-content", "difficulty": "medium"}
+    },
+    {
+      "name": "unicode-latin",
+      "inputs": {"text": "cafe"},
+      "expected_output": {"text": "CAFE"},
+      "evaluators": [{"name": "equals_expected", "arguments": {}}],
+      "metadata": {"category": "unicode", "difficulty": "medium"}
+    }
+  ]
+}

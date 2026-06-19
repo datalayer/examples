@@ -12,7 +12,6 @@ import hashlib
 import json
 import os
 import socket
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -34,12 +33,16 @@ from datalayer_core.agents.agent_local import (
     run_local_agent_chat,
     runtime_route_candidates,
 )
-from datalayer_core.utils.urls import DatalayerURLs
+from datalayer_core.evals import (
+    evaluate_evalset,
+    load_evalset_spec,
+    make_client,
+    watch_runs,
+    write_eval_reports,
+)
 
 
-DEFAULT_DATALAYER_IAM_URL = 'http://localhost:9700'
-DEFAULT_DATALAYER_RUNTIMES_URL = 'http://localhost:9500'
-DEFAULT_DATALAYER_AI_AGENTS_URL = 'http://localhost:4400'
+DEFAULT_EVALSET_SPEC_FILE = Path(__file__).with_name('evals_batch.evalset.json')
 DEFAULT_AGENT_SPEC_ID = 'example-evals'
 DEFAULT_AGENT_SPEC_IDS = ['example-evals', 'example-evals-nocodemode']
 DEFAULT_AGENT_SPEC_NAME_BY_ID = {
@@ -47,205 +50,6 @@ DEFAULT_AGENT_SPEC_NAME_BY_ID = {
     'example-evals-nocodemode': 'Example Evals Agent (No Codemode)',
 }
 BASE_EXPERIMENT_COUNT = 5
-
-
-def _append_service_path(raw_url: str | None, service_suffix: str) -> str | None:
-    if not raw_url:
-        return None
-    value = raw_url.strip().rstrip('/')
-    suffix = service_suffix.strip()
-    if not suffix.startswith('/'):
-        suffix = f'/{suffix}'
-    if value.endswith(suffix):
-        return value
-    return f'{value}{suffix}'
-
-
-def _normalize_service_url(raw_url: str | None, service_suffix: str) -> str | None:
-    if not raw_url:
-        return None
-    value = raw_url.strip().rstrip('/')
-    suffix = service_suffix.rstrip('/')
-    if value.endswith(suffix):
-        value = value[: -len(suffix)].rstrip('/')
-    return value
-
-
-def _resolve_environment(args: argparse.Namespace) -> tuple[str, str, str, str]:
-    requested = args.run_environment.strip().lower()
-
-    if requested == 'sdk':
-        return (
-            'sdk',
-            args.iam_url,
-            args.runtimes_url,
-            args.ai_agents_url,
-        )
-
-    if requested == 'sdk-proxy':
-        runtimes_url = args.runtimes_url
-        if args.execution_target != 'cloud':
-            runtimes_url = runtimes_url or DEFAULT_DATALAYER_RUNTIMES_URL
-        return (
-            'sdk',
-            _append_service_path(args.iam_url or DEFAULT_DATALAYER_IAM_URL, '/api/iam'),
-            _append_service_path(runtimes_url, '/api/runtimes'),
-            _append_service_path(
-                args.ai_agents_url or DEFAULT_DATALAYER_AI_AGENTS_URL,
-                '/api/ai-agents',
-            ),
-        )
-
-    raise ValueError(f'Unsupported run environment: {args.run_environment}')
-
-
-def _build_batch_cases() -> list[dict[str, Any]]:
-    return [
-        {
-            'name': 'uppercase-basic',
-            'inputs': {'text': 'hello world'},
-            'expected_output': {'text': 'HELLO WORLD'},
-            'metadata': {'category': 'normalization', 'difficulty': 'easy'},
-        },
-        {
-            'name': 'trim-and-uppercase',
-            'inputs': {'text': '  Paris  '},
-            'expected_output': {'text': 'PARIS'},
-            'metadata': {'category': 'normalization', 'difficulty': 'easy'},
-        },
-        {
-            'name': 'punctuation-preserved',
-            'inputs': {'text': 'hello, world!'},
-            'expected_output': {'text': 'HELLO, WORLD!'},
-            'metadata': {'category': 'formatting', 'difficulty': 'medium'},
-        },
-        {
-            'name': 'numeric-token-preserved',
-            'inputs': {'text': 'Version 2.1'},
-            'expected_output': {'text': 'VERSION 2.1'},
-            'metadata': {'category': 'mixed-content', 'difficulty': 'medium'},
-        },
-        {
-            'name': 'unicode-latin',
-            'inputs': {'text': 'cafe'},
-            'expected_output': {'text': 'CAFE'},
-            'metadata': {'category': 'unicode', 'difficulty': 'medium'},
-        },
-    ]
-
-
-def _build_eval_schema(kind: str) -> dict[str, Any]:
-    return {
-        'schema_version': '1.0',
-        'kind': kind,
-        'title': 'Text Normalization Evalset',
-        'description': (
-            'Showcases input/output/metadata schemas with constraints, enums, '
-            'defaults, formats, and examples for a text-normalization task.'
-        ),
-        'input_schema': {
-            '$schema': 'https://json-schema.org/draft/2020-12/schema',
-            'title': 'NormalizationInput',
-            'description': 'Payload supplied to the agent for one evaluation case.',
-            'type': 'object',
-            'required': ['text'],
-            'properties': {
-                'text': {
-                    'type': 'string',
-                    'description': 'Raw text to normalize. Leading/trailing whitespace is stripped.',
-                    'minLength': 1,
-                    'maxLength': 4000,
-                    'examples': ['hello world', '  Paris  '],
-                },
-                'language': {
-                    'type': 'string',
-                    'description': 'BCP-47 language tag of the input text.',
-                    'enum': ['en', 'fr', 'es', 'de', 'it'],
-                    'default': 'en',
-                },
-                'mode': {
-                    'type': 'string',
-                    'description': 'Normalization variant to apply.',
-                    'enum': ['uppercase', 'lowercase', 'titlecase'],
-                    'default': 'uppercase',
-                },
-                'preserve_punctuation': {
-                    'type': 'boolean',
-                    'description': 'Keep punctuation characters in the output.',
-                    'default': True,
-                },
-            },
-            'additionalProperties': False,
-        },
-        'output_schema': {
-            '$schema': 'https://json-schema.org/draft/2020-12/schema',
-            'title': 'NormalizationOutput',
-            'description': 'Structured response produced by the agent.',
-            'type': 'object',
-            'required': ['text'],
-            'properties': {
-                'text': {
-                    'type': 'string',
-                    'description': 'Normalized text returned by the agent.',
-                    'minLength': 1,
-                    'examples': ['HELLO WORLD', 'PARIS'],
-                },
-                'confidence': {
-                    'type': 'number',
-                    'description': 'Model self-reported confidence between 0 and 1.',
-                    'minimum': 0,
-                    'maximum': 1,
-                },
-                'detected_language': {
-                    'type': 'string',
-                    'description': 'Language inferred from the input text.',
-                    'enum': ['en', 'fr', 'es', 'de', 'it', 'unknown'],
-                },
-                'tokens': {
-                    'type': 'array',
-                    'description': 'Tokenized form of the normalized text.',
-                    'items': {'type': 'string'},
-                    'minItems': 0,
-                },
-            },
-            'additionalProperties': True,
-        },
-        'metadata_schema': {
-            '$schema': 'https://json-schema.org/draft/2020-12/schema',
-            'title': 'CaseMetadata',
-            'description': 'Authoring metadata attached to each case.',
-            'type': 'object',
-            'properties': {
-                'category': {
-                    'type': 'string',
-                    'description': 'Functional grouping for analytics.',
-                    'enum': ['normalization', 'formatting', 'unicode', 'mixed-content'],
-                },
-                'difficulty': {
-                    'type': 'string',
-                    'description': 'Authoring difficulty estimate.',
-                    'enum': ['easy', 'medium', 'hard'],
-                },
-                'owner': {
-                    'type': 'string',
-                    'description': 'Email of the case author.',
-                    'format': 'email',
-                },
-                'tags': {
-                    'type': 'array',
-                    'description': 'Free-form labels for filtering.',
-                    'items': {'type': 'string'},
-                    'uniqueItems': True,
-                },
-                'created_at': {
-                    'type': 'string',
-                    'description': 'ISO 8601 timestamp when the case was authored.',
-                    'format': 'date-time',
-                },
-            },
-            'additionalProperties': True,
-        },
-    }
 
 
 def _generated_evalset_name(source: str, mode: str) -> str:
@@ -299,7 +103,7 @@ def _resolve_agent_spec_variants(args: argparse.Namespace) -> list[dict[str, Any
 
     if args.agent_spec:
         if len(selected_ids) > 1:
-            raise RuntimeError('Use --agentspec with one agentspec id only.')
+            raise RuntimeError('Use --agent-spec with one agent-spec id only.')
         resolved_id = selected_ids[0] if selected_ids else _resolve_default_agent_spec_id()
         loaded_spec = _load_agent_spec(str(args.agent_spec))
         return [
@@ -351,28 +155,13 @@ def _case_weight(case: dict[str, Any], idx: int, run_seed: str = '') -> float:
             priority, 0.50
         )
     case_name = str(case.get('name') or f'case-{idx}')
-    # Keep a stable per-case offset (keyed only on the case, not the run) so the
-    # difficulty ranking is identical in every run and the "hardest cases fail
-    # first" behavior is reproducible. Run-to-run variation comes solely from the
-    # run pass rate, not from reshuffling case difficulty.
+    # Keep a stable per-case difficulty offset (keyed only on the case, not the
+    # run). Per-run variation in *which* cases fail is layered on top of this
+    # weight at ranking time in _build_case_results, so harder cases still fail
+    # more often on average while individual runs differ.
     order_jitter = (_stable_unit('case-order', case_name, idx) - 0.5) * 0.30
     static_jitter = (idx % 5) * 0.005
     return max(0.01, min(0.99, base + static_jitter + order_jitter))
-
-
-def _output_fails_case(case: dict[str, Any], output_text: str) -> bool:
-    """Return ``True`` when ``output_text`` does not satisfy ``case``.
-
-    Used for both synthetic runs (to grade generated text) and real
-    agent-backed runs (to grade the representative interaction's actual
-    output), so the per-case table stays coherent with the output that is
-    shown in the comparison panel.
-    """
-    expected_text = str((case.get('expected_output') or {}).get('text') or '').strip()
-    actual_text = str(output_text or '').strip()
-    if not expected_text:
-        return False
-    return actual_text != expected_text
 
 
 def _build_case_results(
@@ -382,12 +171,12 @@ def _build_case_results(
     run_seed: str = '',
     forced_failed_case_names: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Derive deterministic per-case outcomes for a single run.
+    """Derive per-case outcomes for a single run.
 
-    The number of passing cases tracks the run pass rate, and the *hardest*
-    cases (highest weight) fail first, so a regressed run visibly drops its
-    most difficult cases before the easy ones. This makes the per-case tables
-    in the UI and report self-explanatory.
+    The number of passing cases tracks the run pass rate. Which cases fail is
+    biased toward the hardest cases (highest weight) but also varies per run
+    via a run-seeded jitter, so different runs surface different failing cases
+    while harder cases still fail more often on average.
     """
     total = len(cases)
     if total == 0 or run_pass_rate is None:
@@ -401,7 +190,8 @@ def _build_case_results(
     ranked = sorted(
         range(total),
         key=lambda i: (
-            _case_weight(cases[i], i, run_seed),
+            _case_weight(cases[i], i, run_seed)
+            + (_stable_unit('run-failure', run_seed, cases[i].get('name') or i, i) - 0.5) * 0.6,
             _stable_unit('rank-tie', run_seed, cases[i].get('name') or i, i),
         ),
         reverse=True,
@@ -424,10 +214,9 @@ def _build_case_results(
         passed = idx not in failing
         weight = _case_weight(case, idx, run_seed)
         case_name = str(case.get('name') or f'case-{idx}')
-        # Score is a pure function of the case and its pass/fail outcome (no run
-        # seed), so the same case keeps the same score across runs unless its
-        # pass/fail status actually changes.
-        score_jitter = (_stable_unit('case-score', case_name, idx) - 0.5) * 0.10
+        # Score includes a per-run jitter so the same case varies slightly across
+        # runs, in addition to changing when its pass/fail status flips.
+        score_jitter = (_stable_unit('case-score', run_seed, case_name, idx) - 0.5) * 0.10
         if passed:
             score = round(min(1.0, max(0.0, 0.82 + (1.0 - weight) * 0.15 + score_jitter)), 4)
         else:
@@ -445,42 +234,51 @@ def _build_case_results(
     return results
 
 
-def _augment_metrics_with_cases(
-    metrics: dict[str, Any],
+def _expected_case_text(case: dict[str, Any]) -> str:
+    return str((case.get('expected_output') or {}).get('text') or '')
+
+
+def _failing_output_text(case: dict[str, Any]) -> str:
+    """Return an output that will *not* satisfy the case under grading."""
+    expected_text = _expected_case_text(case)
+    input_text = str((case.get('inputs') or {}).get('text') or '')
+    if input_text and input_text != expected_text:
+        return input_text
+    marker = f'{expected_text} (incorrect)'.strip()
+    return marker or 'incorrect'
+
+
+def _build_case_outputs(
     cases: list[dict[str, Any]],
+    run_pass_rate: float | None,
     run_status: str,
     run_seed: str = '',
     forced_failed_case_names: set[str] | None = None,
-) -> dict[str, Any]:
-    """Return metrics enriched with a coherent per-case breakdown.
+) -> list[dict[str, Any]]:
+    """Simulate one agent output per case for grading by the evals API.
 
-    ``passed``/``failed``/``total_cases``/``avg_score`` are recomputed from the
-    per-case outcomes so the aggregate numbers always agree with the per-case
-    table shown in the UI and report.
+    The example only *produces* outputs (good ones for the cases the simulated
+    agent gets right, wrong ones for the rest, biased toward harder cases and
+    varied per run via ``_build_case_results``). Evaluator execution and
+    grading are delegated to ``evaluate_evalset`` so the example never
+    re-implements evaluator logic.
     """
-    case_results = _build_case_results(
+    breakdown = _build_case_results(
         cases,
-        metrics.get('pass_rate'),
+        run_pass_rate,
         run_status,
         run_seed=run_seed,
         forced_failed_case_names=forced_failed_case_names,
     )
-    if not case_results:
-        return metrics
-    passed = sum(1 for item in case_results if item['passed'])
-    failed = len(case_results) - passed
-    avg_score = round(
-        sum(float(item['score']) for item in case_results) / len(case_results), 4
-    )
-    return {
-        **metrics,
-        'total_cases': len(case_results),
-        'passed': passed,
-        'failed': failed,
-        'avg_score': avg_score,
-        'case_results': case_results,
-    }
-
+    if not breakdown:
+        return []
+    outputs: list[dict[str, Any]] = []
+    for case, outcome in zip(cases, breakdown):
+        if outcome.get('passed'):
+            outputs.append({'text': _expected_case_text(case)})
+        else:
+            outputs.append({'text': _failing_output_text(case)})
+    return outputs
 
 
 def _build_submitted_code(total_cases: int, run_pass_rate: float, run_mode: str) -> str:
@@ -589,149 +387,16 @@ def _assert_http_service_reachable(service_name: str, base_url: str) -> None:
         ) from exc
 
 
-def _watch_run_statuses(
-    *,
-    client: DatalayerClient,
-    run_ids: list[str],
-    account_uid: str | None,
-    timeout_seconds: int,
-    interval_seconds: int,
-    last_run_expected_failure: bool,
-    local_agent_id: str,
-) -> None:
-    terminal_states = {
-        'completed',
-        'failed',
-        'error',
-        'cancelled',
-        'success',
-        'succeeded',
-        'passed',
-        'done',
-    }
-    started = time.time()
-    snapshots_by_run: dict[str, dict[str, Any]] = {}
-    previous_status_by_run: dict[str, str] = {}
-
-    print(
-        'Watching eval runs: '
-        f'agent_id={local_agent_id}, total_runs={len(run_ids)}, '
-        f'timeout={timeout_seconds}s, interval={interval_seconds}s'
-    )
-    print('Note: identifiers in delta lines are run_id values, not agent UID.')
-
-    while True:
-        status_counts: dict[str, int] = {}
-        pending_ids: list[str] = []
-        for run_id in run_ids:
-            snapshot: dict[str, Any] = client.evals_get_run(run_id, account_uid=account_uid)
-            snapshots_by_run[run_id] = snapshot
-            status = str((snapshot.get('run') or {}).get('status') or '').lower() or 'unknown'
-            status_counts[status] = status_counts.get(status, 0) + 1
-            if status not in terminal_states:
-                pending_ids.append(run_id)
-
-        elapsed = int(time.time() - started)
-        summary = ', '.join(
-            f'{status}={count}' for status, count in sorted(status_counts.items())
-        ) or 'unknown=0'
-        print(f'Run status summary at t+{elapsed}s: {summary}')
-
-        changed_rows: list[str] = []
-        for run_id in run_ids:
-            current_status = str(
-                ((snapshots_by_run.get(run_id) or {}).get('run') or {}).get('status') or ''
-            ).lower() or 'unknown'
-            previous_status = previous_status_by_run.get(run_id)
-            if previous_status is None:
-                changed_rows.append(f'  {run_id}: init->{current_status}')
-            elif previous_status != current_status:
-                changed_rows.append(f'  {run_id}: {previous_status}->{current_status}')
-            previous_status_by_run[run_id] = current_status
-
-        if changed_rows:
-            print('Run status deltas since previous poll:')
-            for row in changed_rows:
-                print(row)
-        else:
-            print('Run status deltas since previous poll: no changes')
-
-        if not pending_ids:
-            final_run_id = run_ids[-1]
-            final_state = str(
-                ((snapshots_by_run.get(final_run_id) or {}).get('run') or {}).get('status') or ''
-            ).lower()
-            if final_state == 'failed' and last_run_expected_failure:
-                print('Final run status: failed (expected demo failure)')
-            else:
-                print(f'Final run status: {final_state or "unknown"}')
-            return
-
-        if time.time() - started > timeout_seconds:
-            preview_ids = ', '.join(pending_ids[:5])
-            suffix = ' ...' if len(pending_ids) > 5 else ''
-            print(
-                'Run status watch timed out before terminal state. '
-                f'Pending run_ids ({len(pending_ids)}): {preview_ids}{suffix}'
-            )
-            sample_run_id = pending_ids[0] if pending_ids else ''
-            sample_run = ((snapshots_by_run.get(sample_run_id) or {}).get('run') or {})
-            sample_summary = sample_run.get('summary') if isinstance(sample_run, dict) else {}
-            if not isinstance(sample_summary, dict):
-                sample_summary = {}
-            print('Timeout diagnostic sample run snapshot:')
-            print(
-                f'  run_id={sample_run_id}, '
-                f'status={str(sample_run.get("status") or "unknown")}, '
-                f'updated_at={str(sample_run.get("updated_at") or "n/a")}'
-            )
-            print(
-                '  summary: '
-                f'execution_target={str(sample_summary.get("execution_target") or "n/a")}, '
-                f'local_agent_base_url={str(sample_summary.get("local_agent_base_url") or "n/a")}, '
-                f'local_agent_id={str(sample_summary.get("local_agent_id") or "n/a")}'
-            )
-            return
-
-        time.sleep(max(1, interval_seconds))
-
-
-def _write_markdown_report(
-    *,
-    client: DatalayerClient,
-    evalset_id: str,
-    account_uid: str | None,
-    run_limit: int = 50,
-) -> tuple[Path, Path]:
-    """Generate markdown + CSV reports by reusing the datalayer-core report API."""
-    from datalayer_core.cli.commands.evals import (
-        _report_data,
-        _report_markdown,
-        _write_report_csv,
-    )
-
-    report = _report_data(
-        client=client,
-        evalset_id=evalset_id,
-        run_limit=run_limit,
-        account_uid=account_uid,
-    )
-    markdown = _report_markdown(report, run_limit=run_limit, colorize=False)
-
-    timestamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    markdown_path = Path(f'report-{timestamp}.md')
-    csv_path = Path(f'report-{timestamp}.csv')
-    markdown_path.write_text(markdown + '\n', encoding='utf-8')
-    _write_report_csv(report, csv_path)
-
-    return markdown_path, csv_path
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='Create one evalset, experiments for one or more agentspecs, and three runs per experiment in batch mode.'
     )
     parser.add_argument('--eval-name', default='')
+    parser.add_argument(
+        '--evalset-spec-file',
+        default=str(DEFAULT_EVALSET_SPEC_FILE),
+        help='Path to evalset JSON spec (includes schema, cases, and evaluators).',
+    )
     parser.add_argument('--run-status', default='completed', choices=['queued', 'running', 'completed', 'failed', 'cancelled'])
     parser.add_argument(
         '--run-environment',
@@ -767,17 +432,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--ui-url', default=None)
     parser.add_argument('--execution-target', default='cloud', choices=['cloud', 'local'])
     parser.add_argument(
-        '--agent-spec-id',
         '--agentspec-id',
         dest='agent_spec_id',
         default=None,
-        help=(
-            'Agent specification id. Defaults to example-evals when omitted. '
-            'Accepts both --agent-spec-id and --agentspec-id.'
-        ),
+        help='Agent specification id. Defaults to example-evals when omitted.',
     )
     parser.add_argument(
-        '--agent-spec-ids',
         '--agentspec-ids',
         dest='agent_spec_ids',
         default=None,
@@ -788,13 +448,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--agentspec',
-        '--agent-spec',
         dest='agent_spec',
         default=None,
         help=(
             'Agent spec source as YAML/JSON URL or local file path. '
-            'When provided, overrides --agentspec-id. '
-            'Accepts both --agentspec and --agent-spec.'
+            'When provided, overrides --agentspec-id.'
         ),
     )
     parser.add_argument('--environment-name', default='ai-agents-env')
@@ -829,8 +487,6 @@ def parse_args() -> argparse.Namespace:
         action='store_true',
         help='Use synthetic eval behavior without invoking an agent.',
     )
-    parser.add_argument('--no-agent', dest='no_agent', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('--dry-run', dest='no_agent', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument(
         '--no-auto-report',
         dest='auto_report',
@@ -838,7 +494,6 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help='Skip automatic markdown report generation at the end of the run.',
     )
-    parser.add_argument('--clean', action='store_true', help='Accepted for compatibility; currently no-op.')
     return parser.parse_args()
 
 
@@ -859,16 +514,18 @@ def main() -> None:
             f"{variant['id']} ({variant['name']})" for variant in agent_spec_variants
         )
     )
-    backend_run_environment, iam_url, runtimes_url, ai_agents_url = _resolve_environment(args)
+    backend_run_environment = 'sdk'
     pass_rate = min(1.0, max(0.0, float(args.pass_rate)))
     run_count = 3
     total_cases = max(1, int(args.total_cases))
 
-    urls = DatalayerURLs.from_environment(
-        iam_url=_normalize_service_url(iam_url, '/api/iam'),
-        runtimes_url=_normalize_service_url(runtimes_url, '/api/runtimes'),
-        ai_agents_url=_normalize_service_url(ai_agents_url, '/api/ai-agents'),
+    client = make_client(
+        token=token,
+        iam_url=args.iam_url,
+        runtimes_url=args.runtimes_url,
+        ai_agents_url=args.ai_agents_url,
     )
+    urls = client.urls
 
     if args.run_environment == 'sdk-proxy':
         _assert_http_service_reachable('ai-agents', urls.ai_agents_url)
@@ -884,20 +541,30 @@ def main() -> None:
             or ('http://localhost:3063' if 'localhost' in urls.ai_agents_url or '127.0.0.1' in urls.ai_agents_url else urls.ai_agents_url)
         ).rstrip('/')
 
-    client = DatalayerClient(urls=urls, token=token)
     mode_label = 'batch-synthetic' if args.no_agent else 'batch'
-    evalset_name = args.eval_name.strip() or _generated_evalset_name('sdk', mode_label)
-
-    cases = _build_batch_cases()
+    evalset_spec = load_evalset_spec(
+        args.evalset_spec_file, expected_kind='batch', require_cases=True
+    )
+    evalset_name = (
+        args.eval_name.strip()
+        or str(evalset_spec.get('name') or '').strip()
+        or _generated_evalset_name('sdk', mode_label)
+    )
+    evalset_description = str(
+        evalset_spec.get('description') or 'Eval created by evals_batch_example.py'
+    )
+    cases = [
+        case for case in (evalset_spec.get('cases') or [])
+        if isinstance(case, dict)
+    ]
 
     print('[1/4] Creating evalset...')
-    evalset_payload = client.evals_create_eval(
+    evalset_payload = client.evals_create_eval_from_spec(
+        spec=evalset_spec,
         name=evalset_name,
-        description='Eval created by evals_batch_example.py',
+        description=evalset_description,
         run_environment=backend_run_environment,
         kind='batch',
-        schema=_build_eval_schema('batch'),
-        cases=cases,
         account_uid=account_uid,
     )
     evalset_id = str((evalset_payload.get('evalset') or {}).get('id') or '')
@@ -1017,7 +684,6 @@ def main() -> None:
             f'(agent: {args.local_agent_id}).'
         )
     run_ids: list[str] = []
-    last_run_expected_failure = False
     for experiment_name, experiment_id, experiment_index, current_agent_spec_id, current_agent_spec_name in experiment_ids:
         print(f'Creating runs for {experiment_name}...')
         if not args.no_agent and effective_execution_target == 'local':
@@ -1044,15 +710,9 @@ def main() -> None:
                 run_status = no_agent_first_run_status if index == 0 else _run_status_for_index(index)
                 intentional_failure = _is_intentional_failure(index, run_status)
                 run_seed = f'{run_seed}:{run_status}'
-                run_passed_cases = int(round(run_pass_rate * total_cases))
-                run_failed_cases = max(0, total_cases - run_passed_cases)
-                metrics: dict[str, Any] = {
-                    'pass_rate': run_pass_rate,
-                    'total_cases': total_cases,
-                    'passed': run_passed_cases,
-                    'failed': run_failed_cases,
-                    'avg_score': round(run_pass_rate * 0.9 + 0.08, 4),
-                }
+                # Simulation knob for the non-representative cases only; every
+                # run metric is graded for real by the evals API further below.
+                target_pass_rate: float | None = run_pass_rate
                 expected_text = str(
                     (representative_case.get('expected_output') or {}).get('text') or ''
                 )
@@ -1066,13 +726,6 @@ def main() -> None:
                     )
                 else:
                     produced_text = expected_text
-                representative_case_failed = _output_fails_case(
-                    representative_case,
-                    produced_text,
-                )
-                forced_failed_case_names = {
-                    str(representative_case.get('name') or '')
-                } if representative_case_failed else set()
                 interaction_output = {
                     'text': produced_text,
                     'expected_text': expected_text,
@@ -1099,15 +752,7 @@ def main() -> None:
                         effective_pass_rate = 0.0
                     else:
                         effective_pass_rate = run_pass_rate if has_output else max(0.0, run_pass_rate - 0.5)
-                    passed = int(round(effective_pass_rate * total_cases))
-                    failed = max(0, total_cases - passed)
-                    metrics = {
-                        'pass_rate': effective_pass_rate,
-                        'total_cases': total_cases,
-                        'passed': passed,
-                        'failed': failed,
-                        'avg_score': round(effective_pass_rate * 0.9 + 0.08, 4),
-                    }
+                    target_pass_rate = effective_pass_rate
                     interaction_output = local_chat_result.get('output')
                     run_report = {
                         'interaction_mode': 'sdk-direct-local-agent-chat-api',
@@ -1126,7 +771,7 @@ def main() -> None:
                     if not cloud_runtime_ingress:
                         # No ingress available: defer execution to the backend.
                         run_status = 'running'
-                        metrics = {}
+                        target_pass_rate = None
                         run_report = {}
                         intentional_failure = False
                         run_seed = f'{run_seed}:{run_status}'
@@ -1158,15 +803,7 @@ def main() -> None:
                             effective_pass_rate = (
                                 run_pass_rate if has_output else max(0.0, run_pass_rate - 0.5)
                             )
-                        passed = int(round(effective_pass_rate * total_cases))
-                        failed = max(0, total_cases - passed)
-                        metrics = {
-                            'pass_rate': effective_pass_rate,
-                            'total_cases': total_cases,
-                            'passed': passed,
-                            'failed': failed,
-                            'avg_score': round(effective_pass_rate * 0.9 + 0.08, 4),
-                        }
+                        target_pass_rate = effective_pass_rate
                         interaction_output = cloud_chat_result.get('output')
                         run_report = {
                             'interaction_mode': 'sdk-direct-cloud-agent-chat-api',
@@ -1190,32 +827,28 @@ def main() -> None:
             ):
                 submitted_code = _build_submitted_code(total_cases, run_pass_rate, 'batch')
 
-            # For real (agent-backed) runs, grade the representative case from
-            # the actual agent output so its per-case row matches the
-            # interaction shown in the comparison panel. A failed run or an
-            # output that does not satisfy the case forces that case to fail.
-            if not args.no_agent:
-                representative_output_text = (
-                    str(interaction_output.get('text') or '')
-                    if isinstance(interaction_output, dict)
-                    else ''
+            # Build one simulated agent output per case, then delegate all
+            # evaluator execution / grading to the shared evals API. The
+            # representative case (index 0) is graded from the *actual* agent
+            # output (or the synthetic output for --no-agent runs) so its row
+            # matches the interaction shown in the comparison panel.
+            # The evals API grades the produced outputs and is the SOLE source
+            # of run metrics (pass rate, per-case results, evaluator results).
+            # The example only *produces* outputs; it never scores them itself.
+            metrics: dict[str, Any] = {}
+            if target_pass_rate is not None:
+                case_outputs = _build_case_outputs(
+                    cases,
+                    target_pass_rate,
+                    run_status,
+                    run_seed=run_seed,
+                    forced_failed_case_names=forced_failed_case_names,
                 )
-                if run_status in {'failed', 'error'} or _output_fails_case(
-                    representative_case, representative_output_text
-                ):
-                    forced_failed_case_names = {
-                        str(representative_case.get('name') or '')
+                if case_outputs and isinstance(interaction_output, dict):
+                    case_outputs[0] = {
+                        'text': str(interaction_output.get('text') or '')
                     }
-
-            # Attach a coherent per-case breakdown so the UI and report can show
-            # per-case metrics (not just the aggregate pass rate).
-            metrics = _augment_metrics_with_cases(
-                metrics,
-                cases,
-                run_status,
-                run_seed=run_seed,
-                forced_failed_case_names=forced_failed_case_names,
-            )
+                metrics = evaluate_evalset(evalset_spec, case_outputs)
 
             run_payload = client.evals_create_run(
                 experiment_id,
@@ -1267,28 +900,25 @@ def main() -> None:
                 f'agent_spec_id={current_agent_spec_id}, agent_id={args.local_agent_id}'
                 f'{run_log_suffix}'
             )
-            last_run_expected_failure = intentional_failure
 
     print('[4/4] Watching run status...')
-    _watch_run_statuses(
-        client=client,
-        run_ids=run_ids,
+    watch_runs(
+        client,
+        run_ids,
         account_uid=account_uid,
         timeout_seconds=max(1, args.timeout),
         interval_seconds=max(1, args.interval),
-        last_run_expected_failure=last_run_expected_failure,
-        local_agent_id=args.local_agent_id,
     )
 
     if args.auto_report:
         try:
-            report_markdown_path, report_csv_path = _write_markdown_report(
-                client=client,
-                evalset_id=evalset_id,
+            reports = write_eval_reports(
+                client,
+                evalset_id,
                 account_uid=account_uid,
             )
-            print(f'Auto report written: {report_markdown_path}')
-            print(f'Auto report CSV written: {report_csv_path}')
+            print(f'Auto report written: {reports["markdown_path"]}')
+            print(f'Auto report CSV written: {reports["csv_path"]}')
         except Exception as exc:
             print(f'Warning: unable to generate auto report ({exc})')
 
