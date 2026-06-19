@@ -259,7 +259,7 @@ def _stable_unit(*parts: object) -> float:
 
 
 def _case_weight(case: dict[str, Any], idx: int, run_seed: str = '') -> float:
-    """Deterministic 'difficulty' weight in [0, 1] with run-level variation."""
+    """Deterministic 'difficulty' weight in [0, 1], stable across runs."""
     metadata = case.get('metadata') or {}
     difficulty = str(metadata.get('difficulty') or '').strip().lower()
     priority = str(metadata.get('priority') or '').strip().lower()
@@ -269,7 +269,11 @@ def _case_weight(case: dict[str, Any], idx: int, run_seed: str = '') -> float:
             priority, 0.50
         )
     case_name = str(case.get('name') or f'case-{idx}')
-    order_jitter = (_stable_unit('case-order', run_seed, case_name, idx) - 0.5) * 0.30
+    # Keep a stable per-case offset (keyed only on the case, not the run) so the
+    # difficulty ranking is identical in every run and the "hardest cases fail
+    # first" behavior is reproducible. Run-to-run variation comes solely from the
+    # run pass rate, not from reshuffling case difficulty.
+    order_jitter = (_stable_unit('case-order', case_name, idx) - 0.5) * 0.30
     static_jitter = (idx % 5) * 0.005
     return max(0.01, min(0.99, base + static_jitter + order_jitter))
 
@@ -323,7 +327,7 @@ def _build_case_results(
         passed = idx not in failing
         weight = _case_weight(case, idx, run_seed)
         case_name = str(case.get('name') or f'case-{idx}')
-        score_jitter = (_stable_unit('case-score', run_seed, case_name, idx) - 0.5) * 0.10
+        score_jitter = (_stable_unit('case-score', case_name, idx) - 0.5) * 0.10
         if passed:
             score = round(min(1.0, max(0.0, 0.82 + (1.0 - weight) * 0.15 + score_jitter)), 4)
         else:
@@ -487,7 +491,13 @@ def _synthetic_pass_text(case: dict[str, Any]) -> str:
     return 'Synthetic passing answer.'
 
 
-def _synthetic_output_fails_case(case: dict[str, Any], output_text: str) -> bool:
+def _output_fails_case(case: dict[str, Any], output_text: str) -> bool:
+    """Return ``True`` when ``output_text`` does not satisfy ``case``.
+
+    Used for both synthetic runs and real agent-backed runs (to grade the
+    representative interaction's actual output) so the per-case table stays
+    coherent with the output shown in the comparison panel.
+    """
     expected = case.get('expected_output')
     text = str(output_text or '').strip()
     text_lower = text.lower()
@@ -817,7 +827,8 @@ def main() -> None:
         ).rstrip('/')
 
     client = DatalayerClient(urls=urls, token=token)
-    evalset_name = args.eval_name.strip() or _generated_evalset_name('sdk', 'interactive')
+    mode_label = 'interactive-synthetic' if args.no_agent else 'interactive'
+    evalset_name = args.eval_name.strip() or _generated_evalset_name('sdk', mode_label)
 
     cases = _build_interactive_cases()
 
@@ -1000,7 +1011,7 @@ def main() -> None:
                         'text': _synthetic_pass_text(representative_case),
                         'expected_output': expected_output,
                     }
-                representative_case_failed = _synthetic_output_fails_case(
+                representative_case_failed = _output_fails_case(
                     representative_case,
                     str((interaction_output or {}).get('text') or ''),
                 )
@@ -1117,6 +1128,23 @@ def main() -> None:
                 and args.execution_target == 'cloud'
             ):
                 submitted_code = _build_submitted_code(total_cases, run_pass_rate, 'interactive')
+
+            # For real (agent-backed) runs, grade the representative case from
+            # the actual agent output so its per-case row matches the
+            # interaction shown in the comparison panel. A failed run or an
+            # output that does not satisfy the case forces that case to fail.
+            if not args.no_agent:
+                representative_output_text = (
+                    str(interaction_output.get('text') or '')
+                    if isinstance(interaction_output, dict)
+                    else ''
+                )
+                if run_status in {'failed', 'error'} or _output_fails_case(
+                    representative_case, representative_output_text
+                ):
+                    forced_failed_case_names = {
+                        str(representative_case.get('name') or '')
+                    }
 
             # Attach a coherent per-case breakdown so the UI and report can show
             # per-case metrics (not just the aggregate pass rate).

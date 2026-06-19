@@ -228,6 +228,13 @@ concise answer, JSON formatting). Each case carries assertion-style
   run returns the un-normalized input (batch) or a placeholder refusal
   (interactive). That is why a lower-`pass_rate` run visibly shows a worse
   output next to the same prompt.
+- In **real (agent-backed)** runs the representative interaction is actually
+  executed against the agent. Its real output is then graded against the
+  representative case (`_output_fails_case(...)`): if the run failed or the
+  output does not satisfy the case, that case is forced to fail in the per-case
+  table. This keeps the representative row coherent with the output shown in the
+  comparison panel — you never see a "pass" row next to an output that is
+  clearly wrong.
 
 ### How per-case results are generated (synthetic)
 
@@ -247,6 +254,34 @@ the aggregate pass rate. The synthetic generator is deliberately didactic:
 This makes the relationship concrete: open two runs of the same experiment and
 the per-case tables show the *same cases* with different pass/fail columns — the
 exact rows that explain the pass-rate delta.
+
+### Where case scores come from (and why they are stable across runs)
+
+The per-case `score` is generated in `_build_case_results(...)` in
+`evals_batch_example.py` (and the matching function in
+`evals_interactive_example.py`). It is a **pure function of the case and its
+pass/fail outcome**:
+
+- a passing case scores high: `0.82 + (1 - difficulty_weight) * 0.15 + offset`
+- a failing case scores low: `0.45 - difficulty_weight * 0.25 + offset`
+
+The `difficulty_weight` and the small `offset` are keyed **only on the case
+name** (via `_case_weight(...)` and the `case-score` hash), not on the run. The
+practical consequence:
+
+- The **same case keeps the same score in every run** while its pass/fail
+  status does not change.
+- A case's score only moves when its **outcome flips** (pass→fail or fail→pass),
+  because the pass and fail formulas are different. That flip is driven purely
+  by the run's pass rate (the example ramps the pass rate down on later runs),
+  not by random per-run noise.
+
+So if you compare two runs and see the *same* case with two *different* scores,
+that case changed pass/fail status between those runs. If a case stays passing
+(or stays failing) in both runs, its score is identical. This is intentional:
+the synthetic data is fully reproducible, so run-to-run deltas always trace back
+to a concrete pass/fail change rather than to randomness.
+
 
 ### Reading "Pass-rate delta (A - B)"
 
