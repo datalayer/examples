@@ -1059,7 +1059,8 @@ def main() -> None:
                 print(f'Cloud runtime URL ({variant_id}): {run_url}/agents/{pod_name}')
     elif args.execution_target == 'cloud' and run_url and runtime_pod_name:
         print(f'Cloud runtime URL: {run_url}/agents/{runtime_pod_name}')
-    print(f'Track in UI: {ui_url}/evals')
+    track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
+    print(f'Track in UI: {track_ui_base}/evals')
 
 
 if __name__ == '__main__':

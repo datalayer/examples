@@ -57,6 +57,11 @@ def _generated_evalset_name(source: str, mode: str) -> str:
     return f'evalset-{source}-{mode}-{stamp}'
 
 
+def _with_timestamp(name: str) -> str:
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+    return f'{name}-{stamp}'
+
+
 def _run_status_for_index(index: int) -> str:
     return 'completed' if index < 2 else 'failed'
 
@@ -565,11 +570,14 @@ def main() -> None:
     evalset_spec = load_evalset_spec(
         args.evalset_spec_file, expected_kind='batch', require_cases=True
     )
-    evalset_name = (
-        args.eval_name.strip()
-        or str(evalset_spec.get('name') or '').strip()
-        or _generated_evalset_name('sdk', mode_label)
-    )
+    explicit_eval_name = args.eval_name.strip()
+    spec_eval_name = str(evalset_spec.get('name') or '').strip()
+    if explicit_eval_name:
+        evalset_name = explicit_eval_name
+    elif spec_eval_name:
+        evalset_name = _with_timestamp(spec_eval_name)
+    else:
+        evalset_name = _generated_evalset_name('sdk', mode_label)
     evalset_description = str(
         evalset_spec.get('description') or 'Eval created by evals_batch_example.py'
     )
@@ -994,7 +1002,8 @@ def main() -> None:
                 print(f'Cloud runtime URL ({variant_id}): {run_url}/agents/{pod_name}')
     elif effective_execution_target == 'cloud' and run_url and runtime_pod_name:
         print(f'Cloud runtime URL: {run_url}/agents/{runtime_pod_name}')
-    print(f'Track in UI: {ui_url}/evals')
+    track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
+    print(f'Track in UI: {track_ui_base}/evals')
 
 
 if __name__ == '__main__':
