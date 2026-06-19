@@ -37,7 +37,7 @@ AGENTSPEC_IDS_FLAG := $(if $(strip $(AGENTSPEC_IDS)),--agentspec-ids $(AGENTSPEC
 AGENTSPEC_FLAGS := $(AGENTSPEC_FLAG) $(AGENTSPEC_ID_FLAG) $(AGENTSPEC_IDS_FLAG)
 CLOUD_DEFAULT_ENV_RESET := env -u DATALAYER_IAM_URL -u DATALAYER_RUNTIMES_URL -u DATALAYER_AI_AGENTS_URL
 
-.PHONY: help evals-batch-local evals-batch-cloud evals-batch-cloud-billable-account evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
+.PHONY: help evals-batch-local evals-batch-cloud evals-batch-cloud-runner evals-batch-local-runner evals-batch-cloud-billable-account evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -47,6 +47,12 @@ evals-batch-local: ## Run batch example in SDK lane using direct endpoints with 
 
 evals-batch-cloud: ## Run batch example in SDK lane using direct endpoints with cloud agent target (set SYNTHETIC=1 for synthetic mode)
 	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+
+evals-batch-cloud-runner: ## Run batch cloud example via the reusable datalayer_core.evals.execute_evalset_spec runner (real runs only)
+	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --execution-target cloud --use-runner --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS)
+
+evals-batch-local-runner: ## Run batch local example via the reusable datalayer_core.evals.execute_evalset_spec runner (real runs only)
+	@python evals_batch_example.py --run-environment sdk --run-status completed --execution-target local --use-runner --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS)
 
 evals-batch-cloud-billable-account: ## Prompt for API key + optional billable account UID, then run batch cloud example
 	@default_api_key="$${DATALAYER_API_KEY:-}"; \

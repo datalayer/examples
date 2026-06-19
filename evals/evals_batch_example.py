@@ -35,6 +35,7 @@ from datalayer_core.agents.agent_local import (
 )
 from datalayer_core.evals import (
     evaluate_evalset,
+    execute_evalset_spec,
     load_evalset_spec,
     make_client,
     watch_runs,
@@ -513,6 +514,16 @@ def parse_args() -> argparse.Namespace:
         help='Use synthetic eval behavior without invoking an agent.',
     )
     parser.add_argument(
+        '--use-runner',
+        action='store_true',
+        help=(
+            'Delegate real execution to the reusable '
+            'datalayer_core.evals.execute_evalset_spec runner (one experiment '
+            'per agentspec, every case executed for real). Works with '
+            '--execution-target cloud or local; incompatible with --synthetic.'
+        ),
+    )
+    parser.add_argument(
         '--no-auto-report',
         dest='auto_report',
         action='store_false',
@@ -585,6 +596,68 @@ def main() -> None:
         case for case in (evalset_spec.get('cases') or [])
         if isinstance(case, dict)
     ]
+
+    if args.use_runner:
+        if args.no_agent:
+            raise RuntimeError('--use-runner cannot be combined with --synthetic.')
+        if args.execution_target not in {'cloud', 'local'}:
+            raise RuntimeError(
+                '--use-runner requires --execution-target cloud or local.'
+            )
+        if args.agent_spec:
+            raise RuntimeError(
+                '--use-runner does not support inline --agentspec; pass '
+                '--agentspec-id/--agentspec-ids instead.'
+            )
+        agentspec_ids = [str(variant['id']) for variant in agent_spec_variants]
+        print(
+            f'[runner] Delegating real {args.execution_target} execution to '
+            'datalayer_core.evals.execute_evalset_spec for agentspecs: '
+            + ', '.join(agentspec_ids)
+        )
+        result = execute_evalset_spec(
+            client,
+            spec=evalset_spec,
+            agentspec_ids=agentspec_ids,
+            run_limit=run_count,
+            run_environment=args.run_environment,
+            environment_name=args.environment_name,
+            account_uid=account_uid,
+            credits_limit=float(args.cloud_credits_limit),
+            evalset_name=evalset_name,
+            backend_run_environment=backend_run_environment,
+            launch_source='python-batch-example',
+            agent_name=args.local_agent_id,
+            execution_target=args.execution_target,
+            local_agent_base_url=args.local_agent_base_url,
+            auto_start_local_agent_runtime=bool(
+                args.auto_start_local_agent_runtime
+            ),
+            local_agent_log_level=args.local_agent_log_level,
+            log=print,
+        )
+        runner_evalset_id = str(result.get('evalset_id') or '')
+        print(
+            f'[runner] Created evalset {runner_evalset_id} '
+            f"({result.get('evalset_name')}) with "
+            f"{len(result.get('experiment_ids') or [])} experiment(s) and "
+            f"{len(result.get('run_ids') or [])} run(s)."
+        )
+        if args.auto_report and runner_evalset_id:
+            try:
+                reports = write_eval_reports(
+                    client,
+                    runner_evalset_id,
+                    account_uid=account_uid,
+                )
+                print(f'Auto report written: {reports["markdown_path"]}')
+                print(f'Auto report CSV written: {reports["csv_path"]}')
+            except Exception as exc:
+                print(f'Warning: unable to generate auto report ({exc})')
+        track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
+        print(f'Track in UI: {track_ui_base}/evals')
+        print('Done.')
+        return
 
     print('[1/4] Creating evalset...')
     evalset_payload = client.evals_create_eval_from_spec(
