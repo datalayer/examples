@@ -13,6 +13,8 @@ It contains two runnable scripts:
 
 - `evals_batch_example.py`: deterministic eval runs with `run_mode=batch`
 - `evals_interactive_example.py`: event-style eval runs with `run_mode=interactive`
+- `evals_batch_simple.py`: minimal cloud batch run using
+  `datalayer_core.evals.execute_evalset_spec`
 
 Each script loads its evalset from a colocated JSON spec file:
 
@@ -47,6 +49,7 @@ Every `make` target is a combination of three axes:
 
 | Target | Lane | Execution target |
 |--------|------|------------------|
+| `evals-batch-simple` | sdk (direct) | cloud (single agentspec, minimal path) |
 | `evals-batch-local` | sdk (direct) | local agent |
 | `evals-batch-cloud` | sdk (direct) | cloud |
 | `evals-batch-cloud-billable-account` | sdk (direct) | cloud (prompts for API key + billable account) |
@@ -54,6 +57,22 @@ Every `make` target is a combination of three axes:
 | `evals-batch-local-proxy` | sdk-proxy | local agent |
 | `evals-batch-cloud-proxy` | sdk-proxy | cloud |
 | `evals-batch-synthetic-proxy` | sdk-proxy | synthetic (no agent) |
+
+### Minimal cloud invocation
+
+If you want the smallest possible cloud batch run with no flags and no report
+generation logic, use:
+
+```bash
+make evals-batch-simple
+```
+
+This target runs `evals_batch_simple.py`, which:
+
+- loads `evals_batch.evalset.json`
+- invokes `execute_evalset_spec(...)` directly
+- executes two cloud runs against `example-evals` (so UI run-compare has enough runs)
+- prints the created evalset id
 
 ### Reusable runner
 

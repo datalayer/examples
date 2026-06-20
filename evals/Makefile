@@ -37,10 +37,13 @@ AGENTSPEC_IDS_FLAG := $(if $(strip $(AGENTSPEC_IDS)),--agentspec-ids $(AGENTSPEC
 AGENTSPEC_FLAGS := $(AGENTSPEC_FLAG) $(AGENTSPEC_ID_FLAG) $(AGENTSPEC_IDS_FLAG)
 CLOUD_DEFAULT_ENV_RESET := env -u DATALAYER_IAM_URL -u DATALAYER_RUNTIMES_URL -u DATALAYER_AI_AGENTS_URL
 
-.PHONY: help evals-batch-local evals-batch-cloud evals-batch-cloud-runner evals-batch-local-runner evals-batch-cloud-billable-account evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
+.PHONY: help evals-batch-simple evals-batch-local evals-batch-cloud evals-batch-cloud-runner evals-batch-local-runner evals-batch-cloud-billable-account evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+evals-batch-simple: ## Minimal cloud batch run via core execute_evalset_spec (single agentspec, no reports)
+	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_simple.py
 
 evals-batch-local: ## Run batch example in SDK lane using direct endpoints with local agent target
 	@python evals_batch_example.py --run-environment sdk --run-status completed --execution-target local --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
@@ -73,7 +76,7 @@ evals-batch-cloud-proxy: ## Run batch example via local proxy endpoints in SDK l
 	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
 evals-batch-synthetic: ## Run batch synthetic comparison across example-evals and example-evals-nocodemode
-	@python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
 evals-batch-synthetic-proxy: ## Run batch synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
 	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
@@ -91,7 +94,7 @@ evals-interactive-cloud-proxy: ## Run interactive example via local proxy endpoi
 	@python evals_interactive_example.py --run-environment sdk-proxy --run-status running --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
 evals-interactive-synthetic: ## Run interactive synthetic comparison across example-evals and example-evals-nocodemode
-	@python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+	@$(CLOUD_DEFAULT_ENV_RESET) python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
 evals-interactive-synthetic-proxy: ## Run interactive synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
 	@python evals_interactive_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
