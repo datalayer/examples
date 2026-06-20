@@ -165,6 +165,37 @@ def _stable_unit(*parts: object) -> float:
     return int(digest[:12], 16) / float(0xFFFFFFFFFFFF)
 
 
+def _build_synthetic_pydantic_usage(
+    *,
+    experiment_id: str,
+    run_index: int,
+    run_pass_rate: float,
+    run_status: str,
+    model_name: str,
+) -> dict[str, Any]:
+    status_factor = 0.45 if run_status in {'failed', 'error'} else 1.0
+    request_count = 1 + int(_stable_unit('synthetic-requests', experiment_id, run_index) * 2)
+    base_prompt = 210 + int(_stable_unit('synthetic-prompt', experiment_id, run_index) * 95)
+    base_completion = 110 + int(_stable_unit('synthetic-completion', experiment_id, run_index) * 80)
+    prompt_tokens = max(1, int(base_prompt * status_factor))
+    completion_tokens = max(1, int(base_completion * status_factor))
+    total_tokens = prompt_tokens + completion_tokens
+    credits_consumed = round(total_tokens * 0.000002, 6)
+    duration_ms = max(50, int(620 + (1.0 - run_pass_rate) * 720 + request_count * 55))
+    return {
+        'source': 'synthetic_example',
+        'provider': 'synthetic',
+        'model': model_name,
+        'requests': request_count,
+        'prompt_tokens': prompt_tokens,
+        'completion_tokens': completion_tokens,
+        'total_tokens': total_tokens,
+        'credits_consumed': credits_consumed,
+        'duration_ms': duration_ms,
+        'captured_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+    }
+
+
 def _case_weight(case: dict[str, Any], idx: int, run_seed: str = '') -> float:
     """Deterministic 'difficulty' weight in [0, 1], stable across runs."""
     metadata = case.get('metadata') or {}
@@ -541,6 +572,32 @@ def main() -> None:
         raise RuntimeError('Use either --agentspec-id or --agentspec-ids with --agentspec, not both.')
 
     agent_spec_variants = _resolve_agent_spec_variants(args)
+    if args.no_agent and len(agent_spec_variants) < 2:
+        default_variant_ids = _resolve_default_agent_spec_ids()
+        existing_variant_ids = {
+            str(variant.get('id') or '').strip()
+            for variant in agent_spec_variants
+            if str(variant.get('id') or '').strip()
+        }
+        for variant_id in default_variant_ids:
+            if variant_id in existing_variant_ids:
+                continue
+            agent_spec_variants.append(
+                {
+                    'id': variant_id,
+                    'name': DEFAULT_AGENT_SPEC_NAME_BY_ID.get(variant_id, variant_id),
+                    'spec': None,
+                }
+            )
+            existing_variant_ids.add(variant_id)
+            if len(agent_spec_variants) >= 2:
+                break
+        if len(agent_spec_variants) < 2:
+            raise RuntimeError('Synthetic mode requires at least two agentspec variants.')
+        print(
+            'Synthetic mode requires cross-agentspec comparisons; '
+            f'auto-expanded to {len(agent_spec_variants)} variants.'
+        )
     print(
         'Agentspec variants: '
         + ', '.join(
@@ -613,10 +670,10 @@ def main() -> None:
     experiment_ids: list[tuple[str, str, int, str, str]] = []
     total_experiments = len(experiment_specs) * len(agent_spec_variants)
     created_experiments = 0
-    for variant_index, variant in enumerate(agent_spec_variants, start=1):
-        variant_id = str(variant['id'])
-        variant_name = str(variant['name'])
-        for spec in experiment_specs:
+    for spec in experiment_specs:
+        for variant_index, variant in enumerate(agent_spec_variants, start=1):
+            variant_id = str(variant['id'])
+            variant_name = str(variant['name'])
             experiment_name = f"{spec['name']}-{variant_id}"
             experiment_payload = client.evals_create_experiment(
                 name=experiment_name,
@@ -884,6 +941,27 @@ def main() -> None:
                         'text': str(interaction_output.get('text') or '')
                     }
                 metrics = evaluate_evalset(evalset_spec, case_outputs)
+
+            if args.no_agent:
+                synthetic_usage = _build_synthetic_pydantic_usage(
+                    experiment_id=experiment_id,
+                    run_index=index,
+                    run_pass_rate=run_pass_rate,
+                    run_status=run_status,
+                    model_name=args.model_name,
+                )
+                metrics = {
+                    **metrics,
+                    'pydantic_ai_usage': synthetic_usage,
+                }
+                existing_report_usage = run_report.get('usage') if isinstance(run_report.get('usage'), dict) else {}
+                run_report = {
+                    **run_report,
+                    'usage': {
+                        **existing_report_usage,
+                        'pydantic_ai_usage': synthetic_usage,
+                    },
+                }
 
             run_payload = client.evals_create_run(
                 experiment_id,

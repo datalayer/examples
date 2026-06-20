@@ -75,10 +75,10 @@ evals-batch-local-proxy: ## Run batch example via local proxy endpoints in SDK l
 evals-batch-cloud-proxy: ## Run batch example via local proxy endpoints in SDK lane with cloud target
 	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-synthetic: ## Run batch synthetic comparison across example-evals and example-evals-nocodemode
+evals-batch-synthetic: ## Run batch synthetic comparison and emit pydantic usage across example-evals and example-evals-nocodemode
 	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-batch-synthetic-proxy: ## Run batch synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
+evals-batch-synthetic-proxy: ## Run batch synthetic comparison via sdk-proxy and emit pydantic usage
 	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
 evals-interactive-local: ## Run interactive example in SDK lane using direct endpoints with local agent target
@@ -93,9 +93,9 @@ evals-interactive-local-proxy: ## Run interactive example via local proxy endpoi
 evals-interactive-cloud-proxy: ## Run interactive example via local proxy endpoints in SDK lane with cloud target
 	@python evals_interactive_example.py --run-environment sdk-proxy --run-status running --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-synthetic: ## Run interactive synthetic comparison across example-evals and example-evals-nocodemode
+evals-interactive-synthetic: ## Run interactive synthetic comparison and emit pydantic usage across example-evals and example-evals-nocodemode
 	@$(CLOUD_DEFAULT_ENV_RESET) python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-interactive-synthetic-proxy: ## Run interactive synthetic comparison via sdk-proxy across example-evals and example-evals-nocodemode
+evals-interactive-synthetic-proxy: ## Run interactive synthetic comparison via sdk-proxy and emit pydantic usage
 	@python evals_interactive_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
