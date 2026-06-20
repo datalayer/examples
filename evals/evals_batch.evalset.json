@@ -1,13 +1,14 @@
 {
   "name": "text-normalization-batch-example",
-  "description": "Batch evalset used by evals_batch_example.py",
+  "description": "Batch evalset used by evals example scripts, showcasing input/output/metadata schemas for text normalization tasks.",
   "run_environment": "sdk",
   "kind": "batch",
   "tags": ["examples", "batch", "text-normalization", "multi-agentspec"],
   "metadata": {
     "scenario": "text-normalization",
     "agentspec_ids": ["example-evals", "example-evals-nocodemode"],
-    "comparison_mode": "same-evalset-multiple-agentspecs"
+    "comparison_mode": "same-evalset-multiple-agentspecs",
+    "prompt_preamble": "Return only the normalized text. Trim leading and trailing whitespace, convert all letters to uppercase, preserve punctuation/numbers/symbols/internal spacing, and do not add any explanation."
   },
   "schema": {
     "schema_version": "1.0",

@@ -14,7 +14,7 @@ from datalayer_core.evals import execute_evalset_spec, load_evalset_spec, make_c
 
 
 EVALSET_SPEC_FILE = Path(__file__).with_name("evals_batch.evalset.json")
-DEFAULT_AGENTSPEC_ID = "example-evals"
+DEFAULT_AGENTSPEC_IDS = ["example-evals", "example-evals-nocodemode"]
 
 
 def main() -> None:
@@ -27,11 +27,12 @@ def main() -> None:
     result = execute_evalset_spec(
         client,
         spec=spec,
-        agentspec_ids=[DEFAULT_AGENTSPEC_ID],
-        run_limit=2,
+        agentspec_ids=DEFAULT_AGENTSPEC_IDS,
+        create_report=True,
+        run_limit=3,
         run_environment="sdk",
         backend_run_environment="sdk",
-        execution_target="cloud",
+        execution_target="local", # cloud or local
         launch_source="python-batch-example-simple",
         log=print,
     )
@@ -39,6 +40,12 @@ def main() -> None:
     print(
         f"View result on http://localhost:3063/evals/experiments/sdk/{result.get('evalset_id')}"
     )
+    report_md = str(result.get("report_markdown_path") or "").strip()
+    report_csv = str(result.get("report_csv_path") or "").strip()
+    if report_md:
+        print(f"Report markdown: {report_md}")
+    if report_csv:
+        print(f"Report csv: {report_csv}")
 
 
 if __name__ == "__main__":
