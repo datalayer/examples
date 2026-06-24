@@ -76,11 +76,12 @@ This target runs `evals_batch_simple.py`, which:
 
 ### Reusable runner (default)
 
-Real batch runs in `evals_batch_example.py` now always delegate execution to
-the shared `datalayer_core.evals.execute_evalset_spec` runner. It creates one
-evalset, one experiment per agentspec, executes **every** case for real against
-a cloud runtime (one per agentspec) or a local `agent-runtimes` server, grades
-the outputs with the evals API, persists one run per execution, and tears the
+Real runs in both `evals_batch_example.py` and `evals_interactive_example.py`
+now always delegate execution to the shared
+`datalayer_core.evals.execute_evalset_spec` runner. It creates one evalset,
+one experiment per agentspec, executes **every** case for real against a cloud
+runtime (one per agentspec) or a local `agent-runtimes` server, grades the
+outputs with the evals API, persists one run per execution, and tears the
 execution resources down afterwards:
 
 ```bash
@@ -89,11 +90,17 @@ make evals-batch-cloud
 
 # Local agent-runtimes server (auto-started):
 make evals-batch-local
+make evals-interactive-local
 
 # or directly:
 python evals_batch_example.py --execution-target cloud \
   --agentspec-ids example-evals,example-evals-nocodemode
+python evals_interactive_example.py --execution-target cloud \
+  --agentspec-ids example-evals,example-evals-nocodemode
 python evals_batch_example.py --execution-target local \
+  --auto-start-local-agent-runtime \
+  --agentspec-ids example-evals,example-evals-nocodemode
+python evals_interactive_example.py --execution-target local \
   --auto-start-local-agent-runtime \
   --agentspec-ids example-evals,example-evals-nocodemode
 ```
