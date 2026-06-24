@@ -32,7 +32,7 @@ def main() -> None:
         run_limit=3,
         run_environment="sdk",
         backend_run_environment="sdk",
-        execution_target="local", # cloud or local
+        execution_target="cloud", # cloud or local
         launch_source="python-batch-example-simple",
         log=print,
     )

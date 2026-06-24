@@ -545,16 +545,6 @@ def parse_args() -> argparse.Namespace:
         help='Use synthetic eval behavior without invoking an agent.',
     )
     parser.add_argument(
-        '--use-runner',
-        action='store_true',
-        help=(
-            'Delegate real execution to the reusable '
-            'datalayer_core.evals.execute_evalset_spec runner (one experiment '
-            'per agentspec, every case executed for real). Works with '
-            '--execution-target cloud or local; incompatible with --synthetic.'
-        ),
-    )
-    parser.add_argument(
         '--no-auto-report',
         dest='auto_report',
         action='store_false',
@@ -654,16 +644,14 @@ def main() -> None:
         if isinstance(case, dict)
     ]
 
-    if args.use_runner:
-        if args.no_agent:
-            raise RuntimeError('--use-runner cannot be combined with --synthetic.')
+    if not args.no_agent:
         if args.execution_target not in {'cloud', 'local'}:
             raise RuntimeError(
-                '--use-runner requires --execution-target cloud or local.'
+                'Runner-backed mode requires --execution-target cloud or local.'
             )
         if args.agent_spec:
             raise RuntimeError(
-                '--use-runner does not support inline --agentspec; pass '
+                'Runner-backed mode does not support inline --agentspec; pass '
                 '--agentspec-id/--agentspec-ids instead.'
             )
         agentspec_ids = [str(variant['id']) for variant in agent_spec_variants]

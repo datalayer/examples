@@ -74,35 +74,32 @@ This target runs `evals_batch_simple.py`, which:
 - executes two cloud runs against `example-evals` (so UI run-compare has enough runs)
 - prints the created evalset id
 
-### Reusable runner
+### Reusable runner (default)
 
-The bespoke cloud path in `evals_batch_example.py` simulates the
-non-representative cases to produce a rich comparison dashboard. When you want a
-genuine end-to-end run instead, pass `--use-runner` (or use the
-`evals-batch-cloud-runner` / `evals-batch-local-runner` targets) to delegate
-execution to the shared `datalayer_core.evals.execute_evalset_spec` runner. It
-creates one evalset, one experiment per agentspec, executes **every** case for
-real against a cloud runtime (one per agentspec) or a local `agent-runtimes`
-server, grades the outputs with the evals API, persists one run per execution,
-and tears the execution resources down afterwards:
+Real batch runs in `evals_batch_example.py` now always delegate execution to
+the shared `datalayer_core.evals.execute_evalset_spec` runner. It creates one
+evalset, one experiment per agentspec, executes **every** case for real against
+a cloud runtime (one per agentspec) or a local `agent-runtimes` server, grades
+the outputs with the evals API, persists one run per execution, and tears the
+execution resources down afterwards:
 
 ```bash
 # Cloud runtimes (one per agentspec):
-make evals-batch-cloud-runner
+make evals-batch-cloud
 
 # Local agent-runtimes server (auto-started):
-make evals-batch-local-runner
+make evals-batch-local
 
 # or directly:
-python evals_batch_example.py --execution-target cloud --use-runner \
+python evals_batch_example.py --execution-target cloud \
   --agentspec-ids example-evals,example-evals-nocodemode
-python evals_batch_example.py --execution-target local --use-runner \
+python evals_batch_example.py --execution-target local \
   --auto-start-local-agent-runtime \
   --agentspec-ids example-evals,example-evals-nocodemode
 ```
 
-`--use-runner` requires `--execution-target cloud` or `local` and cannot be
-combined with `--synthetic` or inline `--agentspec`.
+Synthetic mode (`--synthetic`) remains available for deterministic no-agent
+demo runs.
 
 
 ### Interactive targets
