@@ -535,7 +535,7 @@ def main() -> None:
         _assert_http_service_reachable('ai-agents', urls.ai_agents_url)
         if args.execution_target == 'cloud':
             _assert_http_service_reachable('runtimes', urls.runtimes_url)
-    run_url = (os.environ.get('DATALAYER_RUN_URL') or '').strip().rstrip('/')
+    run_url = (os.environ.get('DATALAYER_URL') or '').strip().rstrip('/')
     if args.execution_target == 'cloud' and run_url and not args.ui_url:
         ui_url = run_url
     else:
