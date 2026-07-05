@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from datalayer_core import DatalayerClient
-from datalayer_core.cli.commands.agents import _load_agent_spec
-from datalayer_core.evals import (
+from agent_runtimes.client import RuntimeClient
+from agent_runtimes.commands.agents import _load_agent_spec
+from agent_runtimes.evals.saas import (
     evaluate_evalset,
     execute_evalset_spec,
     load_evalset_spec,
@@ -571,7 +571,7 @@ def main() -> None:
         agentspec_ids = [str(variant['id']) for variant in agent_spec_variants]
         print(
             f'[runner] Delegating real {args.execution_target} interactive execution to '
-            'datalayer_core.evals.execute_evalset_spec for agentspecs: '
+            'agent_runtimes.evals.saas.execute_evalset_spec for agentspecs: '
             + ', '.join(agentspec_ids)
         )
         result = execute_evalset_spec(

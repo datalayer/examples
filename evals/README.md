@@ -14,7 +14,7 @@ It contains two runnable scripts:
 - `evals_batch_example.py`: deterministic eval runs with `run_mode=batch`
 - `evals_interactive_example.py`: event-style eval runs with `run_mode=interactive`
 - `evals_batch_simple.py`: minimal cloud batch run using
-  `datalayer_core.evals.execute_evalset_spec`
+  `agent_runtimes.evals.saas.execute_evalset_spec`
 
 Each script loads its evalset from a colocated JSON spec file:
 
@@ -78,7 +78,7 @@ This target runs `evals_batch_simple.py`, which:
 
 Real runs in both `evals_batch_example.py` and `evals_interactive_example.py`
 now always delegate execution to the shared
-`datalayer_core.evals.execute_evalset_spec` runner. It creates one evalset,
+`agent_runtimes.evals.saas.execute_evalset_spec` runner. It creates one evalset,
 one experiment per agentspec, executes **every** case for real against a cloud
 runtime (one per agentspec) or a local `agent-runtimes` server, grades the
 outputs with the evals API, persists one run per execution, and tears the
@@ -137,7 +137,7 @@ same evalset, so the report and UI directly compare codemode against
 no-codemode in:
 
 - UI compare views on https://datalayer.evals
-- Mardown and CSV reports created with `datalayer evals report`.
+- Mardown and CSV reports created with `agent-runtimes evals report`.
 
 To run a single agentspec instead, pass `--agentspec-id <id>` (or
 `AGENTSPEC_ID=<id>` with the Makefile).
@@ -208,10 +208,24 @@ Interactive with cloud target:
 make evals-interactive-cloud
 ```
 
+### Runtime Operations CLI
+
+Runtime lifecycle and execution operations are now owned by the
+`agent-runtimes` CLI. During local eval debugging, use:
+
+```bash
+agent-runtimes serve --port 8765 --find-free-port
+agent-runtimes agents ls
+agent-runtimes console --agent <runtime-name-or-id>
+agent-runtimes exec --example-notebook
+agent-runtimes checkpoints ls
+agent-runtimes sandbox-snapshots ls
+```
+
 ### 3) Read Results
 
 - In UI: open `https://datalayer.ai/evals` and select the `SDK` tab.
-- In CLI: run `datalayer evals report <evalset_id>`.
+- In CLI: run `agent-runtimes evals report <evalset_id>`.
 - Auto-generated files: each example writes `report-<timestamp>.md` and
 	`report-<timestamp>.csv` by default.
 
@@ -377,7 +391,7 @@ run) to interpret.
 
 To compare **agentspecs** (codemode vs no-codemode) rather than runs, use the
 Comparisons panel below the run panel, or read the cross-agentspec delta tables
-in `datalayer evals report`.
+in `agent-runtimes evals report`.
 
 ## Quick Start Commands
 

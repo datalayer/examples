@@ -41,7 +41,7 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 10. [Mistral Instruction Tuning](https://github.com/datalayer/examples/tree/main/llm-instruct-tuning-mistral)
 11. [LLM Inference with llama.cpp + LangChain](https://github.com/datalayer/examples/tree/main/llm-inference-llama-cpp-langchain)
 12. [Prompt examples for Jupyter MCP](https://github.com/datalayer/examples/tree/main/prompts)
-13. [Ray CLI examples (`datalayer ray`)](https://github.com/datalayer/examples/tree/main/ray)
+13. [Ray CLI examples (`agent-runtimes ray`)](https://github.com/datalayer/examples/tree/main/ray)
 14. [Evals SDK examples (batch + interactive)](https://github.com/datalayer/examples/tree/main/evals)
 
 ## Highlight: PyTorch Examples
@@ -56,7 +56,7 @@ It is useful to:
 
 ## Ray CLI Examples
 
-The [ray](https://github.com/datalayer/examples/tree/main/ray) folder contains Python scripts designed to be submitted with the Datalayer Ray CLI (`datalayer ray jobs submit --py @...`).
+The [ray](https://github.com/datalayer/examples/tree/main/ray) folder contains Python scripts designed to be submitted with the Agent Runtimes Ray CLI (`agent-runtimes ray jobs submit --py @...`).
 
 Included examples:
 

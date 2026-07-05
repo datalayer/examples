@@ -3,14 +3,14 @@
 """Minimal cloud batch eval execution example.
 
 Runs the evalset spec as-is against one agentspec in cloud mode via
-`datalayer_core.evals.execute_evalset_spec`.
+`agent_runtimes.evals.saas.execute_evalset_spec`.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from datalayer_core.evals import execute_evalset_spec, load_evalset_spec, make_client
+from agent_runtimes.evals.saas import execute_evalset_spec, load_evalset_spec, make_client
 
 
 EVALSET_SPEC_FILE = Path(__file__).with_name("evals_batch.evalset.json")
