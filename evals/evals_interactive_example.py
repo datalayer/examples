@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from agent_runtimes.client import RuntimeClient
+from agent_runtimes.client import AgentClient
 from agent_runtimes.commands.agents import _load_agent_spec
-from agent_runtimes.evals.saas import (
+from agent_runtimes.evals.remote import (
     evaluate_evalset,
     execute_evalset_spec,
     load_evalset_spec,
@@ -535,9 +535,9 @@ def main() -> None:
         _assert_http_service_reachable('ai-agents', urls.ai_agents_url)
         if args.execution_target == 'cloud':
             _assert_http_service_reachable('runtimes', urls.runtimes_url)
-    run_url = (os.environ.get('DATALAYER_URL') or '').strip().rstrip('/')
-    if args.execution_target == 'cloud' and run_url and not args.ui_url:
-        ui_url = run_url
+    datalayer_url = (os.environ.get('DATALAYER_URL') or '').strip().rstrip('/')
+    if args.execution_target == 'cloud' and datalayer_url and not args.ui_url:
+        ui_url = datalayer_url
     else:
         ui_url = (
             args.ui_url
@@ -571,7 +571,7 @@ def main() -> None:
         agentspec_ids = [str(variant['id']) for variant in agent_spec_variants]
         print(
             f'[runner] Delegating real {args.execution_target} interactive execution to '
-            'agent_runtimes.evals.saas.execute_evalset_spec for agentspecs: '
+            'agent_runtimes.evals.remote.execute_evalset_spec for agentspecs: '
             + ', '.join(agentspec_ids)
         )
         result = execute_evalset_spec(
@@ -607,8 +607,8 @@ def main() -> None:
             print(f"Auto report written: {result.get('report_markdown_path')}")
         if result.get('report_csv_path'):
             print(f"Auto report CSV written: {result.get('report_csv_path')}")
-        if args.execution_target == 'cloud' and run_url:
-            print(f'Cloud runtime base URL: {run_url}')
+        if args.execution_target == 'cloud' and datalayer_url:
+            print(f'Cloud runtime base URL: {datalayer_url}')
         track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
         print(f'Track in UI: {track_ui_base}/evals')
         print('Done.')

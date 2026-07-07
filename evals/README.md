@@ -14,7 +14,7 @@ It contains two runnable scripts:
 - `evals_batch_example.py`: deterministic eval runs with `run_mode=batch`
 - `evals_interactive_example.py`: event-style eval runs with `run_mode=interactive`
 - `evals_batch_simple.py`: minimal cloud batch run using
-  `agent_runtimes.evals.saas.execute_evalset_spec`
+  `agent_runtimes.evals.remote.execute_evalset_spec`
 
 Each script loads its evalset from a colocated JSON spec file:
 
@@ -78,7 +78,7 @@ This target runs `evals_batch_simple.py`, which:
 
 Real runs in both `evals_batch_example.py` and `evals_interactive_example.py`
 now always delegate execution to the shared
-`agent_runtimes.evals.saas.execute_evalset_spec` runner. It creates one evalset,
+`agent_runtimes.evals.remote.execute_evalset_spec` runner. It creates one evalset,
 one experiment per agentspec, executes **every** case for real against a cloud
 runtime (one per agentspec) or a local `agent-runtimes` server, grades the
 outputs with the evals API, persists one run per execution, and tears the
