@@ -374,12 +374,9 @@ def parse_args() -> argparse.Namespace:
         help='Datalayer API key. Defaults to DATALAYER_API_KEY env var.',
     )
     parser.add_argument(
-        '--billable-account-uid',
-        default=(
-            os.environ.get('DATALAYER_ACCOUNT_UID')
-            or os.environ.get('DATALAYER_BILLABLE_ACCOUNT_UID')
-        ),
-        help='Optional billable account UID for eval API calls.',
+        '--billable-principal-uid',
+        default=os.environ.get('DATALAYER_BILLABLE_PRINCIPAL_UID'),
+        help='Optional billable principal UID for eval API calls.',
     )
     parser.add_argument('--ui-url', default=None)
     parser.add_argument('--execution-target', default='cloud', choices=['cloud', 'local'])
@@ -455,7 +452,7 @@ def main() -> None:
     if not token:
         raise RuntimeError('Set DATALAYER_API_KEY or pass --api-key.')
 
-    account_uid = str(args.billable_account_uid or '').strip() or None
+    billable_principal_uid = str(args.billable_principal_uid or '').strip() or None
     if args.agent_spec and args.agent_spec_id and args.agent_spec_ids:
         raise RuntimeError('Use either --agentspec-id or --agentspec-ids with --agentspec, not both.')
 
@@ -561,7 +558,7 @@ def main() -> None:
             run_limit=run_count,
             run_environment=args.run_environment,
             environment_name=args.environment_name,
-            account_uid=account_uid,
+            billable_principal_uid=billable_principal_uid,
             credits_limit=float(args.cloud_credits_limit),
             evalset_name=evalset_name,
             backend_run_environment=backend_run_environment,
@@ -587,7 +584,7 @@ def main() -> None:
                 reports = write_eval_reports(
                     client,
                     runner_evalset_id,
-                    account_uid=account_uid,
+                    billable_principal_uid=billable_principal_uid,
                 )
                 print(f'Auto report written: {reports["markdown_path"]}')
                 print(f'Auto report CSV written: {reports["csv_path"]}')
@@ -605,7 +602,7 @@ def main() -> None:
         description=evalset_description,
         run_environment=backend_run_environment,
         kind='batch',
-        account_uid=account_uid,
+        billable_principal_uid=billable_principal_uid,
     )
     evalset_id = str((evalset_payload.get('evalset') or {}).get('id') or '')
     if not evalset_id:
@@ -651,7 +648,7 @@ def main() -> None:
                     'agent_spec_id': variant_id,
                     'agent_spec_name': variant_name,
                 },
-                account_uid=account_uid,
+                billable_principal_uid=billable_principal_uid,
             )
             experiment_id = str((experiment_payload.get('experiment') or {}).get('id') or '')
             if not experiment_id:
@@ -790,7 +787,7 @@ def main() -> None:
                     'agent_output': interaction_output,
                     **run_report,
                 },
-                account_uid=account_uid,
+                billable_principal_uid=billable_principal_uid,
             )
             run_id = str((run_payload.get('run') or {}).get('id') or '')
             if not run_id:
@@ -808,7 +805,7 @@ def main() -> None:
     watch_runs(
         client,
         run_ids,
-        account_uid=account_uid,
+        billable_principal_uid=billable_principal_uid,
         timeout_seconds=max(1, args.timeout),
         interval_seconds=max(1, args.interval),
     )
@@ -818,7 +815,7 @@ def main() -> None:
             reports = write_eval_reports(
                 client,
                 evalset_id,
-                account_uid=account_uid,
+                billable_principal_uid=billable_principal_uid,
             )
             print(f'Auto report written: {reports["markdown_path"]}')
             print(f'Auto report CSV written: {reports["csv_path"]}')
