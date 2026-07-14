@@ -27,8 +27,8 @@ from agent_runtimes.evals.remote import (
     load_evalset_spec,
     make_client,
     watch_runs,
-    write_eval_reports,
 )
+from agent_runtimes.evals.report import write_eval_reports
 
 
 DEFAULT_EVALSET_SPEC_FILE = Path(__file__).with_name('evals_interactive.evalset.json')
@@ -404,7 +404,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--ai-agents-url', default=os.environ.get('DATALAYER_AI_AGENTS_URL'))
     parser.add_argument(
         '--billing-entity-uid',
-        default=os.environ.get('DATALAYER_BIILING_PRINCIPAL_UID'),
+        default=os.environ.get('DATALAYER_BILLING_ENTITY_UID'),
         help='Optional billing entity UID for eval API calls.',
     )
     parser.add_argument(

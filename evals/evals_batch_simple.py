@@ -22,7 +22,7 @@ def main() -> None:
     client = make_client()
     account_uid = str(os.environ.get("DATALAYER_ACCOUNT_UID") or "").strip() or None
     billing_entity_uid = (
-        str(os.environ.get("DATALAYER_BIILING_PRINCIPAL_UID") or "").strip() or None
+        str(os.environ.get("DATALAYER_BILLING_ENTITY_UID") or "").strip() or None
     )
     spec = load_evalset_spec(
         EVALSET_SPEC_FILE,

@@ -151,7 +151,7 @@ To run a single agentspec instead, pass `--agentspec-id <id>` (or
 - `datalayer_core` installed
 - `DATALAYER_API_KEY` exported in your shell
 - Optional: `DATALAYER_ACCOUNT_UID`
-- Optional: `DATALAYER_BIILING_PRINCIPAL_UID`
+- Optional: `DATALAYER_BILLING_ENTITY_UID`
 
 ## Learning Path
 
@@ -442,7 +442,7 @@ To override synthetic target defaults in Makefile-based runs:
 
 You can optionally set a default billing context with:
 
-- `DATALAYER_BIILING_PRINCIPAL_UID`
+- `DATALAYER_BILLING_ENTITY_UID`
 
 ## All Makefile Targets
 
