@@ -52,7 +52,7 @@ Every `make` target is a combination of three axes:
 | `evals-batch-simple` | sdk (direct) | cloud (single agentspec, minimal path) |
 | `evals-batch-local` | sdk (direct) | local agent |
 | `evals-batch-cloud` | sdk (direct) | cloud |
-| `evals-batch-cloud-billable-principal` | sdk (direct) | cloud (prompts for API key + billable principal) |
+| `evals-batch-cloud-billing-entity` | sdk (direct) | cloud (prompts for API key + billing entity) |
 | `evals-batch-synthetic` | sdk (direct) | synthetic (no agent) |
 | `evals-batch-local-proxy` | sdk-proxy | local agent |
 | `evals-batch-cloud-proxy` | sdk-proxy | cloud |
@@ -120,8 +120,11 @@ demo runs.
 | `evals-interactive-cloud-proxy` | sdk-proxy | cloud |
 | `evals-interactive-synthetic-proxy` | sdk-proxy | synthetic (no agent) |
 
-The `-billable-principal` variant is batch-only: it prompts for an API key and a
-billable principal UID, then runs the cloud batch target with both flags.
+The `-billing-entity` variant is batch-only: it prompts for an API key and a
+billing entity UID, then runs the cloud batch target with both flags.
+
+All examples support the authenticated account path first via optional
+`account_uid`, with optional `billing_entity_uid` as an additional context.
 
 ## Codemode vs No-Codemode Comparison
 
@@ -147,6 +150,8 @@ To run a single agentspec instead, pass `--agentspec-id <id>` (or
 - Python 3.10+
 - `datalayer_core` installed
 - `DATALAYER_API_KEY` exported in your shell
+- Optional: `DATALAYER_ACCOUNT_UID`
+- Optional: `DATALAYER_BIILING_PRINCIPAL_UID`
 
 ## Learning Path
 
@@ -196,10 +201,10 @@ Batch with cloud target:
 make evals-batch-cloud
 ```
 
-Batch with interactive API key + billable principal prompts:
+Batch with interactive API key + billing entity prompts:
 
 ```bash
-make evals-batch-cloud-billable-principal
+make evals-batch-cloud-billing-entity
 ```
 
 Interactive with cloud target:
@@ -427,7 +432,7 @@ Common flags you will use:
 - `--execution-target local|cloud`: choose where the agent execution happens
 - `--agent-spec-ids <id1,id2,...>`: run the same evalset across multiple agentspec variants
 - `--agent-spec-id <id>`: run a single agentspec variant
-- `--billable-principal-uid <principal_uid>`: optional billable principal context; omit to use the default principal context
+- `--billing-entity-uid <principal_uid>`: optional billing entity context; omit to use the default principal context
 - `--synthetic`: run deterministic test behavior without agent calls
 
 To override synthetic target defaults in Makefile-based runs:
@@ -437,7 +442,7 @@ To override synthetic target defaults in Makefile-based runs:
 
 You can optionally set a default billing context with:
 
-- `DATALAYER_BILLABLE_PRINCIPAL_UID`
+- `DATALAYER_BIILING_PRINCIPAL_UID`
 
 ## All Makefile Targets
 
@@ -447,7 +452,7 @@ Batch:
 
 - `make evals-batch-local`: batch, sdk (direct) lane, local agent target.
 - `make evals-batch-cloud`: batch, sdk (direct) lane, cloud target.
-- `make evals-batch-cloud-billable-principal`: batch, sdk (direct) lane, cloud target; prompts for API key + optional billable principal UID (press Enter to skip billing override).
+- `make evals-batch-cloud-billing-entity`: batch, sdk (direct) lane, cloud target; prompts for API key + optional billing entity UID (press Enter to skip billing override).
 - `make evals-batch-synthetic`: batch, sdk (direct) lane, synthetic no-agent behavior.
 - `make evals-batch-local-proxy`: batch, sdk-proxy lane, local agent target.
 - `make evals-batch-cloud-proxy`: batch, sdk-proxy lane, cloud target.

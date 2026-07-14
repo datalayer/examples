@@ -8,6 +8,7 @@ Runs the evalset spec as-is against one agentspec in cloud mode via
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from agent_runtimes.evals.remote import execute_evalset_spec, load_evalset_spec, make_client
@@ -19,6 +20,10 @@ DEFAULT_AGENTSPEC_IDS = ["example-evals", "example-evals-nocodemode"]
 
 def main() -> None:
     client = make_client()
+    account_uid = str(os.environ.get("DATALAYER_ACCOUNT_UID") or "").strip() or None
+    billing_entity_uid = (
+        str(os.environ.get("DATALAYER_BIILING_PRINCIPAL_UID") or "").strip() or None
+    )
     spec = load_evalset_spec(
         EVALSET_SPEC_FILE,
         expected_kind="batch",
@@ -33,6 +38,8 @@ def main() -> None:
         run_environment="sdk",
         backend_run_environment="sdk",
         execution_target="cloud", # cloud or local
+        account_uid=account_uid,
+        billing_entity_uid=billing_entity_uid,
         launch_source="python-batch-example-simple",
         log=print,
     )
