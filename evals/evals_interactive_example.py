@@ -385,12 +385,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument('--run-status', default='running', choices=['queued', 'running', 'completed', 'failed', 'cancelled'])
     parser.add_argument(
-        '--run-environment',
-        default='sdk',
-        choices=['sdk', 'sdk-proxy'],
+        '--plane',
+        default='cloud',
+        choices=['cloud', 'local'],
         help=(
-            'sdk uses direct endpoints with backend run_environment=sdk; '
-            'sdk-proxy uses local proxy endpoints while keeping backend run_environment=sdk.'
+            'Which Datalayer plane to talk to: cloud, the SDK defaults; '
+            'local, a `plane local` on this machine (the --iam-url, --runtimes-url and '
+            '--ai-agents-url addresses are checked before anything is created). '
+            'The run environment recorded on the platform is sdk either way.'
         ),
     )
     parser.add_argument('--timeout', type=int, default=60)
@@ -444,6 +446,16 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=100.0,
         help='Target credits reservation for cloud runtime creation.',
+    )
+    parser.add_argument(
+        '--cloud-concurrency',
+        type=int,
+        default=4,
+        help=(
+            'Sandboxes a cloud launch runs the tasks on, per experiment. A local plane '
+            'serves its services from one process each over port-forwards, so one or '
+            'two is what it keeps up with; the cloud takes more.'
+        ),
     )
     parser.add_argument(
         '--local-agent-base-url',
@@ -537,7 +549,7 @@ def main() -> None:
     )
     urls = client.urls
 
-    if args.run_environment == 'sdk-proxy':
+    if args.plane == 'local':
         _assert_http_service_reachable('ai-agents', urls.ai_agents_url)
         if args.execution_target == 'cloud':
             _assert_http_service_reachable('runtimes', urls.runtimes_url)
@@ -585,11 +597,12 @@ def main() -> None:
             spec=evalset_spec,
             agentspec_ids=agentspec_ids,
             run_limit=run_count,
-            run_environment=args.run_environment,
+            run_environment=backend_run_environment,
             environment_name=args.environment_name,
             billing_entity_uid=billing_entity_uid,
             account_uid=account_uid,
             credits_limit=float(args.cloud_credits_limit),
+            concurrency=max(1, int(args.cloud_concurrency)),
             evalset_name=evalset_name,
             backend_run_environment=backend_run_environment,
             launch_source='python-interactive-example',
@@ -617,7 +630,7 @@ def main() -> None:
         if args.execution_target == 'cloud' and datalayer_url:
             print(f'Cloud runtime base URL: {datalayer_url}')
         track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
-        print(f'Track in UI: {track_ui_base}/evals')
+        print(f'Track in UI: {track_ui_base}/benchmarks/{runner_evalset_id}')
         print('Done.')
         return
 
@@ -798,7 +811,7 @@ def main() -> None:
                 summary={
                     'launch_source': 'python-interactive-example',
                     'run_mode': 'interactive',
-                    'run_environment': args.run_environment,
+                    'run_environment': backend_run_environment,
                     'backend_run_environment': backend_run_environment,
                     'execution_target': args.execution_target,
                     'no_agent': bool(args.no_agent),
@@ -816,7 +829,7 @@ def main() -> None:
                     'experiment_index': experiment_index,
                     'run_index': index + 1,
                     'scenario': 'live-monitoring',
-                    'runtime_pod_name': runtime_pod_name or None,
+                    'runtime_name': runtime_name or None,
                     'runtime_termination_policy': 'auto_terminate_after_report' if args.execution_target == 'cloud' else None,
                     'submitted_code': submitted_code,
                     'interaction_mode': interaction_mode,
@@ -922,7 +935,7 @@ def main() -> None:
 
     print('Done.')
     track_ui_base = (os.environ.get('DATALAYER_CDN_URL') or ui_url).strip().rstrip('/')
-    print(f'Track in UI: {track_ui_base}/evals')
+    print(f'Track in UI: {track_ui_base}/benchmarks/{evalset_id}')
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 
 [![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
 
-# ☰ Datalayer Examples
+# ☰💡 Datalayer Examples
 
 Examples for the modern Datalayer platform: **managed agents for data analysis** with governed execution, durable runtimes, and reproducible outputs.
 
@@ -20,12 +20,7 @@ Read more on [datalayer.ai](https://datalayer.ai) and in the [documentation](htt
 pip install datalayer
 git clone https://github.com/datalayer/examples.git datalayer-examples
 cd datalayer-examples
-jupyter lab
 ```
-
-You can run existing notebooks as-is, then attach local or remote runtimes from JupyterLab.
-
-<img alt="Notebook remote execution" src="https://images.datalayer.io/examples/user-flow-1.png" width="900" />
 
 ## Example Catalog
 
@@ -44,7 +39,7 @@ You can run existing notebooks as-is, then attach local or remote runtimes from 
 13. [Ray CLI examples (`agent-runtimes ray`)](https://github.com/datalayer/examples/tree/main/ray)
 14. [Evals SDK examples (batch + interactive)](https://github.com/datalayer/examples/tree/main/evals)
 
-## Highlight: PyTorch Examples
+## PyTorch Examples
 
 The [pytorch](https://github.com/datalayer/examples/tree/main/pytorch) folder includes practical PyTorch baselines, starting with matrix multiplication for CPU/GPU throughput analysis.
 
@@ -73,15 +68,19 @@ The [evals](https://github.com/datalayer/examples/tree/main/evals) folder contai
 
 Run them with the packaged make targets:
 
+Every target is `make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>`:
+the mode, where the agent runs (a pool of Datalayer sandboxes, an `agent-runtimes` server on your
+machine, or no agent at all), and which plane the results go to (the Datalayer services, or a
+`plane local` on your machine).
+
 ```bash
 cd evals
 make help
-make evals-batch-local
-make evals-batch-cloud
-make evals-interactive-local
-make evals-interactive-cloud
-make evals-batch-local-proxy
-make evals-interactive-local-proxy
+make evals-batch-synthetic-cloud_plane
+make evals-batch-cloud_agent-cloud_plane
+make evals-batch-local_agent-cloud_plane
+make evals-interactive-cloud_agent-cloud_plane
+make evals-batch-cloud_agent-local_plane
 ```
 
 ## CLI
@@ -110,6 +109,14 @@ When using the same Kernel, variables defined in a notebook can be reused in the
 
 ## JupyterLab
 
+```
+jupyter lab
+```
+
+You can run existing notebooks as-is, then attach local or remote runtimes from JupyterLab.
+
+<img alt="Notebook remote execution" src="https://images.datalayer.io/examples/user-flow-1.png" width="900" />
+
 Datalayer supports **cell-specific runtimes** so you can run specific cells on different compute targets.
 
 This lets you optimize cost and performance, for example by using local CPU for data prep and remote GPU for intensive cells.
@@ -120,6 +127,7 @@ This lets you optimize cost and performance, for example by using local CPU for 
 
 <img alt="Cell Runtime Execution" src="https://assets.datalayer.tech/examples/cell-picker.gif" width="800" />
 
-The remote GPU runtime is used only for the duration of selected cell computation.
+The remote runtime is used only for the duration of selected cell computation.
 
 </details>
+

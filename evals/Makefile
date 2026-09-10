@@ -2,17 +2,55 @@ SHELL := /bin/bash
 
 .DEFAULT_GOAL := help
 
-DATALAYER_IAM_URL ?= http://localhost:9700
-DATALAYER_RUNTIMES_URL ?= http://localhost:9500
-DATALAYER_AI_AGENTS_URL ?= http://localhost:4400
+# Every target is named on three axes:
+#
+#   make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>
+#
+# - mode:   batch runs the fixed, versioned tasks; interactive evaluates live traffic over a window
+# - agent:  cloud_agent runs on a pool of Datalayer sandboxes (a launch the platform executes);
+#           local_agent runs on an agent-runtimes server on this machine;
+#           synthetic runs no agent at all — deterministic results, to see the reports and the UI
+# - plane:  cloud_plane is the Datalayer services (the SDK defaults);
+#           local_plane is `plane local`, every service on localhost, the durable engine `none`
+#
+# The plane is chosen by construction. cloud_plane targets unset every DATALAYER_*_URL so the
+# SDK defaults apply; local_plane targets pin LOCAL_PLANE_*_URL — names no cluster rc sets — so a
+# shell with datalayerrc-prod1 sourced still sends them to the plane on this machine.
+
+LOCAL_PLANE_IAM_URL ?= http://localhost:9700
+LOCAL_PLANE_RUNTIMES_URL ?= http://localhost:9500
+LOCAL_PLANE_AI_AGENTS_URL ?= http://localhost:4400
+LOCAL_PLANE_UI_URL ?= http://localhost:3063
+LOCAL_PLANE := env DATALAYER_UI_URL=$(LOCAL_PLANE_UI_URL) DATALAYER_CDN_URL=$(LOCAL_PLANE_UI_URL) DATALAYER_IAM_URL=$(LOCAL_PLANE_IAM_URL) DATALAYER_RUNTIMES_URL=$(LOCAL_PLANE_RUNTIMES_URL) DATALAYER_AI_AGENTS_URL=$(LOCAL_PLANE_AI_AGENTS_URL)
+LOCAL_PLANE_FLAGS := --plane local --iam-url $(LOCAL_PLANE_IAM_URL) --runtimes-url $(LOCAL_PLANE_RUNTIMES_URL) --ai-agents-url $(LOCAL_PLANE_AI_AGENTS_URL) --ui-url $(LOCAL_PLANE_UI_URL)
+CLOUD_PLANE := env -u DATALAYER_IAM_URL -u DATALAYER_RUNTIMES_URL -u DATALAYER_AI_AGENTS_URL
+CLOUD_PLANE_FLAGS := --plane cloud
+
+# The local agent: an agent-runtimes server on this machine, started when none answers.
 AGENT_RUNTIME_BASE_URL ?= http://localhost:8765
 AGENT_RUNTIME_ID ?= default
 LOCAL_AGENT_LOG_LEVEL ?= info
+LOCAL_AGENT_FLAGS := --execution-target local --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID)
+# The cloud agent: a launch the platform executes on a pool of sandboxes, capped in credits.
+# CLOUD_CONCURRENCY is the pool per experiment. A local plane serves each service from one
+# process over port-forwards and its IAM answers reservations one at a time, so a pool of
+# four per experiment made the operator time out on IAM; one per experiment is what it
+# keeps up with (LOCAL_PLANE_CONCURRENCY), the cloud takes the full pool.
+CLOUD_CREDITS_LIMIT ?= 100
+CLOUD_CONCURRENCY ?= 4
+LOCAL_PLANE_CONCURRENCY ?= 1
+CLOUD_AGENT_FLAGS := --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID)
+CLOUD_AGENT_CLOUD_PLANE_FLAGS := $(CLOUD_AGENT_FLAGS) --cloud-concurrency $(CLOUD_CONCURRENCY)
+CLOUD_AGENT_LOCAL_PLANE_FLAGS := $(CLOUD_AGENT_FLAGS) --cloud-concurrency $(LOCAL_PLANE_CONCURRENCY)
+
 AGENT_EVALS_MODE ?= interactive
 AGENT_EVALS_EMIT_LIVE_EVENTS ?= true
+LOCAL_AGENT_ENV := AGENT_EVALS_MODE=$(AGENT_EVALS_MODE) AGENT_EVALS_EMIT_LIVE_EVENTS=$(AGENT_EVALS_EMIT_LIVE_EVENTS)
+
 EVAL_WATCH_TIMEOUT ?= 60
 EVAL_WATCH_INTERVAL ?= 2
-CLOUD_CREDITS_LIMIT ?= 100
+WATCH_FLAGS := --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL)
+
 SYNTHETIC ?= 0
 SYNTHETIC_FLAG := $(if $(filter 1 true yes on,$(SYNTHETIC)),--synthetic,)
 SYNTHETIC_AGENTSPEC_IDS ?= example-evals,example-evals-nocodemode
@@ -25,9 +63,9 @@ INTERACTIVE_EVALSET_SPEC_FLAG := $(if $(strip $(INTERACTIVE_EVALSET_SPEC_FILE)),
 # Optional agent spec selection for cloud runtimes.
 # Multi-agent-spec defaults are handled by the scripts when none is provided.
 # Examples:
-#   make evals-batch-cloud AGENTSPEC_ID=example-evals
-#   make evals-batch-cloud AGENTSPEC_IDS="example-evals,example-evals-nocodemode"
-#   make evals-batch-cloud AGENTSPEC=./my-agent.yaml
+#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC_ID=example-evals
+#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC_IDS="example-evals,example-evals-nocodemode"
+#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC=./my-agent.yaml
 AGENTSPEC ?=
 AGENTSPEC_ID ?=
 AGENTSPEC_IDS ?=
@@ -35,23 +73,13 @@ AGENTSPEC_FLAG := $(if $(strip $(AGENTSPEC)),--agentspec $(AGENTSPEC),)
 AGENTSPEC_ID_FLAG := $(if $(strip $(AGENTSPEC_ID)),--agentspec-id $(AGENTSPEC_ID),)
 AGENTSPEC_IDS_FLAG := $(if $(strip $(AGENTSPEC_IDS)),--agentspec-ids $(AGENTSPEC_IDS),)
 AGENTSPEC_FLAGS := $(AGENTSPEC_FLAG) $(AGENTSPEC_ID_FLAG) $(AGENTSPEC_IDS_FLAG)
-CLOUD_DEFAULT_ENV_RESET := env -u DATALAYER_IAM_URL -u DATALAYER_RUNTIMES_URL -u DATALAYER_AI_AGENTS_URL
 
-.PHONY: help evals-batch-simple evals-batch-local evals-batch-cloud evals-batch-cloud-billing-entity evals-batch-local-billing-entity-proxy evals-batch-local-proxy evals-batch-cloud-proxy evals-batch-synthetic evals-batch-synthetic-proxy evals-interactive-local evals-interactive-cloud evals-interactive-local-proxy evals-interactive-cloud-proxy evals-interactive-synthetic evals-interactive-synthetic-proxy
+BATCH := python evals_batch_example.py --run-status completed $(WATCH_FLAGS) $(BATCH_EVALSET_SPEC_FLAG)
+INTERACTIVE := python evals_interactive_example.py --run-status running $(WATCH_FLAGS) $(INTERACTIVE_EVALSET_SPEC_FLAG)
+INTERACTIVE_SYNTHETIC := python evals_interactive_example.py --run-status completed $(WATCH_FLAGS) $(INTERACTIVE_EVALSET_SPEC_FLAG)
 
-help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-evals-batch-simple: ## Minimal cloud batch run via core execute_evalset_spec (single agentspec, no reports)
-	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_simple.py
-
-evals-batch-local: ## Run batch example in SDK lane with local agent target (runner-backed)
-	@python evals_batch_example.py --run-environment sdk --run-status completed --execution-target local --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
-
-evals-batch-cloud: ## Run batch example in SDK lane with cloud agent target (runner-backed; set SYNTHETIC=1 for synthetic mode)
-	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
-
-evals-batch-cloud-billing-entity: ## Prompt for API key + optional billing entity UID, then run batch cloud example (runner-backed)
+# Asks for the API key (hidden) and an optional billing entity, then runs `$(1)` with both.
+define WITH_BILLING_ENTITY
 	@default_api_key="$${DATALAYER_API_KEY:-}"; \
 	if [[ -n "$$default_api_key" ]]; then \
 		read -s -p "API key [hidden; press Enter to use DATALAYER_API_KEY]: " api_key; \
@@ -67,53 +95,73 @@ evals-batch-cloud-billing-entity: ## Prompt for API key + optional billing entit
 	billing_flag=""; \
 	if [[ -n "$$billing_entity_uid" ]]; then billing_flag="--billing-entity-uid $$billing_entity_uid"; fi; \
 	if [[ -z "$$api_key" ]]; then echo "Missing API key. Set DATALAYER_API_KEY or enter one."; exit 1; fi; \
-	$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) --api-key "$$api_key" $$billing_flag $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+	$(1) --api-key "$$api_key" $$billing_flag
+endef
 
-evals-batch-local-billing-entity-proxy: ## Prompt for API key + optional billing entity UID, then run batch local proxy example (runner-backed)
-	@default_api_key="$${DATALAYER_API_KEY:-}"; \
-	if [[ -n "$$default_api_key" ]]; then \
-		read -s -p "API key [hidden; press Enter to use DATALAYER_API_KEY]: " api_key; \
-		echo; \
-	else \
-		read -s -p "API key: " api_key; \
-		echo; \
-	fi; \
-	api_key="$${api_key:-$$default_api_key}"; \
-	default_billing_entity_uid="$${DATALAYER_BILLING_ENTITY_UID:-}"; \
-	read -e -i "$$default_billing_entity_uid" -p "Billing Entity uid (optional) [$$default_billing_entity_uid]: " billing_entity_uid; \
-	billing_entity_uid="$${billing_entity_uid:-$$default_billing_entity_uid}"; \
-	billing_flag=""; \
-	if [[ -n "$$billing_entity_uid" ]]; then billing_flag="--billing-entity-uid $$billing_entity_uid"; fi; \
-	if [[ -z "$$api_key" ]]; then echo "Missing API key. Set DATALAYER_API_KEY or enter one."; exit 1; fi; \
-	AGENT_EVALS_MODE=$(AGENT_EVALS_MODE) AGENT_EVALS_EMIT_LIVE_EVENTS=$(AGENT_EVALS_EMIT_LIVE_EVENTS) python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target local --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) --api-key "$$api_key" $$billing_flag $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
+.PHONY: help \
+	evals-batch-cloud_agent-cloud_plane evals-batch-cloud_agent-cloud_plane-simple evals-batch-cloud_agent-cloud_plane-billing-entity evals-batch-cloud_agent-local_plane \
+	evals-batch-local_agent-cloud_plane evals-batch-local_agent-local_plane evals-batch-local_agent-local_plane-billing-entity \
+	evals-batch-synthetic-cloud_plane evals-batch-synthetic-local_plane \
+	evals-interactive-cloud_agent-cloud_plane evals-interactive-cloud_agent-local_plane \
+	evals-interactive-local_agent-cloud_plane evals-interactive-local_agent-local_plane \
+	evals-interactive-synthetic-cloud_plane evals-interactive-synthetic-local_plane
 
-evals-batch-local-proxy: ## Run batch example via local proxy endpoints in SDK lane with local agent target (runner-backed)
-	@AGENT_EVALS_MODE=$(AGENT_EVALS_MODE) AGENT_EVALS_EMIT_LIVE_EVENTS=$(AGENT_EVALS_EMIT_LIVE_EVENTS) python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target local --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
+help: ## Show available targets: make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>
+	@awk 'BEGIN {FS = ":.*##"; print "Usage: make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-56s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-evals-batch-cloud-proxy: ## Run batch example via local proxy endpoints in SDK lane with cloud target (runner-backed)
-	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(BATCH_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+# ---- batch, cloud agent --------------------------------------------------------------------
 
-evals-batch-synthetic: ## Run batch synthetic comparison and emit pydantic usage across example-evals and example-evals-nocodemode
-	@$(CLOUD_DEFAULT_ENV_RESET) python evals_batch_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+evals-batch-cloud_agent-cloud_plane: ## Batch on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
+	@$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-synthetic-proxy: ## Run batch synthetic comparison via sdk-proxy and emit pydantic usage
-	@python evals_batch_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(BATCH_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+evals-batch-cloud_agent-cloud_plane-simple: ## The smallest cloud batch run: evals_batch_simple.py, one agentspec, no reports
+	@$(CLOUD_PLANE) python evals_batch_simple.py
 
-evals-interactive-local: ## Run interactive example in SDK lane with local agent target (runner-backed)
-	@python evals_interactive_example.py --run-environment sdk --run-status running --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --execution-target local --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
+evals-batch-cloud_agent-cloud_plane-billing-entity: ## Same as evals-batch-cloud_agent-cloud_plane, asking for the API key and a billing entity
+	$(call WITH_BILLING_ENTITY,$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG))
 
-evals-interactive-cloud: ## Run interactive example in SDK lane with cloud agent target (runner-backed; set SYNTHETIC=1 for synthetic mode)
-	@$(CLOUD_DEFAULT_ENV_RESET) python evals_interactive_example.py --run-environment sdk --run-status running --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+evals-batch-cloud_agent-local_plane: ## Batch on a pool of sandboxes launched through `plane local` on this machine
+	@$(LOCAL_PLANE) $(BATCH) $(LOCAL_PLANE_FLAGS) $(CLOUD_AGENT_LOCAL_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-local-proxy: ## Run interactive example via local proxy endpoints in SDK lane with local agent target (runner-backed)
-	@AGENT_EVALS_MODE=$(AGENT_EVALS_MODE) AGENT_EVALS_EMIT_LIVE_EVENTS=$(AGENT_EVALS_EMIT_LIVE_EVENTS) python evals_interactive_example.py --run-environment sdk-proxy --run-status running --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --execution-target local --auto-start-local-agent-runtime --local-agent-log-level $(LOCAL_AGENT_LOG_LEVEL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_FLAG)
+# ---- batch, local agent --------------------------------------------------------------------
 
-evals-interactive-cloud-proxy: ## Run interactive example via local proxy endpoints in SDK lane with cloud target (runner-backed)
-	@python evals_interactive_example.py --run-environment sdk-proxy --run-status running --execution-target cloud --cloud-credits-limit $(CLOUD_CREDITS_LIMIT) --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) --local-agent-base-url $(AGENT_RUNTIME_BASE_URL) --local-agent-id $(AGENT_RUNTIME_ID) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+evals-batch-local_agent-cloud_plane: ## Batch on an agent-runtimes server on this machine, results written to the Datalayer services
+	@$(CLOUD_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(CLOUD_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-synthetic: ## Run interactive synthetic comparison and emit pydantic usage across example-evals and example-evals-nocodemode
-	@$(CLOUD_DEFAULT_ENV_RESET) python evals_interactive_example.py --run-environment sdk --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+evals-batch-local_agent-local_plane: ## Batch on an agent-runtimes server on this machine, results written to `plane local`
+	@$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-synthetic-proxy: ## Run interactive synthetic comparison via sdk-proxy and emit pydantic usage
-	@python evals_interactive_example.py --run-environment sdk-proxy --run-status completed --timeout $(EVAL_WATCH_TIMEOUT) --interval $(EVAL_WATCH_INTERVAL) --iam-url $(DATALAYER_IAM_URL) --runtimes-url $(DATALAYER_RUNTIMES_URL) --ai-agents-url $(DATALAYER_AI_AGENTS_URL) $(INTERACTIVE_EVALSET_SPEC_FLAG) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+evals-batch-local_agent-local_plane-billing-entity: ## Same as evals-batch-local_agent-local_plane, asking for the API key and a billing entity
+	$(call WITH_BILLING_ENTITY,$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG))
 
+# ---- batch, synthetic (no agent) -----------------------------------------------------------
+
+evals-batch-synthetic-cloud_plane: ## Batch with deterministic synthetic results and no agent, against the Datalayer services
+	@$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+
+evals-batch-synthetic-local_plane: ## Batch with deterministic synthetic results and no agent, against `plane local`
+	@$(LOCAL_PLANE) $(BATCH) $(LOCAL_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+
+# ---- interactive, cloud agent --------------------------------------------------------------
+
+evals-interactive-cloud_agent-cloud_plane: ## Interactive on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
+	@$(CLOUD_PLANE) $(INTERACTIVE) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+
+evals-interactive-cloud_agent-local_plane: ## Interactive on a pool of sandboxes launched through `plane local` on this machine
+	@$(LOCAL_PLANE) $(INTERACTIVE) $(LOCAL_PLANE_FLAGS) $(CLOUD_AGENT_LOCAL_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
+
+# ---- interactive, local agent --------------------------------------------------------------
+
+evals-interactive-local_agent-cloud_plane: ## Interactive on an agent-runtimes server on this machine, results written to the Datalayer services
+	@$(CLOUD_PLANE) $(LOCAL_AGENT_ENV) $(INTERACTIVE) $(CLOUD_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
+
+evals-interactive-local_agent-local_plane: ## Interactive on an agent-runtimes server on this machine, results written to `plane local`
+	@$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(INTERACTIVE) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
+
+# ---- interactive, synthetic (no agent) -----------------------------------------------------
+
+evals-interactive-synthetic-cloud_plane: ## Interactive with deterministic synthetic results and no agent, against the Datalayer services
+	@$(CLOUD_PLANE) $(INTERACTIVE_SYNTHETIC) $(CLOUD_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+
+evals-interactive-synthetic-local_plane: ## Interactive with deterministic synthetic results and no agent, against `plane local`
+	@$(LOCAL_PLANE) $(INTERACTIVE_SYNTHETIC) $(LOCAL_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
