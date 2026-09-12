@@ -1,0 +1,54 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A User Environment: the geospatial stack of PLAN_ENV.md section 4.1.
+#
+# Written once, resolved once into a lock, and built into an immutable
+# artifact per variant — so the Datalayer sandbox and the Modal one install
+# the same package versions. Every field is documented at
+# https://datalayer.ai/docs/environments-spec.
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: geospatial-analysis
+  title: Geospatial analysis
+spec:
+  language:
+    name: python
+    # What the base provides, and never silently replaced.
+    version: "3.13"
+  base:
+    ref: datalayer/python-cpu
+    channel: "2026.09"
+  packages:
+    python:
+      manager: uv
+      # Pinned here, and pinned harder by the lock: the resolve records every
+      # transitive version with its hash, and every build installs that.
+      dependencies:
+        - geopandas==1.1.1
+        - rasterio==1.4.3
+    system:
+      # The apt versions are resolved against the snapshot mirror at the
+      # channel's date and recorded in the lock, transitive ones included.
+      apt:
+        - gdal-bin
+  env:
+    # Set before anything installs, because a source build reads it.
+    GDAL_DATA: /usr/share/gdal
+  commands:
+    # Run as uid 1000 with no network: a command that fetches something fails
+    # at build time rather than making an artifact that depends on the day.
+    postInstall:
+      - python -c "import geopandas, rasterio; print(geopandas.__version__, rasterio.__version__)"
+  resources:
+    # `small`, `medium` or `large`; the class sets the resources a sandbox gets
+    # and the credits it burns per second.
+    sizeClass: medium
+  compatibility:
+    variants:
+      # Datalayer builds this itself. The optional ones build at their provider
+      # with your own account, and a version is ready without them.
+      required: [datalayer]
+      optional: [modal]
