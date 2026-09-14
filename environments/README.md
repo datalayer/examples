@@ -63,11 +63,14 @@ limit is refused by name before anything is queued.
 ## What does not work yet
 
 The registry, the pages, the CLI and the launch of a promoted version are in
-place. **The resolve and the build are not deployed**: `env-resolve` answers
-`501`, and a queued build refuses with `DL_ENV_CAPABILITY_UNSUPPORTED`, naming
-what is missing. Until they are, `env-create`, `env-validate`, `env-show`,
-`env-versions`, `env-promote`, `env-rollback` and `env-rm` are the targets that
-do their whole job.
+place. The resolve and the build now run on r1: `env-build-datalayer` resolves
+the lock, builds the image and pushes it. **The scan that follows does not
+finish yet** — the build ends `failed` with `DL_ENV_PROVIDER_ERROR` while the
+registry refuses the scan read — so no version reaches `ready`, and `env-try`,
+`env-promote` and `env-launch` have nothing of yours to use. Until it does,
+`env-create`, `env-validate`, `env-show`, `env-versions`, `env-rollback` and
+`env-rm` are the targets that do their whole job. `env-resolve` still answers
+`501`: a version is resolved by its build, not on its own.
 
 The same targets run against `plane local` — every service on this machine —
 with the `-local` suffix: `make env-create-local`, `env-resolve-local`,
