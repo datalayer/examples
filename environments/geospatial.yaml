@@ -42,7 +42,7 @@ spec:
     # Keep GDAL quiet: a hermetic build reads no debug switch at run time.
     CPL_DEBUG: "OFF"
     # Keep GDAL's block cache bounded: a benign, hermetic run-time hint.
-    GDAL_CACHEMAX: "256"
+    GDAL_CACHEMAX: "512"
   commands:
     # Run as uid 1000 with no network: a command that fetches something fails
     # at build time rather than making an artifact that depends on the day.
@@ -51,7 +51,7 @@ spec:
   resources:
     # `small`, `medium` or `large`; the class sets the resources a sandbox gets
     # and the credits it burns per second.
-    sizeClass: medium
+    sizeClass: small
   compatibility:
     variants:
       # Datalayer builds this itself. The optional ones build at their provider
