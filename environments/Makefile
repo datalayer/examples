@@ -50,7 +50,7 @@ endef
 
 .PHONY: help env-ls env-create env-show env-validate env-resolve env-diff \
 	env-build-datalayer env-build env-logs env-try env-promote env-launch \
-	env-rollback env-versions env-rm walkthrough
+	env-rollback env-versions env-rm env-slos walkthrough
 
 help: ## Show the targets, in the order an environment goes through them
 	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ENVIRONMENT=account/name] [VERSION=1]\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-26s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -118,6 +118,11 @@ env-rollback: ## Promote the newest ready version older than the promoted one; r
 env-rm: ## Delete the environment, once no version is promoted and nothing runs it
 	$(NEEDS_ENVIRONMENT)
 	@$(CLOUD_PLANE) $(ENVS) rm $(ENVIRONMENT) $(OUT)
+
+# ---- how it is going --------------------------------------------------------------------
+
+env-slos: ## Section 14's SLO table, read back from the OTEL query API
+	@$(CLOUD_PLANE) python slos.py
 
 # ---- the whole way through ------------------------------------------------------------
 

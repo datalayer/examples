@@ -49,6 +49,18 @@ is built, so a sandbox started an hour ago keeps running what it started with.
 `make env-rollback ENVIRONMENT=$ENVIRONMENT` promotes the version before,
 rebuilding nothing.
 
+## How it is going
+
+```bash
+make env-slos          # the SLO table: target, measured, and whether one meets the other
+```
+
+Every build and every launch is measured, and `slos.py` reads those series
+back from the telemetry API — resolve and build latency, the build success
+rate, how long a launch takes to turn a version into an immutable reference.
+It answers for the whole plane rather than for your environment: the numbers
+are the platform's, and yours are in them.
+
 `make help` lists every target. Each takes `OUTPUT=json` or `OUTPUT=yaml`, so
 the same commands read well in a terminal and pipe into a script.
 
