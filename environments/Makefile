@@ -26,6 +26,11 @@ VERSION ?= 1
 # The variants to build. Datalayer is the one Datalayer builds itself; modal
 # and daytona build at their provider with your own account (D-8).
 VARIANT ?= datalayer
+# A partially ready version is promoted only with each unavailable variant
+# named, so nobody promotes one by accident (section 9). This document's
+# optional variant is `modal`, and nothing here builds it; acknowledging a
+# variant a version does not lack is ignored.
+ACKNOWLEDGE ?= modal
 OUTPUT ?= table
 CREDITS_LIMIT ?= 5
 
@@ -105,7 +110,8 @@ env-try: ## A trial sandbox of the built version, capped in credits (CREDITS_LIM
 
 env-promote: ## Make this version the one new sandboxes start from
 	$(NEEDS_ENVIRONMENT)
-	@$(CLOUD_PLANE) $(ENVS) promote $(VERSION_REF) $(OUT)
+	@$(CLOUD_PLANE) $(ENVS) promote $(VERSION_REF) \
+		$(foreach variant,$(ACKNOWLEDGE),--acknowledge $(variant)) $(OUT)
 
 env-launch: ## A sandbox of the promoted version, through the Python SDK
 	$(NEEDS_ENVIRONMENT)
@@ -133,7 +139,7 @@ walkthrough: ## create, resolve, build, try, promote, launch — the flow, in or
 	$(MAKE) env-resolve ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION); \
 	$(MAKE) env-build-datalayer ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION); \
 	$(MAKE) env-try ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION); \
-	$(MAKE) env-promote ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION); \
+	$(MAKE) env-promote ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION) ACKNOWLEDGE="$(ACKNOWLEDGE)"; \
 	$(MAKE) env-launch ENVIRONMENT=$(ENVIRONMENT) VERSION=$(VERSION)
 
 # ---- the same, on `plane local` -------------------------------------------------------

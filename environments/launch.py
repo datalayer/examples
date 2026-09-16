@@ -44,7 +44,10 @@ def main() -> int:
     print(f"Runtime {uid} runs {environment}" + (f" version {version}" if version else " (promoted)"))
     if running:
         print(f"  environment: {running}")
-    print("  Stop it with: datalayer runtimes terminate " + str(uid))
+    # `datalayer runtimes` does not exist — the CLI's runtime verbs are on the
+    # SDK, and this is the one that answers.
+    print("  Stop it with: python -c \"from agent_runtimes.client import AgentClient; "
+          f"AgentClient().stop_runtime('{uid}')\"")
     return 0
 
 

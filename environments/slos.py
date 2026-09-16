@@ -110,20 +110,30 @@ def percentile(points: Sequence[Mapping[str, Any]], quantile: float) -> tuple[fl
     percentile over three builds is a fact about three builds, and the caller
     prints the count beside the number for that reason.
     """
-    bounds: list[float] = []
-    totals: list[int] = []
+    # Two bucket layouts cannot be added, and a series that changed its edges
+    # leaves both behind — every instrument here did, on 2026-09-16, when each
+    # started advising edges its own target falls on. The newest layout wins,
+    # and what the older ones hold is dropped rather than folded in: an
+    # observation in a bucket of (0, 5s] says nothing about one in (0.05,
+    # 0.075s], and a percentile over the two together would be a fiction.
+    layouts: dict[tuple[float, ...], tuple[list[int], int]] = {}
     for point in points:
-        edges = [float(edge) for edge in _json(point.get("explicit_bounds"), [])]
+        edges = tuple(float(edge) for edge in _json(point.get("explicit_bounds"), []))
         counts = [int(count) for count in _json(point.get("bucket_counts"), [])]
         if not counts:
             continue
-        if not bounds:
-            bounds, totals = edges, [0] * len(counts)
-        if edges != bounds or len(counts) != len(totals):
-            # Two different bucket layouts cannot be added. Nothing in this
-            # plane mixes them, and saying so beats a silently wrong number.
-            raise ValueError("bucket layouts differ across points")
-        totals = [a + b for a, b in zip(totals, counts)]
+        seen, newest = layouts.get(edges, ([0] * len(counts), 0))
+        if len(counts) != len(seen):
+            continue
+        layouts[edges] = (
+            [a + b for a, b in zip(seen, counts)],
+            max(newest, int(point.get("timestamp_unix_nano") or 0)),
+        )
+    if not layouts:
+        return None, 0
+    bounds_tuple = max(layouts, key=lambda edges: layouts[edges][1])
+    bounds = list(bounds_tuple)
+    totals = layouts[bounds_tuple][0]
     observations = sum(totals)
     if not observations:
         return None, 0

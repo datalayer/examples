@@ -43,6 +43,28 @@ make env-launch   ENVIRONMENT=$ENVIRONMENT       # a sandbox of it
 
 `make walkthrough ENVIRONMENT=$ENVIRONMENT` runs those in order.
 
+This document declares `modal` as an optional variant and nothing here builds
+it, so the version settles **partially ready** rather than ready — which is
+what it should be: the Datalayer variant is built and runs, and nobody has
+said anything about Modal. A partially ready version is promoted only with
+each unavailable variant named, so nobody promotes one by accident:
+`ACKNOWLEDGE` carries them, and defaults to this document's own.
+
+```bash
+make env-promote ENVIRONMENT=$ENVIRONMENT ACKNOWLEDGE=modal
+```
+
+Until a version is promoted, `make env-launch` has nothing to launch.
+
+A name belongs to one environment per owner, so a second `make env-create`
+refuses with `DL_ENV_CONFLICT` rather than making another. To run the flow
+again beside the one you have, copy the document, change its
+`metadata.name`, and point the target at it:
+
+```bash
+make env-create ENVIRONMENT_FILE=my-copy.yaml
+```
+
 Editing the document makes the **next** version — `datalayer envs edit
 $ENVIRONMENT@1 --file geospatial.yaml` — and a version never changes once it
 is built, so a sandbox started an hour ago keeps running what it started with.
