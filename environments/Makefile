@@ -119,7 +119,8 @@ env-launch: ## A sandbox of the promoted version, through the Python SDK
 
 env-rollback: ## Promote the newest ready version older than the promoted one; rebuilds nothing
 	$(NEEDS_ENVIRONMENT)
-	@$(CLOUD_PLANE) $(ENVS) rollback $(ENVIRONMENT) $(OUT)
+	@$(CLOUD_PLANE) $(ENVS) rollback $(ENVIRONMENT) \
+		$(foreach variant,$(ACKNOWLEDGE),--acknowledge $(variant)) $(OUT)
 
 env-rm: ## Delete the environment, once no version is promoted and nothing runs it
 	$(NEEDS_ENVIRONMENT)
