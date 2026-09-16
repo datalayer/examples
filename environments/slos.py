@@ -338,30 +338,45 @@ def extra_series(otel: Otel) -> list[str]:
 def measure_cold_start(environment: str, platform_environment: str, runs: int) -> list[str]:
     """Time a launch to its first `1+1`, for a user and a platform environment.
 
-    Section 14's only row no instrument can answer. The moment it is about —
-    a sandbox that will run code — is not a moment any service sees.
+    Section 14's only row no instrument can answer. The moment it is about — a
+    sandbox that will run code — is not a moment any service sees: Runtimes
+    has answered and the pod is still pulling. So it is measured from here,
+    the way the person waiting experiences it, and the delta is what the row
+    asks for: a user environment against a platform one, same size class, same
+    plane, back to back.
     """
     import time
 
-    from datalayer_core import DatalayerClient
+    from agent_runtimes.client import AgentClient
 
-    client = DatalayerClient()
+    client = AgentClient()
     lines: list[str] = []
-    for name in (environment, platform_environment):
+    taken: dict[str, list[float]] = {}
+    for name in (platform_environment, environment):
         deltas: list[float] = []
         for _ in range(runs):
             began = time.monotonic()
-            runtime = client.create_runtime(environment_name=name, time_reservation=5)
+            runtime = client.create_runtime(environment=name, time_reservation=5)
             try:
-                with runtime as sandbox:
-                    sandbox.execute("1+1")
+                # `create_runtime` answers as soon as the record exists; the
+                # pod may still be pulling. `start()` is what waits for a
+                # kernel, and running code is what proves there is one.
+                runtime.start()
+                runtime.execute("1+1")
                 deltas.append(time.monotonic() - began)
             finally:
                 try:
                     runtime.stop()
                 except Exception:  # noqa: BLE001 - a stop that fails is not a measurement
                     pass
+        taken[name] = deltas
         lines.append(f"{name}: " + ", ".join(f"{d:.1f}s" for d in deltas))
+    warm = {name: min(deltas) for name, deltas in taken.items() if deltas}
+    if len(warm) == 2:
+        delta = warm[environment] - warm[platform_environment]
+        lines.append(
+            f"delta (warmest of each): {delta:+.1f}s against a target of < +5s"
+        )
     return lines
 
 
@@ -372,7 +387,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="the table as JSON")
     parser.add_argument("--cold-start", action="store_true", help="also measure the cold-start delta, which launches sandboxes")
     parser.add_argument("--environment", default=os.environ.get("ENVIRONMENT", ""), help="the user environment to time")
-    parser.add_argument("--platform-environment", default="python-cpu-env", help="the platform environment to time it against")
+    parser.add_argument("--platform-environment", default="ai-agents-env", help="the platform environment to time it against")
     parser.add_argument("--runs", type=int, default=3, help="how many launches each, for --cold-start")
     args = parser.parse_args(argv)
 
