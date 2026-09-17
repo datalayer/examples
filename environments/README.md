@@ -71,6 +71,30 @@ is built, so a sandbox started an hour ago keeps running what it started with.
 `make env-rollback ENVIRONMENT=$ENVIRONMENT` promotes the version before,
 rebuilding nothing.
 
+## Making it public
+
+A promoted version can go into the public Library, where anyone can read it,
+launch it or fork it:
+
+```bash
+make env-publish     ENVIRONMENT=$ENVIRONMENT   # everything that becomes public, listed
+make env-publication ENVIRONMENT=$ENVIRONMENT   # what it made public, and whether it still is
+make env-unpublish   ENVIRONMENT=$ENVIRONMENT   # withdraw it
+```
+
+`env-publish` prints the whole list rather than a confirmation: the spec, the
+lock and its package count, the variants and their artifact references, the
+scan's verdict, the SBOM, the licenses and the README. A version is made
+public once and the snapshot is frozen at that moment, so the list is the
+thing to read before saying yes.
+
+Publishing is refused unless every input is public — no build secret, only
+public indexes, an approved base, and a Datalayer artifact that passed its
+scan. The refusal names which of those it was.
+
+Withdrawing keeps the snapshot, so `env-publish` afterwards restores exactly
+what was public, and sandboxes already running the version are untouched.
+
 ## How it is going
 
 ```bash

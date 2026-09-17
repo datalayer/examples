@@ -55,7 +55,8 @@ endef
 
 .PHONY: help env-ls env-create env-show env-validate env-resolve env-diff \
 	env-build-datalayer env-build env-logs env-try env-promote env-launch \
-	env-rollback env-versions env-rm env-slos walkthrough
+	env-rollback env-versions env-rm env-slos env-publish env-unpublish \
+	env-publication walkthrough
 
 help: ## Show the targets, in the order an environment goes through them
 	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ENVIRONMENT=account/name] [VERSION=1]\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-26s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -125,6 +126,20 @@ env-rollback: ## Promote the newest ready version older than the promoted one; r
 env-rm: ## Delete the environment, once no version is promoted and nothing runs it
 	$(NEEDS_ENVIRONMENT)
 	@$(CLOUD_PLANE) $(ENVS) rm $(ENVIRONMENT) $(OUT)
+
+# ---- making it public -------------------------------------------------------------------
+
+env-publish: ## Publish this version to the public Library; lists everything that becomes public
+	$(NEEDS_ENVIRONMENT)
+	@$(CLOUD_PLANE) $(ENVS) publish $(VERSION_REF) $(OUT)
+
+env-publication: ## What this version's publication made public, and whether it still is
+	$(NEEDS_ENVIRONMENT)
+	@$(CLOUD_PLANE) $(ENVS) publication $(VERSION_REF) $(OUT)
+
+env-unpublish: ## Withdraw it; the snapshot is kept, so publishing again restores it
+	$(NEEDS_ENVIRONMENT)
+	@$(CLOUD_PLANE) $(ENVS) unpublish $(VERSION_REF) $(OUT)
 
 # ---- how it is going --------------------------------------------------------------------
 
