@@ -65,9 +65,24 @@ when it is created:
 | File | Source | What the lock covers |
 |---|---|---|
 | `geospatial.yaml` | a package list | everything |
+| `requirements.yaml` | a `requirements.txt` | everything, solved the way a package list is |
+| `pyproject.yaml`, written by `make env-spec-pyproject` | `pyproject/pyproject.toml` and the `uv.lock` you made | everything, as your `uv.lock` says: it is checked and exported, never solved again |
 | `conda-geospatial.yaml` | a conda `environment.yml`, `gdal` from conda-forge | the conda layer by hash, the pip layer by version |
 | `dockerfile.yaml` | your Dockerfile, on an approved base | the declared packages and the kernel stack; what the Dockerfile installs is not locked |
 | `image-import.yaml` | an existing image | does not build yet |
+
+A `uv.lock` of your own is never merged with Datalayer's protected pins, so it
+has to lock them itself, at the versions the platform needs, or it is refused
+naming the one it lacks. `pyproject/pyproject.toml` lists them. One of them,
+`jupyter-server==2.21.0+datalayer.1`, is Datalayer's fork, and no package index
+serves it: the project takes it from its release by URL
+(`[tool.uv.sources]`), which is also what makes `uv` record its hash.
+
+```bash
+cd pyproject && uv lock && cd ..
+make env-spec-pyproject
+make env-create ENVIRONMENT_FILE=pyproject.yaml
+```
 
 This document declares `modal` as an optional variant and nothing here builds
 it, so the version settles **partially ready** rather than ready — which is

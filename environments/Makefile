@@ -53,7 +53,7 @@ define NEEDS_ENVIRONMENT
 	fi
 endef
 
-.PHONY: help env-ls env-create env-show env-validate env-resolve env-diff \
+.PHONY: help env-ls env-create env-spec-pyproject env-show env-validate env-resolve env-diff \
 	env-build-datalayer env-build-daytona env-build env-logs env-try env-promote env-launch \
 	env-rollback env-versions env-rm env-slos env-publish env-unpublish \
 	env-publication walkthrough
@@ -68,6 +68,18 @@ env-ls: ## The environments you can launch, platform and your own
 
 env-create: ## Create the environment and its first draft version from ENVIRONMENT_FILE
 	@$(CLOUD_PLANE) $(ENVS) create --file $(ENVIRONMENT_FILE) $(OUT)
+
+# A `pyproject` source carries its pyproject.toml and uv.lock inline, and a
+# real uv.lock runs to hundreds of kilobytes, so that example keeps them as
+# files and the spec is written from them: `make env-create
+# ENVIRONMENT_FILE=pyproject.yaml` after this.
+env-spec-pyproject: pyproject.yaml ## Write pyproject.yaml from pyproject/pyproject.toml and its uv.lock
+
+pyproject/uv.lock: pyproject/pyproject.toml
+	cd pyproject && uv lock
+
+pyproject.yaml: pyproject/pyproject.toml pyproject/uv.lock pyproject_spec.py
+	python pyproject_spec.py pyproject > $@
 
 env-validate: ## Read the document and report every finding with its field; builds nothing
 	$(NEEDS_ENVIRONMENT)

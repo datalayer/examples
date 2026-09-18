@@ -1,0 +1,36 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A project brought with its own uv.lock (PLAN_ENV.md E3-01, E3-08).
+#
+# Datalayer never re-resolves this lock: it checks that uv.lock still matches
+# this file and exports it. So the lock has to hold what a sandbox needs to
+# connect, Datalayer's protected pins, itself; a pin the lock leaves out, or
+# locks at another version, is refused by name. Lock it with `uv lock` in this
+# directory, and `make pyproject.yaml` puts both files in an Environment spec.
+[project]
+name = "pyproject-example"
+version = "0.1.0"
+# The base channel's interpreter.
+requires-python = "==3.13.*"
+dependencies = [
+    "pyfiglet==1.0.4",
+    # Datalayer's protected pins, sandbox-contract/v1.
+    "ipykernel==7.3.0",
+    "jupyter-client==8.9.1",
+    "jupyter-server==2.21.0+datalayer.1",
+    "jupyter-server-nbmodel==0.2.8",
+    "jupyter-kernels==1.2.23",
+    "datalayer==1.7.4",
+]
+
+[tool.uv]
+# An environment, not a package to build.
+package = false
+
+[tool.uv.sources]
+# Datalayer's jupyter-server fork. No package index serves a local version, and
+# uv records a wheel's hash only when it fetched it by URL, so it is locked
+# from its release rather than from a find-links directory.
+jupyter-server = { url = "https://github.com/datalayer-externals/jupyter-server/releases/download/v2.21.0-datalayer.1/jupyter_server-2.21.0%2Bdatalayer.1-py3-none-any.whl" }
