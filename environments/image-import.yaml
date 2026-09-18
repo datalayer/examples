@@ -11,7 +11,10 @@
 # stack under Datalayer's protected pins — is layered on top of it at build
 # time, and the core tier runs against the result like any other artifact.
 #
-# Only the `datalayer` variant imports an image today.
+# **Does not build yet** (PLAN_ENV.md E3-04, deferred 2026-09-18). It resolves
+# and installs on r1, then fails at the doctor: a Datalayer runtime pod starts
+# from the image's own `start-jupyter.sh` and platform config, which an
+# imported image does not carry. Kept as the example that box will build.
 apiVersion: environments.datalayer.io/v1alpha1
 kind: Environment
 metadata:
