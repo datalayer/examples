@@ -1,0 +1,49 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A User Environment brought as a Dockerfile (PLAN_ENV.md E3-03).
+#
+# The Dockerfile names an approved base by its channel, and that is what the
+# build pins to a digest and resolves the lock in. What the Dockerfile itself
+# installs is not locked — the lock says so in its own header — while the
+# packages declared below, and Datalayer's protected pins, are locked and
+# installed over it. A file copied from a build context is refused until the
+# context upload exists; bake it with a `RUN` or a heredoc instead.
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: dockerfile-example
+  title: From a Dockerfile
+spec:
+  language:
+    name: python
+    version: "3.13"
+  base:
+    # Required by the schema; the Dockerfile's own `FROM` is the base.
+    ref: datalayer/python-cpu
+    channel: "2026.09"
+  packages:
+    python:
+      manager: uv
+      dependencies:
+        # Locked, with its hash, and checked by Appendix B check 5.
+        - pyfiglet==1.0.4
+  compatibility:
+    variants:
+      required: [datalayer]
+      optional: [daytona]
+  build:
+    source: dockerfile
+    dockerfile:
+      content: |
+        FROM datalayer/python-cpu:2026.09
+        # Not locked: the Dockerfile's own install. A package the lock also
+        # names is installed at the lock's version instead.
+        RUN pip install --no-cache-dir tabulate==0.10.0
+        COPY <<EOF /home/datalayer/.config/greeting.txt
+        built from a Dockerfile
+        EOF
+  commands:
+    postInstall:
+      - python -c "import tabulate, pyfiglet; print(tabulate.__version__, pyfiglet.__version__)"
