@@ -6,6 +6,10 @@
 
     make pyproject.yaml
     python pyproject_spec.py pyproject > pyproject.yaml
+    python pyproject_spec.py ../../../../research/data-analysis --name agentic-data-analysis \
+        --title "Agentic data analysis" \
+        --check "import pandas, duckdb; print(pandas.__version__, duckdb.__version__)" \
+        > data-analysis.yaml
 
 A `pyproject` source carries both files inline, the way a `requirements`
 source carries its file: the lock is checked and exported before anything is
@@ -15,6 +19,7 @@ keeps them as files and writes the spec from them.
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -23,8 +28,8 @@ SPEC = """\
 apiVersion: environments.datalayer.io/v1alpha1
 kind: Environment
 metadata:
-  name: pyproject-example
-  title: From a pyproject.toml and its uv.lock
+  name: {name}
+  title: {title}
 spec:
   language:
     name: python
@@ -46,7 +51,7 @@ spec:
 {lock}
   commands:
     postInstall:
-      - python -c "import pyfiglet, jupyter_server; print(pyfiglet.__version__, jupyter_server.__version__)"
+      - python -c "{check}"
 """
 
 
@@ -55,14 +60,27 @@ def _block(text: str) -> str:
     return "\n".join(("        " + line).rstrip() for line in text.splitlines())
 
 
-def main(folder: str) -> None:
-    root = Path(folder)
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("folder", nargs="?", default="pyproject")
+    parser.add_argument("--name", default="pyproject-example")
+    parser.add_argument("--title", default="From a pyproject.toml and its uv.lock")
+    parser.add_argument(
+        "--check",
+        default="import pyfiglet, jupyter_server; print(pyfiglet.__version__, jupyter_server.__version__)",
+        help="The Python the build runs after installing the lock, as its postInstall.",
+    )
+    arguments = parser.parse_args()
+    root = Path(arguments.folder)
     lock = root / "uv.lock"
     if not lock.exists():
-        sys.exit(f"No {lock}: run `uv lock` in {folder} first")
+        sys.exit(f"No {lock}: run `uv lock` in {arguments.folder} first")
     sys.stdout.write(
         SPEC.format(
-            folder=folder,
+            folder=arguments.folder,
+            name=arguments.name,
+            title=arguments.title,
+            check=arguments.check.replace('"', '\\"'),
             content=_block((root / "pyproject.toml").read_text(encoding="utf-8")),
             lock=_block(lock.read_text(encoding="utf-8")),
         )
@@ -70,4 +88,4 @@ def main(folder: str) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "pyproject")
+    main()
