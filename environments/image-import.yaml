@@ -1,0 +1,45 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A User Environment that starts from an existing image (PLAN_ENV.md E3-04).
+#
+# The image replaces the approved base: `spec.base` is still written, because
+# the schema asks for one, and is not what the build starts from. The image is
+# pinned by digest: a tag moves, and a version never may. Everything the
+# sandbox contract needs — the `datalayer` user, the doctor, `uv`, the kernel
+# stack under Datalayer's protected pins — is layered on top of it at build
+# time, and the core tier runs against the result like any other artifact.
+#
+# Only the `datalayer` variant imports an image today.
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: image-import
+  title: From python:3.12-slim-bookworm
+spec:
+  language:
+    name: python
+    # What the image provides: the build checks it, and never replaces it.
+    version: "3.12"
+  base:
+    # Required by the schema and unused by this source: `build.image` is the base.
+    ref: datalayer/python-cpu
+    channel: "2026.09"
+  packages:
+    python:
+      manager: uv
+      dependencies:
+        # A leaf: nothing in the kernel stack depends on it, so no protected pin
+        # competes with it.
+        - pyfiglet==1.0.4
+  compatibility:
+    variants:
+      required: [datalayer]
+  build:
+    source: image
+    image:
+      reference: docker.io/library/python:3.12-slim-bookworm@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254
+  commands:
+    postInstall:
+      - python -c "import pyfiglet; print(pyfiglet.__version__)"
