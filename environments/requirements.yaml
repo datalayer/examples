@@ -1,0 +1,37 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A User Environment brought as a `requirements.txt` (PLAN_ENV.md E3-01, E3-08).
+#
+# The file is resolved the way a package list is: Datalayer's protected pins
+# are merged over it, and the whole tree is solved once into a hashed lock
+# that every variant installs without solving again. A requirement that
+# disagrees with a protected pin is refused, naming both.
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: requirements-example
+  title: From a requirements.txt
+spec:
+  language:
+    name: python
+    version: "3.13"
+  base:
+    ref: datalayer/python-cpu
+    channel: "2026.09"
+  compatibility:
+    variants:
+      required: [datalayer]
+      optional: [daytona]
+  build:
+    source: dependencyFile
+    dependencyFile:
+      sourceFormat: requirements
+      content: |
+        # Any requirements.txt: pins, ranges and comments are all accepted.
+        humanize==4.16.0
+        python-slugify>=9,<10
+  commands:
+    postInstall:
+      - python -c "import humanize, slugify; print(humanize.__version__, slugify.slugify('Built from a requirements.txt'))"
