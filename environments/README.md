@@ -43,6 +43,32 @@ make env-launch   ENVIRONMENT=$ENVIRONMENT       # a sandbox of it
 
 `make walkthrough ENVIRONMENT=$ENVIRONMENT` runs those in order.
 
+### On Daytona, in your own account
+
+A build for Daytona runs in **your** Daytona organization, with the key you
+keep as a Datalayer secret — never a shared account — and makes a snapshot
+there, sized by the version's size class:
+
+```bash
+datalayer secrets create DAYTONA_API_KEY "my Daytona key" <your Daytona key>
+make env-build-daytona ENVIRONMENT=$ENVIRONMENT  # the snapshot, built from the same lock
+```
+
+It builds from the lock the Datalayer build used, so both install the same
+package versions, and the version's package report shows them side by side.
+
+### Other sources
+
+The same targets build the other examples, each named with `ENVIRONMENT_FILE`
+when it is created:
+
+| File | Source | What the lock covers |
+|---|---|---|
+| `geospatial.yaml` | a package list | everything |
+| `conda-geospatial.yaml` | a conda `environment.yml`, `gdal` from conda-forge | the conda layer by hash, the pip layer by version |
+| `dockerfile.yaml` | your Dockerfile, on an approved base | the declared packages and the kernel stack; what the Dockerfile installs is not locked |
+| `image-import.yaml` | an existing image | does not build yet |
+
 This document declares `modal` as an optional variant and nothing here builds
 it, so the version settles **partially ready** rather than ready — which is
 what it should be: the Datalayer variant is built and runs, and nobody has

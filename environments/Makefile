@@ -54,7 +54,7 @@ define NEEDS_ENVIRONMENT
 endef
 
 .PHONY: help env-ls env-create env-show env-validate env-resolve env-diff \
-	env-build-datalayer env-build env-logs env-try env-promote env-launch \
+	env-build-datalayer env-build-daytona env-build env-logs env-try env-promote env-launch \
 	env-rollback env-versions env-rm env-slos env-publish env-unpublish \
 	env-publication walkthrough
 
@@ -94,6 +94,10 @@ env-diff: ## What changed between two versions' locks (VERSION and BEFORE)
 env-build-datalayer: ## Build the version for the Datalayer variant, following its log
 	$(NEEDS_ENVIRONMENT)
 	@$(CLOUD_PLANE) $(ENVS) build $(VERSION_REF) --variant datalayer --follow $(OUT)
+
+env-build-daytona: ## Build the version for Daytona, in your own Daytona account (DAYTONA_API_KEY kept as a secret)
+	$(NEEDS_ENVIRONMENT)
+	@$(CLOUD_PLANE) $(ENVS) build $(VERSION_REF) --variant daytona --follow $(OUT)
 
 env-build: ## Build it for VARIANT (datalayer, modal, daytona, e2b), following its log
 	$(NEEDS_ENVIRONMENT)
