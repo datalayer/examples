@@ -1,0 +1,46 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# A User Environment brought as a conda `environment.yml` (PLAN_ENV.md E3-02).
+#
+# The file is solved once, with `micromamba`, into an explicit lock — one
+# `package-url#hash` line per package — and every variant installs that lock
+# without solving again. The pip layer is recorded with it, every distribution
+# pinned, under Datalayer's protected pins, so the kernel stack is the same
+# one a `packages` environment gets.
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: conda-geospatial
+  title: Geospatial, from conda-forge
+spec:
+  language:
+    name: python
+    # The interpreter is the base's: a `python` line in the file below would
+    # be dropped rather than doubled.
+    version: "3.13"
+  base:
+    ref: datalayer/python-cpu
+    channel: "2026.09"
+  compatibility:
+    variants:
+      required: [datalayer]
+      optional: [daytona]
+  build:
+    source: dependencyFile
+    dependencyFile:
+      sourceFormat: conda
+      content: |
+        name: conda-geospatial
+        channels:
+          - conda-forge
+        dependencies:
+          # GDAL with its native libraries, which is what conda is for: the
+          # wheel on PyPI cannot bring libgdal with it.
+          - gdal=3.11
+          - pip:
+              - shapely==2.1.2
+  commands:
+    postInstall:
+      - python -c "from osgeo import gdal; import shapely; print(gdal.__version__, shapely.__version__)"
