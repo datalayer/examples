@@ -68,6 +68,7 @@ when it is created:
 | `requirements.yaml` | a `requirements.txt` | everything, solved the way a package list is |
 | `pyproject.yaml`, written by `make env-spec-pyproject` | `pyproject/pyproject.toml` and the `uv.lock` you made | everything, as your `uv.lock` says: it is checked and exported, never solved again |
 | `conda-geospatial.yaml` | a conda `environment.yml`, `gdal` from conda-forge | the conda layer by hash, the pip layer by version |
+| `gpu-torch.yaml` | PyTorch on the CUDA channel, an RTX 4090 on Daytona (`make env-build-gpu-daytona`) | everything |
 | `dockerfile.yaml` | your Dockerfile, on an approved base | the declared packages and the kernel stack; what the Dockerfile installs is not locked |
 | `image-import.yaml` | an existing image | does not build yet |
 

@@ -1,0 +1,47 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# PyTorch on a GPU (PLAN_ENV.md E2-17).
+#
+# A GPU class runs on the providers that have GPUs, so the version is built for
+# Daytona, never for Datalayer, whose nodes have none yet. The GPU is baked into
+# the Daytona snapshot with the rest of its resources, and the build's smoke test
+# launches it and checks the GPU is there (Appendix B check 11). The compute is
+# billed by Daytona to your own account.
+#
+#   make env-create ENVIRONMENT_FILE=gpu-torch.yaml
+#   make env-build-gpu-daytona ENVIRONMENT=<you>/gpu-torch
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: gpu-torch
+  title: PyTorch on a GPU
+spec:
+  language:
+    name: python
+    version: "3.13"
+  base:
+    # The CUDA channel: the CPU channel plus the CUDA 12.8 toolkit.
+    ref: datalayer/python-cuda
+    channel: "2026.09"
+  packages:
+    python:
+      manager: uv
+      dependencies:
+        # The last release built for CUDA 12.8, the channel's; 2.12 moved to 13.
+        - torch==2.10.0
+  resources:
+    sizeClass: gpu-small
+    accelerator:
+      # One of Daytona's: H100, H200, RTX-PRO-6000, RTX-4090, RTX-5090.
+      type: RTX-4090
+      count: 1
+      cuda: "12.8"
+  compatibility:
+    variants:
+      required: [daytona]
+  commands:
+    postInstall:
+      # No GPU at build time: this checks the install, check 11 checks the GPU.
+      - python -c "import torch; print(torch.__version__, torch.version.cuda)"
