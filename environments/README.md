@@ -69,6 +69,7 @@ when it is created:
 | `pyproject.yaml`, written by `make env-spec-pyproject` | `pyproject/pyproject.toml` and the `uv.lock` you made | everything, as your `uv.lock` says: it is checked and exported, never solved again |
 | `conda-geospatial.yaml` | a conda `environment.yml`, `gdal` from conda-forge | the conda layer by hash, the pip layer by version |
 | `gpu-torch.yaml` | PyTorch on the CUDA channel, an RTX 4090 on Daytona (`make env-build-gpu-daytona`) | everything |
+| `gpu-torch-modal.yaml` | the same, on a Modal L4 (`make env-build-gpu-modal`) | everything |
 | `dockerfile.yaml` | your Dockerfile, on an approved base | the declared packages and the kernel stack; what the Dockerfile installs is not locked |
 | `image-import.yaml` | an existing image | does not build yet |
 
@@ -160,17 +161,19 @@ too, and builds are limited while the feature is in preview — two at once,
 120 build-minutes a day, ten versions kept, 50 GiB stored — so a build over a
 limit is refused by name before anything is queued.
 
-## What does not work yet
+## What it reaches, and what is left
 
-The registry, the pages, the CLI and the launch of a promoted version are in
-place. The resolve and the build now run on r1: `env-build-datalayer` resolves
-the lock, builds the image and pushes it. **The scan that follows does not
-finish yet** — the build ends `failed` with `DL_ENV_PROVIDER_ERROR` while the
-registry refuses the scan read — so no version reaches `ready`, and `env-try`,
-`env-promote` and `env-launch` have nothing of yours to use. Until it does,
-`env-create`, `env-validate`, `env-show`, `env-versions`, `env-rollback` and
-`env-rm` are the targets that do their whole job. `env-resolve` still answers
-`501`: a version is resolved by its build, not on its own.
+Builds run on the platform. For `datalayer` the lock is resolved, the image
+built, pushed, scanned and signed, and the version reaches `ready`; for
+Daytona and Modal the same lock is built in your own account and tried there
+before the version is ready. A GPU version builds for Modal
+(`gpu-torch-modal.yaml`) or Daytona (`gpu-torch.yaml`, which needs paid GPU
+credit at Daytona: its free credit does not cover GPU sandboxes).
+
+A build reaches only the hosts packages come from: PyPI and PyTorch's wheels,
+the public conda channels, the Ubuntu and Debian snapshot mirrors, GitHub
+releases and the image registries. An index or a channel on a host of your
+own fails the build with `403` until the platform allows that host.
 
 The same targets run against `plane local` — every service on this machine —
 with the `-local` suffix: `make env-create-local`, `env-resolve-local`,
