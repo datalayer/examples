@@ -4,17 +4,17 @@ SHELL := /bin/bash
 
 # Every target is named on three axes:
 #
-#   make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>
+#   make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>
 #
 # - mode:   batch runs the fixed, versioned tasks; interactive evaluates live traffic over a window
-# - agent:  cloud_agent runs on a pool of Datalayer sandboxes (a launch the platform executes);
-#           local_agent runs on an agent-runtimes server on this machine;
+# - agent:  cloudagent runs on a pool of Datalayer sandboxes (a launch the platform executes);
+#           localagent runs on an agent-runtimes server on this machine;
 #           synthetic runs no agent at all — deterministic results, to see the reports and the UI
-# - plane:  cloud_plane is the Datalayer services (the SDK defaults);
-#           local_plane is `plane local`, every service on localhost, the durable engine `none`
+# - plane:  cloudplane is the Datalayer services (the SDK defaults);
+#           localplane is `plane local`, every service on localhost, the durable engine `none`
 #
-# The plane is chosen by construction. cloud_plane targets unset every DATALAYER_*_URL so the
-# SDK defaults apply; local_plane targets pin LOCAL_PLANE_*_URL — names no cluster rc sets — so a
+# The plane is chosen by construction. cloudplane targets unset every DATALAYER_*_URL so the
+# SDK defaults apply; localplane targets pin LOCAL_PLANE_*_URL — names no cluster rc sets — so a
 # shell with datalayerrc-prod1 sourced still sends them to the plane on this machine.
 
 LOCAL_PLANE_IAM_URL ?= http://localhost:9700
@@ -63,9 +63,9 @@ INTERACTIVE_EVALSET_SPEC_FLAG := $(if $(strip $(INTERACTIVE_EVALSET_SPEC_FILE)),
 # Optional agent spec selection for cloud runtimes.
 # Multi-agent-spec defaults are handled by the scripts when none is provided.
 # Examples:
-#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC_ID=example-evals
-#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC_IDS="example-evals,example-evals-nocodemode"
-#   make evals-batch-cloud_agent-cloud_plane AGENTSPEC=./my-agent.yaml
+#   make evals-batch-cloudagent-cloudplane AGENTSPEC_ID=example-evals
+#   make evals-batch-cloudagent-cloudplane AGENTSPEC_IDS="example-evals,example-evals-nocodemode"
+#   make evals-batch-cloudagent-cloudplane AGENTSPEC=./my-agent.yaml
 AGENTSPEC ?=
 AGENTSPEC_ID ?=
 AGENTSPEC_IDS ?=
@@ -99,69 +99,69 @@ define WITH_BILLING_ENTITY
 endef
 
 .PHONY: help \
-	evals-batch-cloud_agent-cloud_plane evals-batch-cloud_agent-cloud_plane-simple evals-batch-cloud_agent-cloud_plane-billing-entity evals-batch-cloud_agent-local_plane \
-	evals-batch-local_agent-cloud_plane evals-batch-local_agent-local_plane evals-batch-local_agent-local_plane-billing-entity \
-	evals-batch-synthetic-cloud_plane evals-batch-synthetic-local_plane \
-	evals-interactive-cloud_agent-cloud_plane evals-interactive-cloud_agent-local_plane \
-	evals-interactive-local_agent-cloud_plane evals-interactive-local_agent-local_plane \
-	evals-interactive-synthetic-cloud_plane evals-interactive-synthetic-local_plane
+	evals-batch-cloudagent-cloudplane evals-batch-cloudagent-cloudplane-simple evals-batch-cloudagent-cloudplane-billing-entity evals-batch-cloudagent-localplane \
+	evals-batch-localagent-cloudplane evals-batch-localagent-localplane evals-batch-localagent-localplane-billing-entity \
+	evals-batch-synthetic-cloudplane evals-batch-synthetic-localplane \
+	evals-interactive-cloudagent-cloudplane evals-interactive-cloudagent-localplane \
+	evals-interactive-localagent-cloudplane evals-interactive-localagent-localplane \
+	evals-interactive-synthetic-cloudplane evals-interactive-synthetic-localplane
 
-help: ## Show available targets: make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>
-	@awk 'BEGIN {FS = ":.*##"; print "Usage: make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-56s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+help: ## Show available targets: make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>
+	@awk 'BEGIN {FS = ":.*##"; print "Usage: make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>\n"} /^[a-zA-Z_-]+:.*?##/ {printf "%-56s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # ---- batch, cloud agent --------------------------------------------------------------------
 
-evals-batch-cloud_agent-cloud_plane: ## Batch on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
+evals-batch-cloudagent-cloudplane: ## Batch on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
 	@$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-cloud_agent-cloud_plane-simple: ## The smallest cloud batch run: evals_batch_simple.py, one agentspec, no reports
+evals-batch-cloudagent-cloudplane-simple: ## The smallest cloud batch run: evals_batch_simple.py, one agentspec, no reports
 	@$(CLOUD_PLANE) python evals_batch_simple.py
 
-evals-batch-cloud_agent-cloud_plane-billing-entity: ## Same as evals-batch-cloud_agent-cloud_plane, asking for the API key and a billing entity
+evals-batch-cloudagent-cloudplane-billing-entity: ## Same as evals-batch-cloudagent-cloudplane, asking for the API key and a billing entity
 	$(call WITH_BILLING_ENTITY,$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG))
 
-evals-batch-cloud_agent-local_plane: ## Batch on a pool of sandboxes launched through `plane local` on this machine
+evals-batch-cloudagent-localplane: ## Batch on a pool of sandboxes launched through `plane local` on this machine
 	@$(LOCAL_PLANE) $(BATCH) $(LOCAL_PLANE_FLAGS) $(CLOUD_AGENT_LOCAL_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
 # ---- batch, local agent --------------------------------------------------------------------
 
-evals-batch-local_agent-cloud_plane: ## Batch on an agent-runtimes server on this machine, results written to the Datalayer services
+evals-batch-localagent-cloudplane: ## Batch on an agent-runtimes server on this machine, results written to the Datalayer services
 	@$(CLOUD_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(CLOUD_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-local_agent-local_plane: ## Batch on an agent-runtimes server on this machine, results written to `plane local`
+evals-batch-localagent-localplane: ## Batch on an agent-runtimes server on this machine, results written to `plane local`
 	@$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-batch-local_agent-local_plane-billing-entity: ## Same as evals-batch-local_agent-local_plane, asking for the API key and a billing entity
+evals-batch-localagent-localplane-billing-entity: ## Same as evals-batch-localagent-localplane, asking for the API key and a billing entity
 	$(call WITH_BILLING_ENTITY,$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(BATCH) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG))
 
 # ---- batch, synthetic (no agent) -----------------------------------------------------------
 
-evals-batch-synthetic-cloud_plane: ## Batch with deterministic synthetic results and no agent, against the Datalayer services
+evals-batch-synthetic-cloudplane: ## Batch with deterministic synthetic results and no agent, against the Datalayer services
 	@$(CLOUD_PLANE) $(BATCH) $(CLOUD_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-batch-synthetic-local_plane: ## Batch with deterministic synthetic results and no agent, against `plane local`
+evals-batch-synthetic-localplane: ## Batch with deterministic synthetic results and no agent, against `plane local`
 	@$(LOCAL_PLANE) $(BATCH) $(LOCAL_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
 # ---- interactive, cloud agent --------------------------------------------------------------
 
-evals-interactive-cloud_agent-cloud_plane: ## Interactive on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
+evals-interactive-cloudagent-cloudplane: ## Interactive on a pool of Datalayer sandboxes, against the Datalayer services (SYNTHETIC=1 for synthetic results)
 	@$(CLOUD_PLANE) $(INTERACTIVE) $(CLOUD_PLANE_FLAGS) $(CLOUD_AGENT_CLOUD_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-cloud_agent-local_plane: ## Interactive on a pool of sandboxes launched through `plane local` on this machine
+evals-interactive-cloudagent-localplane: ## Interactive on a pool of sandboxes launched through `plane local` on this machine
 	@$(LOCAL_PLANE) $(INTERACTIVE) $(LOCAL_PLANE_FLAGS) $(CLOUD_AGENT_LOCAL_PLANE_FLAGS) $(AGENTSPEC_FLAGS) $(SYNTHETIC_FLAG)
 
 # ---- interactive, local agent --------------------------------------------------------------
 
-evals-interactive-local_agent-cloud_plane: ## Interactive on an agent-runtimes server on this machine, results written to the Datalayer services
+evals-interactive-localagent-cloudplane: ## Interactive on an agent-runtimes server on this machine, results written to the Datalayer services
 	@$(CLOUD_PLANE) $(LOCAL_AGENT_ENV) $(INTERACTIVE) $(CLOUD_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
-evals-interactive-local_agent-local_plane: ## Interactive on an agent-runtimes server on this machine, results written to `plane local`
+evals-interactive-localagent-localplane: ## Interactive on an agent-runtimes server on this machine, results written to `plane local`
 	@$(LOCAL_PLANE) $(LOCAL_AGENT_ENV) $(INTERACTIVE) $(LOCAL_PLANE_FLAGS) $(LOCAL_AGENT_FLAGS) $(SYNTHETIC_FLAG)
 
 # ---- interactive, synthetic (no agent) -----------------------------------------------------
 
-evals-interactive-synthetic-cloud_plane: ## Interactive with deterministic synthetic results and no agent, against the Datalayer services
+evals-interactive-synthetic-cloudplane: ## Interactive with deterministic synthetic results and no agent, against the Datalayer services
 	@$(CLOUD_PLANE) $(INTERACTIVE_SYNTHETIC) $(CLOUD_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
 
-evals-interactive-synthetic-local_plane: ## Interactive with deterministic synthetic results and no agent, against `plane local`
+evals-interactive-synthetic-localplane: ## Interactive with deterministic synthetic results and no agent, against `plane local`
 	@$(LOCAL_PLANE) $(INTERACTIVE_SYNTHETIC) $(LOCAL_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic

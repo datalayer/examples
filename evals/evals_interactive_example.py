@@ -42,11 +42,11 @@ BASE_EXPERIMENT_COUNT = 5
 
 
 def _target_label(args: argparse.Namespace) -> str:
-    """What the make target calls this run, e.g. `synthetic-cloud_plane` or
-    `cloud_agent-cloud_plane` (`make evals-<mode>-<agent>-<plane>`): part of every
+    """What the make target calls this run, e.g. `synthetic-cloudplane` or
+    `cloudagent-cloudplane` (`make evals-<mode>-<agent>-<plane>`): part of every
     name the run creates, so a synthetic run is never read as an agent's."""
-    agent = 'synthetic' if args.no_agent else f'{args.execution_target}_agent'
-    return f'{agent}-{args.plane}_plane'
+    agent = 'synthetic' if args.no_agent else f'{args.execution_target}agent'
+    return f'{agent}-{args.plane}plane'
 
 
 def _generated_evalset_name(source: str, mode: str) -> str:

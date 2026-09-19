@@ -68,7 +68,7 @@ The [evals](https://github.com/datalayer/examples/tree/main/evals) folder contai
 
 Run them with the packaged make targets:
 
-Every target is `make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>`:
+Every target is `make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>`:
 the mode, where the agent runs (a pool of Datalayer sandboxes, an `agent-runtimes` server on your
 machine, or no agent at all), and which plane the results go to (the Datalayer services, or a
 `plane local` on your machine).
@@ -76,11 +76,11 @@ machine, or no agent at all), and which plane the results go to (the Datalayer s
 ```bash
 cd evals
 make help
-make evals-batch-synthetic-cloud_plane
-make evals-batch-cloud_agent-cloud_plane
-make evals-batch-local_agent-cloud_plane
-make evals-interactive-cloud_agent-cloud_plane
-make evals-batch-cloud_agent-local_plane
+make evals-batch-synthetic-cloudplane
+make evals-batch-cloudagent-cloudplane
+make evals-batch-localagent-cloudplane
+make evals-interactive-cloudagent-cloudplane
+make evals-batch-cloudagent-localplane
 ```
 
 ## CLI

@@ -40,46 +40,46 @@ You can point either script at a custom spec with:
 Every `make` target is named on three axes:
 
 ```text
-make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>
+make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>
 ```
 
 - **Mode** — `batch` runs the fixed, versioned tasks; `interactive` evaluates
   live traffic over a window.
-- **Agent** — where the agent runs. `cloud_agent`: a launch the platform
-  executes on a pool of Datalayer sandboxes. `local_agent`: an
+- **Agent** — where the agent runs. `cloudagent`: a launch the platform
+  executes on a pool of Datalayer sandboxes. `localagent`: an
   `agent-runtimes` server on this machine, started for you when none answers.
   `synthetic`: no agent at all — deterministic, self-explanatory results, to
   see the reports and the UI without a model call.
-- **Plane** — which Datalayer the results go to. `cloud_plane`: the Datalayer
-  services (the SDK defaults). `local_plane`: a `plane local` on this machine
+- **Plane** — which Datalayer the results go to. `cloudplane`: the Datalayer
+  services (the SDK defaults). `localplane`: a `plane local` on this machine
   — every service on `localhost`, the durable engine `none`, so a benchmark
   runs end to end with no database.
 
-The plane is chosen by construction. `cloud_plane` targets unset every
-`DATALAYER_*_URL` so the SDK defaults apply; `local_plane` targets pin
+The plane is chosen by construction. `cloudplane` targets unset every
+`DATALAYER_*_URL` so the SDK defaults apply; `localplane` targets pin
 `LOCAL_PLANE_*_URL` — names no cluster rc sets — so a shell with
 `datalayerrc-prod1` sourced still sends them to the plane on this machine,
 and the addresses they print are `http://localhost:3063`.
 
 | Target | Mode | Agent | Plane |
 |--------|------|-------|-------|
-| `evals-batch-cloud_agent-cloud_plane` | batch | pool of Datalayer sandboxes | Datalayer services |
-| `evals-batch-cloud_agent-cloud_plane-simple` | batch | one sandbox, one agentspec, no reports (`evals_batch_simple.py`) | Datalayer services |
-| `evals-batch-cloud_agent-cloud_plane-billing-entity` | batch | pool of Datalayer sandboxes; asks for the API key and a billing entity | Datalayer services |
-| `evals-batch-cloud_agent-local_plane` | batch | pool of sandboxes launched through `plane local` | `plane local` |
-| `evals-batch-local_agent-cloud_plane` | batch | `agent-runtimes` on this machine | Datalayer services |
-| `evals-batch-local_agent-local_plane` | batch | `agent-runtimes` on this machine | `plane local` |
-| `evals-batch-local_agent-local_plane-billing-entity` | batch | `agent-runtimes` on this machine; asks for the API key and a billing entity | `plane local` |
-| `evals-batch-synthetic-cloud_plane` | batch | none — synthetic results | Datalayer services |
-| `evals-batch-synthetic-local_plane` | batch | none — synthetic results | `plane local` |
-| `evals-interactive-cloud_agent-cloud_plane` | interactive | pool of Datalayer sandboxes | Datalayer services |
-| `evals-interactive-cloud_agent-local_plane` | interactive | pool of sandboxes launched through `plane local` | `plane local` |
-| `evals-interactive-local_agent-cloud_plane` | interactive | `agent-runtimes` on this machine | Datalayer services |
-| `evals-interactive-local_agent-local_plane` | interactive | `agent-runtimes` on this machine | `plane local` |
-| `evals-interactive-synthetic-cloud_plane` | interactive | none — synthetic results | Datalayer services |
-| `evals-interactive-synthetic-local_plane` | interactive | none — synthetic results | `plane local` |
+| `evals-batch-cloudagent-cloudplane` | batch | pool of Datalayer sandboxes | Datalayer services |
+| `evals-batch-cloudagent-cloudplane-simple` | batch | one sandbox, one agentspec, no reports (`evals_batch_simple.py`) | Datalayer services |
+| `evals-batch-cloudagent-cloudplane-billing-entity` | batch | pool of Datalayer sandboxes; asks for the API key and a billing entity | Datalayer services |
+| `evals-batch-cloudagent-localplane` | batch | pool of sandboxes launched through `plane local` | `plane local` |
+| `evals-batch-localagent-cloudplane` | batch | `agent-runtimes` on this machine | Datalayer services |
+| `evals-batch-localagent-localplane` | batch | `agent-runtimes` on this machine | `plane local` |
+| `evals-batch-localagent-localplane-billing-entity` | batch | `agent-runtimes` on this machine; asks for the API key and a billing entity | `plane local` |
+| `evals-batch-synthetic-cloudplane` | batch | none — synthetic results | Datalayer services |
+| `evals-batch-synthetic-localplane` | batch | none — synthetic results | `plane local` |
+| `evals-interactive-cloudagent-cloudplane` | interactive | pool of Datalayer sandboxes | Datalayer services |
+| `evals-interactive-cloudagent-localplane` | interactive | pool of sandboxes launched through `plane local` | `plane local` |
+| `evals-interactive-localagent-cloudplane` | interactive | `agent-runtimes` on this machine | Datalayer services |
+| `evals-interactive-localagent-localplane` | interactive | `agent-runtimes` on this machine | `plane local` |
+| `evals-interactive-synthetic-cloudplane` | interactive | none — synthetic results | Datalayer services |
+| `evals-interactive-synthetic-localplane` | interactive | none — synthetic results | `plane local` |
 
-`SYNTHETIC=1` on a `cloud_agent` target keeps its plane and agent wiring but
+`SYNTHETIC=1` on a `cloudagent` target keeps its plane and agent wiring but
 produces synthetic results; `AGENTSPEC_ID=<id>` runs one agentspec instead of
 the two.
 
@@ -91,7 +91,7 @@ operator out when four arrive at once.
 ### The smallest cloud run
 
 ```bash
-make evals-batch-cloud_agent-cloud_plane-simple
+make evals-batch-cloudagent-cloudplane-simple
 ```
 
 This target runs `evals_batch_simple.py`, which:
@@ -107,18 +107,18 @@ Real runs in both `evals_batch_example.py` and `evals_interactive_example.py`
 delegate execution to the shared
 `agent_runtimes.evals.remote.execute_evalset_spec` runner. It creates one
 evalset, one experiment per agentspec, executes **every** case for real —
-on a pool of Datalayer sandboxes (`cloud_agent`) or against a local
-`agent-runtimes` server (`local_agent`) — grades the outputs with the evals
+on a pool of Datalayer sandboxes (`cloudagent`) or against a local
+`agent-runtimes` server (`localagent`) — grades the outputs with the evals
 API, persists one run per execution, and tears the execution resources down
 afterwards:
 
 ```bash
 # A pool of Datalayer sandboxes, results in the Datalayer services:
-make evals-batch-cloud_agent-cloud_plane
+make evals-batch-cloudagent-cloudplane
 
 # An agent-runtimes server on this machine (auto-started):
-make evals-batch-local_agent-cloud_plane
-make evals-interactive-local_agent-cloud_plane
+make evals-batch-localagent-cloudplane
+make evals-interactive-localagent-cloudplane
 
 # or directly:
 python evals_batch_example.py --plane cloud --execution-target cloud \
@@ -130,7 +130,7 @@ python evals_batch_example.py --plane cloud --execution-target local \
   --agentspec-ids example-evals,example-evals-nocodemode
 ```
 
-A `cloud_agent` run is a launch the platform executes: the example submits
+A `cloudagent` run is a launch the platform executes: the example submits
 it, prints its address, and follows it, one line per change and a heartbeat
 every 30 seconds while nothing changes. When a launch ends `failed` or
 `blocked` the example says why, run by run, from the failure cause the
@@ -144,7 +144,7 @@ The same, against a `plane local` on this machine (every service on
 `localhost`, the durable engine `none`):
 
 ```bash
-make evals-batch-cloud_agent-local_plane
+make evals-batch-cloudagent-localplane
 ```
 
 ## Codemode vs No-Codemode Comparison
@@ -187,16 +187,16 @@ make help
 Run one batch example:
 
 ```bash
-make evals-batch-synthetic-cloud_plane
+make evals-batch-synthetic-cloudplane
 ```
 
 Run one interactive example:
 
 ```bash
-make evals-interactive-synthetic-cloud_plane
+make evals-interactive-synthetic-cloudplane
 ```
 
-Against a `plane local` on this machine, the same with `local_plane`.
+Against a `plane local` on this machine, the same with `localplane`.
 
 These synthetic targets are the fastest way to verify setup because they do not
 depend on live agent responses while still exercising report generation and
@@ -209,31 +209,31 @@ After synthetic runs work, move to agent-backed execution.
 Batch on an `agent-runtimes` server on this machine:
 
 ```bash
-make evals-batch-local_agent-cloud_plane
+make evals-batch-localagent-cloudplane
 ```
 
 Interactive on the same:
 
 ```bash
-make evals-interactive-local_agent-cloud_plane
+make evals-interactive-localagent-cloudplane
 ```
 
 Batch on a pool of Datalayer sandboxes:
 
 ```bash
-make evals-batch-cloud_agent-cloud_plane
+make evals-batch-cloudagent-cloudplane
 ```
 
 The same, asked for the API key and a billing entity:
 
 ```bash
-make evals-batch-cloud_agent-cloud_plane-billing-entity
+make evals-batch-cloudagent-cloudplane-billing-entity
 ```
 
 Interactive on a pool of Datalayer sandboxes:
 
 ```bash
-make evals-interactive-cloud_agent-cloud_plane
+make evals-interactive-cloudagent-cloudplane
 ```
 
 ### Runtime Operations CLI
@@ -430,8 +430,8 @@ If you want the shortest path:
 
 ```bash
 make help
-make evals-batch-synthetic-cloud_plane
-make evals-interactive-synthetic-cloud_plane
+make evals-batch-synthetic-cloudplane
+make evals-interactive-synthetic-cloudplane
 ```
 
 ## Useful Flags
@@ -452,7 +452,7 @@ python evals_interactive_example.py --help
 
 Common flags you will use:
 
-- `--eval-name <name>`: set the evalset name. Without it, the name is the spec's, followed by the make target's agent and plane and, for a batch, a timestamp — `text-normalization-batch-example-synthetic-cloud_plane-20260919-101500` for `make evals-batch-synthetic-cloud_plane`, `…-cloud_agent-cloud_plane-…` for `make evals-batch-cloud_agent-cloud_plane` — and a synthetic run's experiments start with `synthetic-`, so a synthetic run is never read as an agent's.
+- `--eval-name <name>`: set the evalset name. Without it, the name is the spec's, followed by the make target's agent and plane and, for a batch, a timestamp — `text-normalization-batch-example-synthetic-cloudplane-20260919-101500` for `make evals-batch-synthetic-cloudplane`, `…-cloudagent-cloudplane-…` for `make evals-batch-cloudagent-cloudplane` — and a synthetic run's experiments start with `synthetic-`, so a synthetic run is never read as an agent's.
 - `--evalset-spec-file <path>`: load schema/cases/evaluators from a JSON evalset spec file
 - `--plane cloud|local`: which Datalayer to talk to — the Datalayer services, or a `plane local` on this machine (its `--iam-url`, `--runtimes-url` and `--ai-agents-url` are checked before anything is created)
 - `--execution-target cloud|local`: where the agent runs — a pool of Datalayer sandboxes, or an `agent-runtimes` server on this machine
@@ -464,8 +464,8 @@ Common flags you will use:
 
 To override synthetic target defaults in Makefile-based runs:
 
-- `make evals-batch-synthetic-cloud_plane SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
-- `make evals-interactive-synthetic-cloud_plane SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
+- `make evals-batch-synthetic-cloudplane SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
+- `make evals-interactive-synthetic-cloudplane SYNTHETIC_AGENTSPEC_IDS="example-evals,example-evals-nocodemode"`
 
 You can optionally set a default billing context with:
 
@@ -475,7 +475,7 @@ You can optionally set a default billing context with:
 
 - `make help`: print the list of available targets and short descriptions.
 
-Every target is `make evals-<batch|interactive>-<cloud_agent|local_agent|synthetic>-<cloud_plane|local_plane>`;
+Every target is `make evals-<batch|interactive>-<cloudagent|localagent|synthetic>-<cloudplane|localplane>`;
 the table under *Target Matrix* lists all fifteen. All of them run both
 agentspecs (`example-evals` and `example-evals-nocodemode`) against one
 evalset so the report and the UI show the codemode-vs-no-codemode comparison.
@@ -483,7 +483,7 @@ evalset so the report and the UI show the codemode-vs-no-codemode comparison.
 ## Troubleshooting
 
 - If authentication fails, verify `DATALAYER_API_KEY` is set.
-- If `local_plane` runs fail, start `plane local` first; if `local_agent` runs fail, `agent-runtimes serve --port 8765 --find-free-port` is what the target starts for you.
+- If `localplane` runs fail, start `plane local` first; if `localagent` runs fail, `agent-runtimes serve --port 8765 --find-free-port` is what the target starts for you.
 - If cloud runs fail, check runtime capacity and service connectivity.
 
 ## Related Docs
