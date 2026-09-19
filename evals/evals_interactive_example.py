@@ -41,6 +41,14 @@ DEFAULT_AGENT_SPEC_NAME_BY_ID = {
 BASE_EXPERIMENT_COUNT = 5
 
 
+def _target_label(args: argparse.Namespace) -> str:
+    """What the make target calls this run, e.g. `synthetic-cloud_plane` or
+    `cloud_agent-cloud_plane` (`make evals-<mode>-<agent>-<plane>`): part of every
+    name the run creates, so a synthetic run is never read as an agent's."""
+    agent = 'synthetic' if args.no_agent else f'{args.execution_target}_agent'
+    return f'{agent}-{args.plane}_plane'
+
+
 def _generated_evalset_name(source: str, mode: str) -> str:
     stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     return f'evalset-{source}-{mode}-{stamp}'
@@ -563,13 +571,15 @@ def main() -> None:
             or ('http://localhost:3063' if 'localhost' in urls.ai_agents_url or '127.0.0.1' in urls.ai_agents_url else urls.ai_agents_url)
         ).rstrip('/')
 
-    mode_label = 'interactive-synthetic' if args.no_agent else 'interactive'
+    target_label = _target_label(args)
+    mode_label = f'interactive-{target_label}'
     evalset_spec = load_evalset_spec(
         args.evalset_spec_file, expected_kind='interactive', require_cases=True
     )
+    spec_eval_name = str(evalset_spec.get('name') or '').strip()
     evalset_name = (
         args.eval_name.strip()
-        or str(evalset_spec.get('name') or '').strip()
+        or (f'{spec_eval_name}-{target_label}' if spec_eval_name else '')
         or _generated_evalset_name('sdk', mode_label)
     )
     evalset_description = str(
@@ -651,7 +661,8 @@ def main() -> None:
 
     print('[2/3] Creating experiments...')
     experiment_specs = [
-        {'name': f'interactive-experiment-{index}', 'index': index}
+        # A synthetic run's experiments say so too: `synthetic-interactive-experiment-1-<agentspec>`.
+        {'name': f"{'synthetic-' if args.no_agent else ''}interactive-experiment-{index}", 'index': index}
         for index in range(1, BASE_EXPERIMENT_COUNT + 1)
     ]
     experiment_ids: list[tuple[str, str, int, str, str]] = []

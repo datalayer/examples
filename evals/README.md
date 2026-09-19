@@ -452,7 +452,7 @@ python evals_interactive_example.py --help
 
 Common flags you will use:
 
-- `--eval-name <name>`: set the evalset name
+- `--eval-name <name>`: set the evalset name. Without it, the name is the spec's, followed by the make target's agent and plane and, for a batch, a timestamp — `text-normalization-batch-example-synthetic-cloud_plane-20260919-101500` for `make evals-batch-synthetic-cloud_plane`, `…-cloud_agent-cloud_plane-…` for `make evals-batch-cloud_agent-cloud_plane` — and a synthetic run's experiments start with `synthetic-`, so a synthetic run is never read as an agent's.
 - `--evalset-spec-file <path>`: load schema/cases/evaluators from a JSON evalset spec file
 - `--plane cloud|local`: which Datalayer to talk to — the Datalayer services, or a `plane local` on this machine (its `--iam-url`, `--runtimes-url` and `--ai-agents-url` are checked before anything is created)
 - `--execution-target cloud|local`: where the agent runs — a pool of Datalayer sandboxes, or an `agent-runtimes` server on this machine

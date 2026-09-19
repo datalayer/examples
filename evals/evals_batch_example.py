@@ -43,6 +43,14 @@ def _generated_evalset_name(source: str, mode: str) -> str:
     return f'evalset-{source}-{mode}-{stamp}'
 
 
+def _target_label(args: argparse.Namespace) -> str:
+    """What the make target calls this run, e.g. `synthetic-cloud_plane` or
+    `cloud_agent-cloud_plane` (`make evals-<mode>-<agent>-<plane>`): part of every
+    name the run creates, so a synthetic run is never read as an agent's."""
+    agent = 'synthetic' if args.no_agent else f'{args.execution_target}_agent'
+    return f'{agent}-{args.plane}_plane'
+
+
 def _with_timestamp(name: str) -> str:
     stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     return f'{name}-{stamp}'
@@ -533,7 +541,8 @@ def main() -> None:
             or ('http://localhost:3063' if 'localhost' in urls.ai_agents_url or '127.0.0.1' in urls.ai_agents_url else urls.ai_agents_url)
         ).rstrip('/')
 
-    mode_label = 'batch-synthetic' if args.no_agent else 'batch'
+    target_label = _target_label(args)
+    mode_label = f'batch-{target_label}'
     evalset_spec = load_evalset_spec(
         args.evalset_spec_file, expected_kind='batch', require_cases=True
     )
@@ -542,7 +551,7 @@ def main() -> None:
     if explicit_eval_name:
         evalset_name = explicit_eval_name
     elif spec_eval_name:
-        evalset_name = _with_timestamp(spec_eval_name)
+        evalset_name = _with_timestamp(f'{spec_eval_name}-{target_label}')
     else:
         evalset_name = _generated_evalset_name('sdk', mode_label)
     evalset_description = str(
@@ -634,7 +643,8 @@ def main() -> None:
 
     print('[2/4] Creating experiments...')
     experiment_specs = [
-        {'name': f'batch-experiment-{index}', 'index': index}
+        # A synthetic run's experiments say so too: `synthetic-batch-experiment-1-<agentspec>`.
+        {'name': f"{'synthetic-' if args.no_agent else ''}batch-experiment-{index}", 'index': index}
         for index in range(1, BASE_EXPERIMENT_COUNT + 1)
     ]
     experiment_ids: list[tuple[str, str, int, str, str]] = []
