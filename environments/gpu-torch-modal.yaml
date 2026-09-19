@@ -1,0 +1,47 @@
+# Copyright (c) 2025-2026 Datalayer, Inc.
+#
+# BSD 3-Clause License
+#
+# PyTorch on a Modal GPU (PLAN_ENV.md E2-17).
+#
+# The same PyTorch environment as gpu-torch.yaml, for Modal. On Modal a GPU is a
+# launch option, not part of the image: the image is built from the CUDA base
+# like any other, and every sandbox of it is started on the GPU named below.
+# The build's smoke test does that, and checks the GPU is there (Appendix B
+# check 11). The compute is billed by Modal to your own workspace.
+#
+#   make env-create ENVIRONMENT_FILE=gpu-torch-modal.yaml
+#   make env-build-gpu-modal ENVIRONMENT=<you>/gpu-torch-modal
+apiVersion: environments.datalayer.io/v1alpha1
+kind: Environment
+metadata:
+  name: gpu-torch-modal
+  title: PyTorch on a Modal GPU
+spec:
+  language:
+    name: python
+    version: "3.13"
+  base:
+    # The CUDA channel: the CPU channel plus the CUDA 12.8 toolkit.
+    ref: datalayer/python-cuda
+    channel: "2026.09"
+  packages:
+    python:
+      manager: uv
+      dependencies:
+        # The last release built for CUDA 12.8, the channel's; 2.12 moved to 13.
+        - torch==2.10.0
+  resources:
+    sizeClass: gpu-small
+    accelerator:
+      # One of Modal's: T4, L4, A10G, L40S, A100, A100-40GB, A100-80GB, H100, H200, B200.
+      type: L4
+      count: 1
+      cuda: "12.8"
+  compatibility:
+    variants:
+      required: [modal]
+  commands:
+    postInstall:
+      # No GPU at build time: this checks the install, check 11 checks the GPU.
+      - python -c "import torch; print(torch.__version__, torch.version.cuda)"

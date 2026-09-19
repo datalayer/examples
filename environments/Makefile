@@ -54,7 +54,7 @@ define NEEDS_ENVIRONMENT
 endef
 
 .PHONY: help env-ls env-create env-spec-pyproject env-show env-validate env-resolve env-diff \
-	env-build-datalayer env-build-daytona env-build-gpu-daytona env-build env-logs env-try env-promote env-launch \
+	env-build-datalayer env-build-daytona env-build-gpu-daytona env-build-gpu-modal env-build env-logs env-try env-promote env-launch \
 	env-rollback env-versions env-rm env-slos env-publish env-unpublish \
 	env-publication walkthrough
 
@@ -114,6 +114,10 @@ env-build-daytona: ## Build the version for Daytona, in your own Daytona account
 env-build-gpu-daytona: ## Build a GPU version (gpu-torch.yaml) for Daytona, its GPU baked into the snapshot
 	$(NEEDS_ENVIRONMENT)
 	@$(CLOUD_PLANE) $(ENVS) build $(VERSION_REF) --variant daytona --follow $(OUT)
+
+env-build-gpu-modal: ## Build a GPU version (gpu-torch-modal.yaml) for Modal; its sandboxes start on the GPU
+	$(NEEDS_ENVIRONMENT)
+	@$(CLOUD_PLANE) $(ENVS) build $(VERSION_REF) --variant modal --follow $(OUT)
 
 env-build: ## Build it for VARIANT (datalayer, modal, daytona, e2b), following its log
 	$(NEEDS_ENVIRONMENT)
