@@ -147,6 +147,27 @@ The same, against a `plane local` on this machine (every service on
 make evals-batch-cloudagent-localplane
 ```
 
+## Inspect AI
+
+`inspect/` is the compatibility fixture of the Inspect AI adapter: a file-backed
+dataset, a multi-step solver with a tool call, and two scorers, one of them
+custom. Nothing in the adapter knows `extras.py`: the framework runs it.
+
+```bash
+# On the pinned Inspect, on its own mock model: no provider, no key.
+make evals-inspect-local
+```
+
+`tasks.py@arithmetic` binds the mock model. `-T mock=false --model <provider/model>`
+runs the same task on a real provider. `docker_task.py@arithmetic_in_docker` runs
+its tool in Inspect's Docker sandbox, so it needs a Docker Engine and a model key.
+
+A platform launch of an imported source approves each tool by name
+(`config.tools`), grants the network and a provider key by name
+(`config.network: boundary`, `config.secrets`), and picks the headline score
+explicitly: with several scorers and no aggregation chosen, a task keeps every
+score and waits in review.
+
 ## Codemode vs No-Codemode Comparison
 
 Every target runs **one** evalset that is executed against **both**

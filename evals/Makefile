@@ -165,3 +165,8 @@ evals-interactive-synthetic-cloudplane: ## Interactive with deterministic synthe
 
 evals-interactive-synthetic-localplane: ## Interactive with deterministic synthetic results and no agent, against `plane local`
 	@$(LOCAL_PLANE) $(INTERACTIVE_SYNTHETIC) $(LOCAL_PLANE_FLAGS) $(SYNTHETIC_AGENTSPEC_IDS_FLAG) --synthetic
+
+# The Inspect AI compatibility fixture, on Inspect's own mock model: no provider, no key.
+.PHONY: evals-inspect-local
+evals-inspect-local: ## Run the Inspect fixture on the pinned Inspect, with no platform at all
+	cd inspect && uvx --from inspect-ai==0.3.286 inspect eval tasks.py@arithmetic --log-format json
